@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Load & Packages - JazzCash</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #e60000;
+            --dark-bg: #111111;
+            --light-bg: #f4f5f7;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --success-green: #22c55e;
+            --yellow-accent: #facc15;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #121212;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .phone-shell {
+            width: 100%;
+            max-width: 390px;
+            height: 100%;
+            max-height: 800px;
+            background-color: var(--light-bg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        @media (min-width: 400px) {
+            .phone-shell {
+                border-radius: 36px;
+                border: 8px solid #2b2b2b;
+                height: 90vh;
+            }
+        }
+
+        .app-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--light-bg);
+            display: none;
+            flex-direction: column;
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .app-screen.active {
+            display: flex;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background-color: #111111;
+            border-bottom: 2px solid var(--primary);
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            color: #ffffff;
+        }
+
+        .back-btn {
+            background: #222222;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: #ffffff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .screen-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .page-content {
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .load-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .load-item {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(230,0,0,0.06);
+            transition: transform 0.1s;
+        }
+        .load-item:active {
+            transform: scale(0.96);
+        }
+        .load-icon-square {
+            width: 52px;
+            height: 52px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 6px;
+            background: #fff;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .load-icon-square img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .load-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #374151;
+            line-height: 1.2;
+        }
+
+        .operators-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 4px 12px 4px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 15px;
+            background: #fff;
+        }
+        .operator-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: 0.2s;
+        }
+        .operator-tab.active {
+            opacity: 1;
+            font-weight: 700;
+        }
+        .operator-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 4px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        .operator-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .input-group-custom {
+            margin-bottom: 14px;
+        }
+        .input-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .custom-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        
+        .btn-black-custom {
+            width: 100%;
+            background-color: #111827;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .receipt-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border-color); font-size: 13px; }
+        .receipt-row:last-child { border-bottom: none; }
+        .receipt-label { color: var(--text-muted); }
+        .receipt-value { font-weight: 600; color: var(--text-main); text-align: right; }
+
+        .pin-container { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 15px; background: #fff; }
+        .pin-dots { display: flex; gap: 14px; margin: 20px 0 25px 0; }
+        .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #111827; background: transparent; }
+        .pin-dot.filled { background: #111827; }
+        .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 35px; width: 100%; max-width: 290px; }
+        .keypad-key { background-color: white; border: 1px solid var(--border-color); border-radius: 50%; width: 58px; height: 58px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; cursor: pointer; }
+
+        #loader-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .dots-container {
+            display: flex;
+            gap: 10px;
+        }
+        .dot {
+            width: 16px;
+            height: 16px;
+            background-color: var(--yellow-accent);
+            border-radius: 50%;
+            animation: bounce 1.2s infinite ease-in-out both;
+        }
+        .dot:nth-child(1) { animation-delay: -0.36s; }
+        .dot:nth-child(2) { animation-delay: -0.24s; }
+        .dot:nth-child(3) { animation-delay: -0.12s; }
+        .dot:nth-child(4) { animation-delay: 0s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="phone-shell">
+    <!-- Loader -->
+    <div id="loader-overlay">
+        <div class="dots-container">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
+
+    <!-- 1. Menu Screen -->
+    <div id="screen-categories" class="app-screen active">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Load & Packages</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor: pointer; color: #ffffff;" onclick="window.location.href='index.html'"></i>
+        </div>
+        <div class="page-content" style="justify-content:flex-start;">
+            <div style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 15px;">Load & Packages</div>
+            <div class="load-grid">
+                <div class="load-item" onclick="selectLoadService('My Favorites')">
+                    <div class="load-icon-square"><img src="https://i.ibb.co/pBPdTQG6/icon1.png" alt="Icon 1" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-star\' style=\'color:#d97706;\'></i>';"></div>
+                    <div class="load-label">My Favorites</div>
+                </div>
+                <div class="load-item" onclick="selectLoadService('Prepaid Load')">
+                    <div class="load-icon-square"><img src="https://i.ibb.co/27KwRYQH/icon2.png" alt="Icon 2" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-mobile-screen\' style=\'color:#2563eb;\'></i>';"></div>
+                    <div class="load-label">Prepaid Load</div>
+                </div>
+                <div class="load-item" onclick="selectLoadService('Postpaid Bill')">
+                    <div class="load-icon-square"><img src="https://i.ibb.co/zMSNrmF/icon3.png" alt="Icon 3" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-file-invoice\' style=\'color:#7c3aed;\'></i>';"></div>
+                    <div class="load-label">Postpaid Bill</div>
+                </div>
+                <div class="load-item" onclick="selectLoadService('Mobile Packages')">
+                    <div class="load-icon-square"><img src="https://i.ibb.co/KckbBpV0/icon4.png" alt="Icon 4" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-box-archive\' style=\'color:#dc2626;\'></i>';"></div>
+                    <div class="load-label">Mobile Packages</div>
+                </div>
+                <div class="load-item" onclick="selectLoadService('ReadyLoad Prepaid')">
+                    <div class="load-icon-square"><img src="https://i.ibb.co/CpDfTByv/icon5.png" alt="Icon 5" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-store\' style=\'color:#059669;\'></i>';"></div>
+                    <div class="load-label">ReadyLoad Prepaid</div>
+                </div>
+                <div class="load-item" onclick="selectLoadService('ReadyLoad Mobile Pac...')">
+                    <div class="load-icon-square"><img src="https://i.ibb.co/67JBP0Lh/icon6.png" alt="Icon 6" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-boxes-stacked\' style=\'color:#d97706;\'></i>';"></div>
+                    <div class="load-label">ReadyLoad Mobile Pac...</div>
+                </div>
+                <div class="load-item" onclick="selectLoadService('Best Offers for You')">
+                    <div class="load-icon-square"><img src="https://i.ibb.co/QvTmG6YJ/icon7.png" alt="Icon 7" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-gift\' style=\'color:#db2777;\'></i>';"></div>
+                    <div class="load-label">Best Offers for You</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Number & Amount Input Screen -->
+    <div id="screen-form" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="switchScreen('screen-categories')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title" id="form-header-title">Prepaid Mobile Load</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor: pointer; color: #ffffff;" onclick="window.location.href='index.html'"></i>
+        </div>
+        <div class="page-content">
+            <div>
+                <div class="operators-row">
+                    <div class="operator-tab active" onclick="setOperator('Jazz', this)">
+                        <div class="operator-logo"><img src="https://i.brecorder.com/images/2016/04/mobilink.jpg" alt="Jazz"></div>
+                        <span style="font-size:10px;">Jazz</span>
+                    </div>
+                    <div class="operator-tab" onclick="setOperator('Telenor', this)">
+                        <div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_ZJtET5C63Lkv-3Q9M1X2KwZ5akTn6UXx4weMlOQ3odHB3a8ba4jgZ_Mi&s=10" alt="Telenor"></div>
+                        <span style="font-size:10px;">Telenor</span>
+                    </div>
+                    <div class="operator-tab" onclick="setOperator('Ufone', this)">
+                        <div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSyJO1-GNqiSM-RF33rar4Ko4rbDcdjict2CISuNPYPw&s=10" alt="Ufone"></div>
+                        <span style="font-size:10px;">Ufone</span>
+                    </div>
+                    <div class="operator-tab" onclick="setOperator('SCO', this)">
+                        <div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBjFrddLlJBP4Z3fqJb6RKMOPtdFJnTva1hEUNmrxxzw&s" alt="SCO"></div>
+                        <span style="font-size:10px;">SCO</span>
+                    </div>
+                    <div class="operator-tab" onclick="setOperator('Zong', this)">
+                        <div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQr3khCDYb_o1PePpPQE1T8wMX5yvKw7Y776V-JN8SukNKfzHNVTaZBsTt_&s=10" alt="Zong"></div>
+                        <span style="font-size:10px;">Zong</span>
+                    </div>
+                </div>
+
+                <div class="input-group-custom">
+                    <label class="input-label" id="input-num-label">Enter or search a number</label>
+                    <div style="position:relative; display:flex; align-items:center;">
+                        <input type="text" class="custom-input" id="load-num" placeholder="03XX-XXXXXXX" style="padding-right:38px;" oninput="handleLoadInput(this.value)">
+                        <div id="load-green-tick" style="position:absolute; right:12px; display:none; width:20px; height:20px; background:var(--success-green); color:white; border-radius:50%; align-items:center; justify-content:center; font-size:11px;"><i class="fa-solid fa-check"></i></div>
+                    </div>
+                </div>
+
+                <div class="input-group-custom">
+                    <label class="input-label">Amount (PKR) - Min Rs. 99</label>
+                    <input type="number" class="custom-input" id="load-amt" placeholder="Rs. 99">
+                </div>
+            </div>
+
+            <!-- Black Proceed / Send Button -->
+            <button class="btn-black-custom" id="pay-btn" onclick="goToReviewScreen()" disabled style="background-color: #d1d5db; color: #374151;">
+                <span id="pay-btn-text">Send Rs. 0</span> <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 3. Mobile Packages Screen -->
+    <div id="screen-packages" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="switchScreen('screen-categories')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Prepaid Mobile Packages</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor: pointer; color: #ffffff;" onclick="window.location.href='index.html'"></i>
+        </div>
+        <div class="page-content" style="justify-content:flex-start;">
+            <div style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">Select an operator to view packages</div>
+            
+            <div class="operators-row">
+                <div class="operator-tab active" onclick="switchPkgOperator('Jazz', this)"><div class="operator-logo"><img src="https://i.brecorder.com/images/2016/04/mobilink.jpg" alt="Jazz"></div><span style="font-size:10px;">Jazz</span></div>
+                <div class="operator-tab" onclick="switchPkgOperator('Telenor', this)"><div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_ZJtET5C63Lkv-3Q9M1X2KwZ5akTn6UXx4weMlOQ3odHB3a8ba4jgZ_Mi&s=10" alt="Telenor"></div><span style="font-size:10px;">Telenor</span></div>
+                <div class="operator-tab" onclick="switchPkgOperator('Ufone', this)"><div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSyJO1-GNqiSM-RF33rar4Ko4rbDcdjict2CISuNPYPw&s=10" alt="Ufone"></div><span style="font-size:10px;">Ufone</span></div>
+                <div class="operator-tab" onclick="switchPkgOperator('SCO', this)"><div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBjFrddLlJBP4Z3fqJb6RKMOPtdFJnTva1hEUNmrxxzw&s" alt="SCO"></div><span style="font-size:10px;">SCO</span></div>
+                <div class="operator-tab" onclick="switchPkgOperator('Zong', this)"><div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQr3khCDYb_o1PePpPQE1T8wMX5yvKw7Y776V-JN8SukNKfzHNVTaZBsTt_&s=10" alt="Zong"></div><span style="font-size:10px;">Zong</span></div>
+            </div>
+
+            <div style="position:relative; margin-bottom:15px;">
+                <input type="text" class="custom-input" placeholder="Search a package by name" style="padding-right:35px;">
+                <i class="fa-solid fa-magnifying-glass" style="position:absolute; right:14px; top:14px; color:var(--text-muted);"></i>
+            </div>
+
+            <div id="packages-list-container"></div>
+        </div>
+    </div>
+
+    <!-- 4. Review Transaction Details Screen (Without Name, showing only Number) -->
+    <div id="screen-review" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="switchScreen('screen-form')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Review Transaction Details</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor: pointer; color: #ffffff;" onclick="window.location.href='index.html'"><
