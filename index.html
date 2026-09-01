@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JazzCash - Digital Wallet App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
+    <style>
+        :root {
+            --primary: #dc2626;
+            --primary-dark: #b91c1c;
+            --primary-light: #fee2e2;
+            --dark-bg: #121212;
+            --light-bg: #f4f5f7;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --danger: #ef4444;
+            --yellow-accent: #facc15;
+            --success-green: #22c55e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .phone-shell {
+            width: 100%;
+            max-width: 390px;
+            height: 100%;
+            max-height: 800px;
+            background-color: var(--light-bg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        @media (min-width: 400px) {
+            .phone-shell {
+                border-radius: 36px;
+                border: 8px solid #2b2b2b;
+                height: 90vh;
+            }
+        }
+
+        .app-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--light-bg);
+            display: none;
+            flex-direction: column;
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .app-screen.active {
+            display: flex;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: var(--text-main);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f3f4f6;
+        }
+
+        .screen-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        #splash-screen {
+            background-color: #ffffff;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .splash-logo-container {
+            text-align: center;
+        }
+
+        .splash-logo-img {
+            width: 160px;
+            height: auto;
+            object-fit: contain;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        #loader-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .dots-container {
+            display: flex;
+            gap: 10px;
+        }
+        .dot {
+            width: 16px;
+            height: 16px;
+            background-color: var(--yellow-accent);
+            border-radius: 50%;
+            animation: bounce 1.2s infinite ease-in-out both;
+        }
+        .dot:nth-child(1) { animation-delay: -0.36s; }
+        .dot:nth-child(2) { animation-delay: -0.24s; }
+        .dot:nth-child(3) { animation-delay: -0.12s; }
+        .dot:nth-child(4) { animation-delay: 0s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        #wrong-pin-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            display: none;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            z-index: 2000;
+        }
+        .popup-card {
+            width: 100%;
+            background: white;
+            border-top-left-radius: 25px;
+            border-top-right-radius: 25px;
+            padding: 24px 20px 32px 20px;
+            text-align: center;
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            0% { transform: translateY(100%); }
+            100% { transform: translateY(0); }
+        }
+        .popup-icon {
+            width: 50px;
+            height: 50px;
+            background-color: #fee2e2;
+            color: var(--danger);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin: 0 auto 12px auto;
+        }
+        .popup-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+        .popup-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+        .popup-buttons-col {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn-black-custom {
+            width: 100%;
+            background-color: #111827;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-outline-custom {
+            width: 100%;
+            background-color: #ffffff;
+            color: #111827;
+            border: 1px solid var(--border-color);
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .full-login-screen {
+            background-color: #ffffff;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .login-dark-topbar {
+            background-color: #1a1a1a;
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .login-pin-dots-row {
+            display: flex;
+            gap: 25px;
+            margin: 20px 0;
+        }
+        .login-dot-item {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #d1d5db;
+        }
+        .login-dot-item.filled {
+            background-color: var(--yellow-accent);
+        }
+        
+        .login-keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px 30px;
+            max-width: 280px;
+            margin: 10px auto 25px auto;
+            justify-items: center;
+            align-items: center;
+        }
+        .login-key-btn {
+            background: transparent;
+            border: none;
+            color: #1f2937;
+            font-size: 24px;
+            font-weight: 600;
+            width: 54px;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .login-key-btn:active {
+            background-color: #f3f4f6;
+        }
+
+        #home-screen {
+            background-color: var(--light-bg);
+        }
+
+        .dark-header {
+            background: linear-gradient(180deg, #3b0707 0%, #1a1a1a 100%);
+            color: white;
+            padding: 24px 20px 24px 20px;
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .app-title { font-size: 18px; font-weight: 700; }
+        .header-icons { display: flex; gap: 14px; font-size: 18px; color: #d1d5db; cursor: pointer; }
+        
+        .user-row-home {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .user-info-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-avatar-home {
+            width: 36px; height: 36px; border-radius: 50%; background-color: #3f3f46;
+            display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; border: 1px solid #d1d5db;
+            font-size: 13px; overflow: hidden; cursor: pointer;
+        }
+        .login-prompt-banner {
+            margin-top: 5px;
+            cursor: pointer;
+        }
+        .login-prompt-banner .login-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--yellow-accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .login-prompt-banner .login-subtitle {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            margin-top: 2px;
+        }
+
+        .app-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 10px 65px 10px;
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            background: #ffffff;
+            padding: 14px 10px;
+            border-radius: 22px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .icon-item { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            text-align: center; 
+            cursor: pointer; 
+            position: relative;
+            padding: 12px 4px;
+            background: #ffffff;
+            border: 1px solid #f3f4f6;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            transition: all 0.2s ease;
+        }
+        .icon-item:active {
+            transform: scale(0.97);
+            background: #f9fafb;
+        }
+        .icon-box {
+            width: 100%; 
+            height: 68px; 
+            background: transparent; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            margin-bottom: 4px; 
+            color: var(--primary); 
+            font-size: 36px;
+        }
+        .icon-label { font-size: 11px; color: #374151; line-height: 1.2; font-weight: 600; }
+        
+        .badge-new {
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            background: #f59e0b;
+            color: white;
+            font-size: 8px;
+            font-weight: 700;
+            padding: 1px 4px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background-color: white;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 30;
+        }
+        .nav-link {
+            display: flex; flex-direction: column; align-items: center; background: none;
+            border: none; cursor: pointer; color: #111827; font-size: 10px; font-weight: 500; gap: 2px;
+        }
+        .nav-link.active { color: #111827; font-weight: 700; }
+        .nav-link i { font-size: 16px; color: #111827; }
+
+        #money-transfer-overlay-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            display: none;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            z-index: 1000;
+        }
+        .mt-modal-card {
+            width: 100%;
+            background: #ffffff;
+            border-top-left-radius: 25px;
+            border-top-right-radius: 25px;
+            padding: 20px 16px 30px 16px;
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.25);
+            animation: slideUp 0.3s ease;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .mt-modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            text-align: center;
+            margin-bottom: 18px;
+        }
+        .mt-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .mt-item {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 14px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+        .mt-icon-box {
+            width: 52px;
+            height: 52px;
+            background: #ffffff;
+            border: 1px solid #f3f4f6;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+        .mt-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #374151;
+            line-height: 1.2;
+        }
+
+        #contact-search-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            display: none;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            z-index: 1500;
+        }
+        .contact-modal-sheet {
+            width: 100%;
+            height: 94%;
+            background: #ffffff;
+            border-top-left-radius: 25px;
+            border-top-right-radius: 25px;
+            padding: 16px 16px 24px 16px;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
+        }
+
+        #scanner-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .scanner-card {
+            width: 100%;
+            max-width: 320px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+        .scanner-header-bar {
+            padding: 12px 16px;
+            background: #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        #reader {
+            width: 100% !important;
+            min-height: 250px;
+            background: #000;
+        }
+
+        .page-content { padding: 15px; flex: 1; overflow-y: auto; padding-bottom: 75px; background-color: #ffffff; }
+        .menu-list-card { background: white; border-radius: 14px; border: 1px solid var(--border-color); overflow: hidden; margin-bottom: 15px; }
+        .menu-list-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: white; font-size: 13px; font-weight: 500;}
+        .menu-list-item:last-child { border-bottom: none; }
+        .input-group-custom { margin-bottom: 14px; }
+        .input-label { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+        
+        .custom-input { 
+            width: 100%; 
+            padding: 12px 14px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 12px; 
+            font-size: 14px; 
+            outline: none; 
+            background: #ffffff; 
+            color: var(--text-main);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .custom-input:focus { border-color: var(--primary); }
+        
+        .btn-primary-custom { width: 100%; background-color: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+
+        .receipt-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border-color); font-size: 13px; }
+        .receipt-row:last-child { border-bottom: none; }
+        .receipt-label { color: var(--text-muted); }
+        .receipt-value { font-weight: 600; color: var(--text-main); text-align: right; }
+
+        .pin-container { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 15px; background: #fff; }
+        .pin-dots { display: flex; gap: 14px; margin: 20px 0 25px 0; }
+        .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #111827; background: transparent; }
+        .pin-dot.filled { background: #111827; }
+    </style>
+</head>
+<body>
+
+<div class="phone-shell">
+
+    <!-- Silent Loader -->
+    <div id="loader-overlay">
+        <div class="dots-container">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Screen -->
+    <div id="admin-panel-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('home-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Admin Panel - Manage Accounts</span>
+            </div>
+        </div>
+        <div class="page-content">
+            <div style="margin-bottom:15px; font-size:12px; color:var(--text-muted);">Add, edit or remove verified recipient numbers and names for each service category.</div>
+            
+            <div class="input-group-custom">
+                <label class="input-label">Select Wallet / Category</label>
+                <select class="custom-input" id="admin-cat">
+                    <option value="JazzCash">JazzCash Transfer</option>
+                    <option value="Easypaisa">Easypaisa Wallet</option>
+                    <option value="Bank">Bank Transfer</option>
+                    <option value="CNIC">CNIC Transfer</option>
+                    <option value="Raast">Raast ID</option>
+                </select>
+            </div>
+            <div class="input-group-custom">
+                <label class="input-label">Account / Mobile Number</label>
+                <input type="text" class="custom-input" id="admin-num-input" placeholder="e.g. 03291667662">
+            </div>
+            <div class="input-group-custom">
+                <label class="input-label">Account Title / Name</label>
+                <input type="text" class="custom-input" id="admin-name-input" placeholder="e.g. MUDASIR ABBAS">
+            </div>
+            <button class="btn-black-custom" onclick="saveAdminAccount()">Save / Add Account</button>
+
+            <div style="margin-top: 25px; font-weight:700; font-size:14px; margin-bottom:10px;">Saved Accounts List</div>
+            <div class="menu-list-card" id="admin-list-container"></div>
+        </div>
+    </div>
+
+    <div id="wrong-pin-modal">
+        <div class="popup-card">
+            <div class="popup-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="popup-title">Wrong MPIN</div>
+            <div class="popup-desc">You have entered an incorrect MPIN. Please try again.</div>
+            <div class="popup-buttons-col">
+                <button class="btn-black-custom" onclick="closeWrongPinModal()">Reset Password</button>
+                <button class="btn-outline-custom" onclick="tryAgainWrongPin()">Try Again</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Money Transfer Modal -->
+    <div id="money-transfer-overlay-modal">
+        <div class="mt-modal-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span class="mt-modal-title" style="margin-bottom:0;">Money Transfer</span>
+                <i class="fa-solid fa-xmark" style="font-size:18px; cursor:pointer; color:var(--text-muted);" onclick="closeMoneyTransferModal()"></i>
+            </div>
+            <div class="mt-grid">
+                <div class="mt-item" onclick="triggerLoaderWithFlow(() => { closeMoneyTransferModal(); window.location.href='favorites.html'; })">
+                    <div class="mt-icon-box" style="padding:4px; overflow:hidden;">
+                        <img src="https://i.ibb.co/yFJqx2RS/yFJqx2RS.png" style="width:100%; height:100%; object-fit:contain; border-radius:10px;" alt="Favorites" onerror="this.src='https://i.ibb.co/VYR1ScKk/VYR1ScKk.png';">
+                    </div>
+                    <div class="mt-label">My Favorites</div>
+                </div>
+                <div class="mt-item" onclick="triggerLoaderWithFlow(() => { closeMoneyTransferModal(); openTransferDetail('JazzCash Transfer'); })">
+                    <div class="mt-icon-box" style="padding:4px; overflow:hidden;">
+                        <img src="https://i.ibb.co/9k5QGt2K/9k5QGt2K.png" style="width:100%; height:100%; object-fit:contain; border-radius:10px;" alt="JazzCash">
+                    </div>
+                    <div class="mt-label">JazzCash Transfer</div>
+                </div>
+                <div class="mt-item" onclick="triggerLoaderWithFlow(() => { closeMoneyTransferModal(); openSearchableList('bank'); })">
+                    <div class="mt-icon-box" style="padding:4px; overflow:hidden;">
+                        <img src="https://i.ibb.co/F4rbTjCB/F4rbTjCB.png" style="width:100%; height:100%; object-fit:contain; border-radius:10px;" alt="Bank">
+                    </div>
+                    <div class="mt-label">Bank Transfer</div>
+                </div>
+                <div class="mt-item" onclick="triggerLoaderWithFlow(() => { closeMoneyTransferModal(); openTransferDetail('CNIC Transfer'); })">
+                    <div class="mt-icon-box" style="padding:4px; overflow:hidden;">
+                        <img src="https://i.ibb.co/jkTM6PsS/jkTM6PsS.png" style="width:100%; height:100%; object-fit:contain; border-radius:10px;" alt="CNIC Transfer">
+                    </div>
+                    <div class="mt-label">CNIC Transfer</div>
+                </div>
+                <div class="mt-item" onclick="triggerLoaderWithFlow(() => { closeMoneyTransferModal(); openTransferDetail('Raast ID'); })">
+                    <div class="mt-icon-box" style="padding:4px; overflow:hidden;">
+                        <img src="https://i.ibb.co/8LZGJsz8/8LZGJsz8.png" style="width:100%; height:100%; object-fit:contain; border-radius:10px;" alt="Raast">
+                    </div>
+                    <div class="mt-label">Raast ID</div>
+                </div>
+                <div class="mt-item" onclick="triggerLoaderWithFlow(() => { closeMoneyTransferModal(); openSearchableList('wallet'); })">
+                    <div class="mt-icon-box" style="padding:4px; overflow:hidden;">
+                        <img src="https://i.ibb.co/jkTM6PsS/jkTM6PsS.png" style="width:100%; height:100%; object-fit:contain; border-radius:10px;" alt="Other Wallets">
+                    </div>
+                    <div class="mt-label">Other Wallets</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Searchable Selection List Screen -->
+    <div id="searchable-list-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title" id="sl-title">Select Bank</span>
+            </div>
+        </div>
+        <div class="page-content" style="background:#ffffff; padding: 15px;">
+            <div style="position:relative; margin-bottom:15px;">
+                <input type="text" class="custom-input" id="sl-search-input" placeholder="Search Bank" style="padding-right:35px;" oninput="filterSearchableList(this.value)">
+                <i class="fa-solid fa-magnifying-glass" style="position:absolute; right:14px; top:14px; color:var(--text-muted);"></i>
+            </div>
+            <div style="font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:10px;" id="sl-subtitle">Select Bank</div>
+            <div class="menu-list-card" id="sl-items-container"></div>
+        </div>
+    </div>
+
+    <!-- Scanner Modal -->
+    <div id="scanner-modal">
+        <div class="scanner-card">
+            <div class="scanner-header-bar">
+                <span>Scan Barcode / QR / Text</span>
+                <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeScannerModal()"></i>
+            </div>
+            <div id="reader"></div>
+            <div style="padding: 12px; text-align: center; font-size: 12px; color: var(--text-muted); background: #fff;" id="scan-status">
+                Scanning text/QR in progress...
+            </div>
+        </div>
+    </div>
+
+    <div id="splash-screen" class="app-screen active">
+        <div class="splash-logo-container">
+            <img src="https://i.ibb.co/9HSRyfTC/1.png" class="splash-logo-img" alt="JazzCash Logo" onerror="this.src='./images/1.png';">
+        </div>
+    </div>
+
+    <!-- Login Keypad Screen (Linked to login-mpin.html file path logic) -->
+    <div id="login-keypad-screen" class="app-screen">
+        <div class="full-login-screen">
+            <div>
+                <div class="login-dark-topbar">
+                    <button class="back-btn" style="background:#333; color:#fff;" onclick="navigateTo('home-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                    <i class="fa-solid fa-house" style="cursor: pointer; color: white;" onclick="navigateTo('home-screen')"></i>
+                </div>
+                <div style="padding: 24px 20px 0 20px;">
+                    <h2 style="font-size: 22px; font-weight: 700; color: #111827;">Complete Sign-in</h2>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Enter your 4 digit MPIN (Path: login-mpin.html)</p>
+                    
+                    <div class="login-pin-dots-row">
+                        <div class="login-dot-item" id="key-dot-0"></div>
+                        <div class="login-dot-item" id="key-dot-1"></div>
+                        <div class="login-dot-item" id="key-dot-2"></div>
+                        <div class="login-dot-item" id="key-dot-3"></div>
+                    </div>
+                    <div style="text-align: right;">
+                        <a href="#" style="font-size: 12px; color: #111827; text-decoration: none; font-weight: 600;">Forgot MPIN?</a>
+                    </div>
+                    <p style="font-size: 11px; color: var(--danger); margin-top: 20px;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</p>
+                </div>
+            </div>
+
+            <!-- Balanced 3-Column Keypad Layout -->
+            <div class="login-keypad-grid">
+                <button class="login-key-btn" onclick="pressKeypadLogin('1')">1</button>
+                <button class="login-key-btn" onclick="pressKeypadLogin('2')">2</button>
+                <button class="login-key-btn" onclick="pressKeypadLogin('3')">3</button>
+                <button class="login-key-btn" onclick="pressKeypadLogin('4')">4</button>
+                <button class="login-key-btn" onclick="pressKeypadLogin('5')">5</button>
+                <button class="login-key-btn" onclick="pressKeypadLogin('6')">6</button>
+                <button class="login-key-btn" onclick="pressKeypadLogin('7')">7</button>
+                <button class="login-key-btn" onclick="pressKeypadLogin('8')">8</button>
+                <button class="login-key-btn" onclick="pressKeypadLogin('9')">9</button>
+                <button class="login-key-btn" onclick="navigateTo('login-biometric-screen')" style="font-size: 20px;" title="Fingerprint"><i class="fa-solid fa-fingerprint"></i></button>
+                <button class="login-key-btn" onclick="pressKeypadLogin('0')">0</button>
+                <button class="login-key-btn" onclick="pressKeypadLogin('del')"><i class="fa-solid fa-delete-left"></i></button>
+            </div>
+
+            <div style="padding: 15px 20px 20px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color);">
+                <span style="font-size: 12px; color: var(--text-muted); cursor: pointer;" onclick="window.location.href='help.html'">Need Help?</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-biometric-screen" class="app-screen">
+        <div class="full-login-screen">
+            <div>
+                <div class="login-dark-topbar">
+                    <button class="back-btn" style="background:#333; color:#fff;" onclick="navigateTo('login-keypad-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                    <i class="fa-solid fa-house" style="cursor: pointer; color: white;" onclick="navigateTo('home-screen')"></i>
+                </div>
+                <div style="padding: 24px 20px 0 20px;">
+                    <h2 style="font-size: 22px; font-weight: 700; color: #111827;">Complete Sign-in</h2>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Enter your 4 digit MPIN</p>
+                    
+                    <div class="login-pin-dots-row">
+                        <div class="login-dot-item" id="bio-dot-0"></div>
+                        <div class="login-dot-item" id="bio-dot-1"></div>
+                        <div class="login-dot-item" id="bio-dot-2"></div>
+                        <div class="login-dot-item" id="bio-dot-3"></div>
+                    </div>
+                    <div style="text-align: right;">
+                        <a href="#" style="font-size: 12px; color: #111827; text-decoration: none; font-weight: 600;" onclick="alert('Forgot MPIN flow')">Forgot MPIN?</a>
+                    </div>
+                    <p style="font-size: 11px; color: var(--danger); margin-top: 25px;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</p>
+                </div>
+            </div>
+
+            <div style="text-align: center; padding: 0 20px;">
+                <div style="font-size: 13px; font-weight: 700; color: #111827; margin-bottom: 12px;">JazzCash</div>
+                <div style="font-size: 16px; font-weight: 600; color: #111827; margin-bottom: 6px;">Biometric login for JazzCash</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Touch in-display fingerprint sensor</div>
+                <i class="fa-solid fa-fingerprint" style="font-size: 60px; color: #111827; margin-bottom: 25px; cursor: pointer;" onclick="triggerLoaderWithFlow(() => navigateTo('home-screen'))"></i>
+            </div>
+
+            <div style="padding: 15px 20px 25px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color);">
+                <span style="font-size: 13px; color: #111827; font-weight: 600; cursor: pointer;" onclick="navigateTo('login-keypad-screen')">Use MPIN</span>
+                <span style="font-size: 12px; color: var(--text-muted); cursor: pointer;" onclick="window.location.href='help.html'">Need Help?</span>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="home-screen" class="app-screen">
+        <div class="dark-header">
+            <div class="header-top">
+                <div class="app-title">JazzCash</div>
+                <div class="header-icons">
+                    <!-- Help linked to help.html -->
+                    <i class="fa-solid fa-headset" onclick="triggerLoaderWithFlow(() => window.location.href='help.html')"></i>
+                    <!-- Profile Header button linked to profile.html -->
+                    <i class="fa-solid fa-user" onclick="triggerLoaderWithFlow(() => window.location.href='profile.html')"></i>
+                </div>
+            </div>
+
+            <div class="user-row-home">
+                <div class="user-info-box">
+                    <!-- Profile DP image linked to profile.html -->
+                    <div class="user-avatar-home" id="home-avatar" onclick="triggerLoaderWithFlow(() => window.location.href='profile.html')">
+                        <img id="profile-avatar-img" src="https://i.ibb.co/3Y74Vy3y/3Y74Vy3y.png" style="width:100%; height:100%; object-fit:cover; display:block;" alt="Avatar">
+                        <span id="home-avatar-text" style="display:none;">MA</span>
+                    </div>
+                    <div>
+                        <div style="font-size: 15px; font-weight: 700; color: white;" id="home-username">Mudassar Abbas</div>
+                        <div style="font-size: 11px; color: var(--yellow-accent); display:flex; align-items:center; gap:4px; margin-top:1px;" id="home-reward-hub">
+                            <i class="fa-solid fa-award"></i> Reward Hub <i class="fa-solid fa-chevron-right" style="font-size:9px;"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- + Money and Loan buttons linked to add-money.html and loan.html -->
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="triggerLoaderWithFlow(() => window.location.href='add-money.html')" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 700; cursor: pointer;">+ Money</button>
+                    <button onclick="triggerLoaderWithFlow(() => window.location.href='loan.html')" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 700; cursor: pointer;">Loan</button>
+                </div>
+            </div>
+
+            <div class="login-prompt-banner" id="home-banner" onclick="navigateTo('login-keypad-screen')">
+                <div class="login-title" id="banner-main-text">Log in <i class="fa-solid fa-arrow-right" style="font-size:16px;"></i></div>
+                <div class="login-subtitle" id="banner-sub-text">to Make Payments</div>
+            </div>
+        </div>
+
+        <div class="app-body">
+            <!-- 3x3 Grid protected by unauthenticated infinite loading if not logged in -->
+            <div class="icon-grid">
+                <div class="icon-item" onclick="checkAuthAndOpen(openMoneyTransferModal)">
+                    <div class="icon-box">
+                        <img src="https://i.ibb.co/yFJqx2RS/yFJqx2RS.png" style="width:52px; height:52px; object-fit:contain;" alt="Money Transfer" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-paper-plane\'></i>';">
+                    </div>
+                    <div class="icon-label">Money Transfer</div>
+                </div>
+                <!-- Bill Payment linked to bill-payments.html -->
+                <div class="icon-item" onclick="checkAuthAndOpen(() => window.location.href='bill-payments.html')">
+                    <div class="icon-box">
+                        <img src="https://i.ibb.co/7tdSVfL2/7tdSVfL2.png" style="width:52px; height:52px; object-fit:contain;" alt="Bill Payment" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-file-invoice-dollar\'></i>';">
+                    </div>
+                    <div class="icon-label">Bill Payment</div>
+                </div>
+                <!-- Load & Packages linked to mobile-load.html -->
+                <div class="icon-item" onclick="checkAuthAndOpen(() => window.location.href='mobile-load.html')">
+                    <div class="icon-box">
+                        <img src="https://i.ibb.co/LzCwJcKj/LzCwJcKj.png" style="width:52px; height:52px; object-fit:contain;" alt="Load & Packages" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-mobile-screen-button\'></i>';">
+                    </div>
+                    <div class="icon-label">Load & Packages</div>
+                </div>
+                <div class="icon-item" onclick="checkAuthAndOpen(() => alert('Market T-Bills'))">
+                    <span class="badge-new">New</span>
+                    <div class="icon-box">
+                        <img src="https://i.ibb.co/jPR4XgLh/jPR4XgLh.png" style="width:52px; height:52px; object-fit:contain;" alt="Market T-Bills" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-chart-line\'></i>';">
+                    </div>
+                    <div class="icon-label">Market T-Bills</div>
+                </div>
+                <div class="icon-item" onclick="checkAuthAndOpen(() => alert('Yeylo portal'))">
+                    <span class="badge-new">New</span>
+                    <div class="icon-box" style="background:#fef08a; border-radius:12px; width:52px; height:52px; margin:auto;">
+                        <img src="https://i.ibb.co/NdyCmqdj/NdyCmqdj.png" style="width:40px; height:40px; object-fit:contain;" alt="Yeylo" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-y\'></i>';">
+                    </div>
+                    <div class="icon-label" style="margin-top:4px;">Yeylo</div>
+                </div>
+                <!-- Government Payments linked to gov-payments.html -->
+                <div class="icon-item" onclick="checkAuthAndOpen(() => window.location.href='gov-payments.html')">
+                    <div class="icon-box">
+                        <img src="https://i.ibb.co/Kp4B8wHG/Kp4B8wHG.png" style="width:52px; height:52px; object-fit:contain;" alt="Government Payments" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-landmark\'></i>';">
+                    </div>
+                    <div class="icon-label">Government Payments</div>
+                </div>
+                <div class="icon-item" onclick="checkAuthAndOpen(() => alert('Sehat +'))">
+                    <span class="badge-new">New</span>
+                    <div class="icon-box">
+                        <img src="https://i.ibb.co/fdp4Fk5S/fdp4Fk5S.png" style="width:52px; height:52px; object-fit:contain;" alt="Sehat +" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-heart-pulse\'></i>';">
+                    </div>
+                    <div class="icon-label">Sehat +</div>
+                </div>
+                <!-- Corporate Payments linked to corporate-payments.html -->
+                <div class="icon-item" onclick="checkAuthAndOpen(() => window.location.href='corporate-payments.html')">
+                    <div class="icon-box">
+                        <img src="https://i.ibb.co/8LGg9rRT/8LGg9rRT.png" style="width:52px; height:52px; object-fit:contain;" alt="Corporate Payments" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-building-columns\'></i>';">
+                    </div>
+                    <div class="icon-label">Corporate Payments</div>
+                </div>
+                <!-- More Services linked to more-services.html -->
+                <div class="icon-item" onclick="checkAuthAndOpen(() => window.location.href='more-services.html')">
+                    <div class="icon-box">
+                        <img src="https://i.ibb.co/Y4kRLr2J/Y4kRLr2J.png" style="width:52px; height:52px; object-fit:contain;" alt="More" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-ellipsis\'></i>';">
+                    </div>
+                    <div class="icon-label">More</div>
+                </div>
+            </div>
+
+            <!-- Yeylo Banner Section -->
+            <div style="background: linear-gradient(135deg, #fef08a 0%, #facc15 100%); border-radius: 18px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; cursor: pointer;" onclick="alert('Yeylo promotional banner clicked!')">
+                <div>
+                    <div style="font-size: 20px; font-weight: 800; color: #1e1b4b; letter-spacing: -0.5px;">yeylo</div>
+                    <div style="font-size: 9px; color: #713f12; font-weight: 600;">by JazzCash</div>
+                </div>
+                <div style="background: #2563eb; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Detail Screen -->
+    <div id="transfer-detail-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title" id="td-screen-title">Money Transfer</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor: pointer; color: var(--text-main);" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content" style="padding-top: 0; display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+                <div style="width: 100%; height: 130px; background: #fff; margin-bottom: 12px; display: flex; justify-content: center; align-items: center; border-bottom: 1px solid var(--border-color); overflow: hidden;">
+                    <img src="https://i.ibb.co/CK0YPHGD/CK0YPHGD.png" style="width: 100%; height: 100%; object-fit: contain;" alt="Transfer Banner" onerror="this.src='https://i.ibb.co/yFJqx2RS/yFJqx2RS.png';">
+                </div>
+
+                <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px; text-align:center;" id="td-subtitle">Via JazzCash Wallet</div>
+                <div style="font-weight:700; font-size:14px; color:var(--text-main); margin-bottom:10px;">Transfer Details</div>
+                
+                <div class="input-group-custom">
+                    <label class="input-label" id="td-recipient-label">Recipient</label>
+                    <div style="position:relative; display:flex; align-items:center;">
+                        <input type="text" class="custom-input" id="td-num" placeholder="Enter mobile number or name" style="padding-right:38px;" oninput="handleRecipientInput(this.value)">
+                        <div id="recipient-green-tick" style="position:absolute; right:12px; display:none; width:20px; height:20px; background:var(--success-green); color:white; border-radius:50%; align-items:center; justify-content:center; font-size:11px;"><i class="fa-solid fa-check"></i></div>
+                    </div>
+                </div>
+                
+                <div class="input-group-custom">
+                    <label class="input-label">Amount (PKR)</label>
+                    <div style="position:relative; display:flex; align-items:center;">
+                        <input type="number" class="custom-input" id="td-amt" placeholder="Rs. 0">
+                        <div style="position:absolute; right:12px; display:flex; gap:4px;">
+                            <div style="width:6px; height:6px; background:var(--yellow-accent); border-radius:50%;"></div>
+                            <div style="width:6px; height:6px; background:var(--yellow-accent); border-radius:50%;"></div>
+                            <div style="width:6px; height:6px; background:var(--yellow-accent); border-radius:50%;"></div>
+                            <div style="width:6px; height:6px; background:var(--yellow-accent); border-radius:50%;"></div>
+                        </div>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">Your Remaining transaction debit limit Rs. 100,000.00 left</div>
+                </div>
+
+                <div class="input-group-custom">
+                    <label class="input-label">Comment (Optional)</label>
+                    <input type="text" class="custom-input" id="td-comment" placeholder="Enter comment" maxlength="24">
+                </div>
+            </div>
+
+            <!-- Black Send Button -->
+            <button class="btn-black-custom" onclick="validateTransferDetails()" style="border-radius:30px; padding:14px; display:flex; justify-content:center; align-items:center; gap:8px; margin-top:20px;" id="send-btn-custom" disabled>
+                <span id="send-btn-text">Send Rs. 0</span> <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Review Transaction Details Screen -->
+    <div id="confirmation-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Review Transaction Details</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor: pointer; color: var(--text-main);" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content" style="background-color: #ffffff; padding: 20px; display:flex; flex-direction:column; justify-content:space-between; height:calc(100% - 53px);">
+            <div>
+                <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Amount</div>
+                <h2 id="conf-total" style="color:var(--text-main); font-size:22px; font-weight:700; margin-bottom:14px;">Rs. 100.00</h2>
+                
+                <div style="border-bottom: 1px dashed var(--border-color); margin-bottom: 14px;"></div>
+
+                <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">To</div>
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; background:white; padding:10px 0;">
+                    <div style="width:36px; height:36px; background:var(--yellow-accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#1f2937;">MA</div>
+                    <div>
+                        <div style="font-size:13px; font-weight:700; color:var(--text-main);" id="conf-v3">MUDASIR ABBAS</div>
+                        <div style="font-size:11px; color:var(--text-muted);" id="conf-v2">03291667662</div>
+                    </div>
+                </div>
+
+                <div style="border-bottom: 1px dashed var(--border-color); margin-bottom: 14px;"></div>
+
+                <div style="background:#fef08a; padding:12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border:1px solid #fde047;">
+                    <div>
+                        <div style="font-size:12px; font-weight:700; color:#713f12;">Add to Favorites?</div>
+                        <div style="font-size:10px; color:#854d0e;">To access your favorites, visit the Favorites Management.</div>
+                    </div>
+                    <i class="fa-regular fa-star" style="font-size:20px; color:#713f12;"></i>
+                </div>
+
+                <div style="border-bottom: 1px dashed var(--border-color); margin-bottom: 14px;"></div>
+
+                <div style="padding: 6px 0; margin-bottom: 14px; display:flex; align-items:center; gap:10px;">
+                    <i class="fa-solid fa-circle-plus" style="font-size:18px; color:var(--text-muted);"></i>
+                    <span style="font-size:13px; color:var(--text-main); font-weight:500;">Add nickname</span>
+                </div>
+
+                <div style="border-bottom: 1px dashed var(--border-color); margin-bottom: 14px;"></div>
+
+                <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">From</div>
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; background:white; padding:10px 0;">
+                    <div style="width:36px; height:36px; background:#e5e7eb; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                        <img id="conf-from-avatar" src="https://i.ibb.co/3Y74Vy3y/3Y74Vy3y.png" style="width:100%; height:100%; object-fit:cover;" alt="From">
+                    </div>
+                    <div>
+                        <div style="font-size:13px; font-weight:700; color:var(--text-main);" id="conf-from-name">AZIZ BIBI</div>
+                        <div style="font-size:11px; color:var(--text-muted);">03084191378</div>
+                    </div>
+                </div>
+
+                <div style="border-bottom: 1px dashed var(--border-color); margin-bottom: 14px;"></div>
+
+                <div style="margin-bottom: 14px;">
+                    <div class="receipt-row"><span class="receipt-label">Transaction Fee</span><span class="receipt-value">Rs. 0.00</span></div>
+                    <div class="receipt-row" style="font-weight:700; font-size:14px; margin-top:8px;"><span>Total</span><span id="conf-total-bottom" style="color:var(--text-main);">Rs. 100.00</span></div>
+                </div>
+
+                <div style="border-bottom: 1px dashed var(--border-color); margin-bottom: 14px;"></div>
+
+                <div style="padding: 6px 0; margin-bottom: 14px; display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-size:12px; color:var(--text-muted);">Split with</span>
+                    <button class="btn-outline-custom" style="width:auto; padding:4px 12px; border-radius:15px; font-size:11px;">JazzCash</button>
+                </div>
+
+                <div style="border-bottom: 1px dashed var(--border-color); margin-bottom: 14px;"></div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <span style="font-size:12px; color:var(--text-muted);">Total Amount</span>
+                    <span style="font-size:16px; font-weight:700; color:var(--text-main);" id="conf-total-amt-bottom">Rs. 100</span>
+                </div>
+            </div>
+
+            <!-- Confirm Button section shifted higher up as requested -->
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 120px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                <div>
+                    <div style="font-size: 10px; color: var(--text-muted);">Total Amount</div>
+                    <div style="font-size: 16px; font-weight: 700; color: var(--text-main);" id="conf-footer-amt">Rs. 100</div>
+                </div>
+                <button class="btn-black-custom" onclick="openPinScreen()" style="border-radius:30px; padding:12px 28px; display:flex; align-items:center; gap:8px; width: auto;">
+                    <span>Confirm</span> <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authorise Transfer MPIN Screen -->
+    <div id="pin-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Authorise Transfer</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor: pointer; color: var(--text-main);" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="pin-container">
+            <div style="font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 2px;">Enter your 4-Digit MPIN</div>
+            
+            <div style="margin: 15px 0;">
+                <img src="https://i.ibb.co/9HSRyfTC/1.png" style="width: 30px; height: 30px; object-fit: contain;" alt="Logo">
+            </div>
+
+            <div class="pin-dots">
+                <div class="pin-dot" id="dot-0"></div>
+                <div class="pin-dot" id="dot-1"></div>
+                <div class="pin-dot" id="dot-2"></div>
+                <div class="pin-dot" id="dot-3"></div>
+            </div>
+
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">Forgot MPIN?</div>
+            <div style="font-size:11px; color:var(--danger); margin-bottom:25px;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</div>
+
+            <div class="keypad-grid">
+                <div class="keypad-key" onclick="pressKey('1')">1</div>
+                <div class="keypad-key" onclick="pressKey('2')">2</div>
+                <div class="keypad-key" onclick="pressKey('3')">3</div>
+                <div class="keypad-key" onclick="pressKey('4')">4</div>
+                <div class="keypad-key" onclick="pressKey('5')">5</div>
+                <div class="keypad-key" onclick="pressKey('6')">6</div>
+                <div class="keypad-key" onclick="pressKey('7')">7</div>
+                <div class="keypad-key" onclick="pressKey('8')">8</div>
+                <div class="keypad-key" onclick="pressKey('9')">9</div>
+                <div class="keypad-key" style="background:transparent; border:none; box-shadow:none;"></div>
+                <div class="keypad-key" onclick="pressKey('0')">0</div>
+                <div class="keypad-key" onclick="pressKey('del')"><i class="fa-solid fa-delete-left"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Successful Full Screen -->
+    <div id="success-screen" class="app-screen" style="background-color: #121212;">
+        <div class="top-bar" style="background:#121212; border:none;">
+            <div style="width:32px;"></div>
+            <i class="fa-solid fa-house" style="cursor: pointer; color: white;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content" style="display:flex; flex-direction:column; align-items:center; background:#121212; padding-top: 3rem; padding-bottom: 1rem; justify-content: flex-start; height: 100%;">
+            <div style="width:46px; height:46px; background:var(--yellow-accent); color:#121212; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:12px;"><i class="fa-solid fa-check"></i></div>
+
+            <div style="background:white; width:100%; border-radius:14px; padding:20px; text-align:left; color:#1f2937; margin-bottom:10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                <div style="text-align: center; margin-bottom: 12px;">
+                    <div style="font-size: 16px; font-weight: 700; color: var(--text-main);">Transaction Successful</div>
+                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;" id="rec-tid-date">TID: 467754865409 | 01 Sep 2026 at 10:52 AM</div>
+                </div>
+
+                <div style="border-bottom: 1px solid var(--border-color); margin-bottom: 14px;"></div>
+
+                <h2 style="color:var(--text-main); font-size:22px; font-weight:700; margin-bottom:2px;" id="rec-amt">Rs. 100.00</h2>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:18px;" id="rec-sub-desc">Transferred to JazzCash Transfer</div>
+
+                <div class="receipt-row"><span class="receipt-label">Fee</span><span class="receipt-value">Rs. 0.00</span></div>
+                <div class="receipt-row"><span class="receipt-label">To</span><span class="receipt-value" id="rec-name" style="text-align:right;">MUDASIR ABBAS<br><span style="font-weight:normal; color:var(--text-muted);" id="rec-num">03291667662</span></span></div>
+                <div class="receipt-row"><span class="receipt-label">From</span><span class="receipt-value" style="text-align:right;">AZIZ BIBI<br><span style="font-weight:normal; color:var(--text-muted);">03084191378</span></span></div>
+
+                <div style="text-align:center; margin-top:20px; font-size:11px; color:var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 12px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    Securely paid via <img src="https://i.ibb.co/9HSRyfTC/1.png" style="width:16px; vertical-align:middle;" alt="Logo"> JazzCash
+                </div>
+            </div>
+
+            <div style="font-size:10px; color:#9ca3af; margin-bottom:10px; text-align: center;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</div>
+
+            <div style="display:flex; gap:12px; width:100%;">
+                <button style="flex:1; background:#1c1c1e; color:white; border:1px solid #374151; border-radius:28px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="alert('Receipt Shared successfully!')"><i class="fa-solid fa-share-nodes"></i> Share</button>
+                <button style="flex:1; background:#1c1c1e; color:white; border:1px solid #374151; border-radius:28px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="alert('Receipt Saved to Device Gallery!')"><i class="fa-solid fa-download"></i> Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Search Modal -->
+    <div id="contact-search-modal">
+        <div class="contact-modal-sheet">
+            <div style="width:40px; height:4px; background:#d1d5db; border-radius:2px; margin:0 auto 12px auto; cursor:pointer;" onclick="closeContactSearchOverlay()"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="font-weight:700; font-size:15px; color:var(--text-main);">Money Transfer</span>
+                <i class="fa-solid fa-xmark" style="cursor:pointer; font-size:16px; color:var(--text-muted);" onclick="closeContactSearchOverlay()"></i>
+            </div>
+            <div style="position:relative; margin-bottom:12px;">
+                <input type="text" class="custom-input" placeholder="Search Name Or Number" style="padding-right:35px;" id="contact-search-input">
+                <i class="fa-solid fa-magnifying-glass" style="position:absolute; right:12px; top:12px; color:var(--text-muted);"></i>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted); margin-bottom:15px;">
+                <span>Select Contact</span>
+                <span style="cursor:pointer; color:var(--primary);" onclick="triggerLoaderWithFlow(() => alert('Contacts Refreshed'))"><i class="fa-solid fa-rotate"></i> Refresh contacts</span>
+            </div>
+            
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px 0;">
+                <i class="fa-solid fa-wind" style="font-size:36px; color:var(--text-muted); margin-bottom:10px;"></i>
+                <div style="font-weight:700; font-size:15px; margin-bottom:4px;">Oh no</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px; max-width:280px;">Link your contacts with wallet to easily search and send them money.</div>
+                <button class="btn-outline-custom" style="width:auto; padding:10px 24px; border-radius:20px;" onclick="triggerLoaderWithFlow(() => { closeContactSearchOverlay(); document.getElementById('td-num').value = 'MUDASIR ABBAS'; document.getElementById('recipient-green-tick').style.display = 'flex'; checkAdminVerification('03291667662'); })">Add Contacts</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Searchable Selection List Screen -->
+    <div id="searchable-list-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title" id="sl-title">Select Bank</span>
+            </div>
+        </div>
+        <div class="page-content" style="background:#ffffff; padding: 15px;">
+            <div style="position:relative; margin-bottom:15px;">
+                <input type="text" class="custom-input" id="sl-search-input" placeholder="Search Bank" style="padding-right:35px;" oninput="filterSearchableList(this.value)">
+                <i class="fa-solid fa-magnifying-glass" style="position:absolute; right:14px; top:14px; color:var(--text-muted);"></i>
+            </div>
+            <div style="font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:10px;" id="sl-subtitle">Select Bank</div>
+            <div class="menu-list-card" id="sl-items-container"></div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar with Black Icons -->
+    <nav class="bottom-nav">
+        <button class="nav-link active" onclick="triggerLoaderWithFlow(() => navigateTo('home-screen'))">
+            <i class="fa-solid fa-house" style="color: #111827;"></i>
+            <span>Home</span>
+        </button>
+        <button class="nav-link" onclick="triggerLoaderWithFlow(() => window.location.href='agent.html')">
+            <i class="fa-solid fa-location-dot" style="color: #111827;"></i>
+            <span>Agent</span>
+        </button>
+        <button class="nav-link" onclick="openScannerModal()">
+            <i class="fa-solid fa-qrcode" style="color: #111827;"></i>
+            <span>Scan QR</span>
+        </button>
+        <button class="nav-link" onclick="triggerLoaderWithFlow(() => window.location.href='favorites.html')">
+            <i class="fa-solid fa-clock-rotate-left" style="color: #111827;"></i>
+            <span>Favorites</span>
+        </button>
+        <button class="nav-link" onclick="triggerLoaderWithFlow(() => window.location.href='gift.html')">
+            <i class="fa-solid fa-gift" style="color: #111827;"></i>
+            <span>Gift</span>
+        </button>
+    </nav>
+
+</div>
+
+<script>
+    let navigationStack = ['home-screen'];
+    let loginPinStr = "";
+    let correctLoginPin = "0990";
+    let txData = { type: '', targetName: '', targetDetail: '', amount: 0, accountTitle: 'MUDASIR ABBAS' };
+    let enteredPin = "";
+    let html5QrCode = null;
+    let customProfileImg = "https://i.ibb.co/3Y74Vy3y/3Y74Vy3y.png";
+    let currentSelectMode = 'bank';
+    let isUserLoggedIn = false; // Auth state flag
+
+    let adminAccounts = {
+        'JazzCash Transfer': { '03291667662': 'MUDASIR ABBAS' },
+        'Easypaisa': { '03001234567': 'MUDASIR ABBAS' },
+        'Bank Transfer': { '1234567890': 'MUDASIR ABBAS' },
+        'CNIC Transfer': { '3630212345671': 'MUDASIR ABBAS' },
+        'Raast ID': { '03291667662': 'MUDASIR ABBAS' }
+    };
+
+    let bankListDatabase = [
+        { name: "ABHI Microfinance Bank Limited", logo: "https://i.ibb.co/BHKjXFpd/BHKjXFpd.png" },
+        { name: "Al Baraka Bank", logo: "https://i.ibb.co/Fbs8vQHS/Fbs8vQHS.png" },
+        { name: "Allied Bank", logo: "https://i.ibb.co/67RMLrdS/67RMLrdS.png" },
+        { name: "Apna Microfinance Bank", logo: "https://i.ibb.co/bgr3MS8v/bgr3MS8v.png" },
+        { name: "Askari Bank", logo: "https://i.ibb.co/HTSnRDxK/HTSnRDxK.png" },
+        { name: "Bank Al Habib", logo: "https://i.ibb.co/vxypRz7V/vxypRz7V.png" },
+        { name: "Bank Alfalah", logo: "https://i.ibb.co/SXrzV4wh/SXrzV4wh.png" },
+        { name: "Bank Makramah", logo: "https://i.ibb.co/1Jhvy5j9/1Jhvy5j9.png" },
+        { name: "Bank of Khyber", logo: "https://i.ibb.co/mfTY4hx/mfTY4hx.png" },
+        { name: "Faysal Bank Limited", logo: "https://i.ibb.co/C5B6cB6x/C5B6cB6x.png" },
+        { name: "First Women Bank Ltd", logo: "https://i.ibb.co/GQMjvwqk/GQMjvwqk.png" },
+        { name: "HBL MFB", logo: "https://i.ibb.co/svL95vcx/svL95vcx.png" },
+        { name: "Habib Bank Limited", logo: "https://i.ibb.co/S9YvYV9/S9YvYV9.png" },
+        { name: "Habib Metro Bank", logo: "https://i.ibb.co/qMKGzL8F/qMKGzL8F.png" },
+        { name: "Halan Microfinance Bank", logo: "https://i.ibb.co/67Gvpwv1/67Gvpwv1.png" },
+        { name: "JS Bank Limited - Zindigi", logo: "https://i.ibb.co/4Zs6y3LP/4Zs6y3LP.png" },
+        { name: "KASB Bank", logo: "https://i.ibb.co/s9d7KDYZ/s9d7KDYZ.png" },
+        { name: "Khushali Bank", logo: "https://i.ibb.co/p6yxJW2h/p6yxJW2h.png" },
+        { name: "MCB Bank Limited", logo: "https://i.ibb.co/Q36ScKKC/Q36ScKKC.png" },
+        { name: "Meezan Bank", logo: "https://i.ibb.co/yBQWbpfz/yBQWbpfz.png" },
+        { name: "National Bank of Pakistan", logo: "https://i.ibb.co/pjZ6ZYwB/pjZ6ZYwB.png" },
+        { name: "NRSP Microfinance Bank", logo: "https://i.ibb.co/pjN2qCbs/pjN2qCbs.png" },
+        { name: "Samba Bank Limited", logo: "https://i.ibb.co/93v0jVkk/93v0jVkk.png" },
+        { name: "Silk Bank", logo: "https://i.ibb.co/HfwJF34W/HfwJF34W.png" },
+        { name: "Sindh Bank", logo: "https://i.ibb.co/WNB5dD3y/WNB5dD3y.png" },
+        { name: "Standard Chartered Bank", logo: "https://i.ibb.co/S4zKDxVr/S4zKDxVr.png" },
+        { name: "Summit Bank Limited", logo: "https://i.ibb.co/hFNBBXVh/hFNBBXVh.png" },
+        { name: "The Bank of Punjab", logo: "https://i.ibb.co/tpVC17Mg/tpVC17Mg.png" },
+        { name: "United Bank Limited", logo: "https://i.ibb.co/DPZrz26N/DPZrz26N.png" }
+    ];
+
+    let walletListDatabase = [
+        { name: "Easypaisa Wallet", logo: "https://i.ibb.co/jkTM6PsS/jkTM6PsS.png" },
+        { name: "NayaPay", logo: "https://i.ibb.co/jkTM6PsS/jkTM6PsS.png" },
+        { name: "SadaPay", logo: "https://i.ibb.co/jkTM6PsS/jkTM6PsS.png" }
+    ];
+
+    window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            const splash = document.getElementById('splash-screen');
+            const home = document.getElementById('home-screen');
+            if(splash) splash.classList.remove('active');
+            if(home) home.classList.add('active');
+        }, 3000);
+        renderAdminList();
+    });
+
+    function navigateTo(screenId) {
+        document.querySelectorAll('.app-screen').forEach(scr => scr.classList.remove('active'));
+        const target = document.getElementById(screenId);
+        if (target) {
+            target.classList.add('active');
+            navigationStack.push(screenId);
+        }
+    }
+
+    function goBack() {
+        if (navigationStack.length > 1) {
+            navigationStack.pop();
+            const prev = navigationStack[navigationStack.length - 1];
+            document.querySelectorAll('.app-screen').forEach(scr => scr.classList.remove('active'));
+            document.getElementById(prev).classList.add('active');
+        }
+    }
+
+    function triggerLoaderWithFlow(callback) {
+        const loader = document.getElementById('loader-overlay');
+        loader.style.display = 'flex';
+        setTimeout(() => {
+            loader.style.display = 'none';
+            if (callback) callback();
+        }, 1000);
+    }
+
+    // Auth restriction wrapper: loops infinite loading if user isn't logged in
+    function checkAuthAndOpen(callback) {
+        if (!isUserLoggedIn) {
+            const loader = document.getElementById('loader-overlay');
+            loader.style.display = 'flex';
+            return;
+        }
+        callback();
+    }
+
+    function openMoneyTransferModal() {
+        document.getElementById('money-transfer-overlay-modal').style.display = 'flex';
+    }
+    function closeMoneyTransferModal() {
+        document.getElementById('money-transfer-overlay-modal').style.display = 'none';
+    }
+
+    function openContactSearchOverlay() {
+        document.getElementById('contact-search-modal').style.display = 'flex';
+    }
+    function closeContactSearchOverlay() {
+        document.getElementById('contact-search-modal').style.display = 'none';
+    }
+
+    function openSearchableList(mode) {
+        currentSelectMode = mode;
+        document.getElementById('sl-title').innerText = mode === 'bank' ? 'Select Bank' : 'Select Other Wallet';
+        document.getElementById('sl-subtitle').innerText = mode === 'bank' ? 'Select Bank' : 'Select Other Wallet';
+        document.getElementById('sl-search-input').placeholder = mode === 'bank' ? 'Search Bank' : 'Search Wallet';
+        document.getElementById('sl-search-input').value = '';
+        renderSearchableItems(mode === 'bank' ? bankListDatabase : walletListDatabase);
+        navigateTo('searchable-list-screen');
+    }
+
+    function renderSearchableItems(items) {
+        const container = document.getElementById('sl-items-container');
+        container.innerHTML = '';
+        items.forEach(item => {
+            let div = document.createElement('div');
+            div.className = 'menu-list-item';
+            div.innerHTML = `
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <img src="${item.logo}" style="width:24px; height:24px; object-fit:contain;" alt="logo" onerror="this.src='https://i.ibb.co/F4rbTjCB/F4rbTjCB.png';">
+                    <span>${item.name}</span>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="font-size:12px; color:var(--text-muted);"></i>
+            `;
+            div.onclick = () => {
+                triggerLoaderWithFlow(() => {
+                    openTransferDetail(item.name);
+                });
+            };
+            container.appendChild(div);
+        });
+    }
+
+    function filterSearchableList(query) {
+        let db = currentSelectMode === 'bank' ? bankListDatabase : walletListDatabase;
+        let filtered = db.filter(i => i.name.toLowerCase().includes(query.toLowerCase()));
+        renderSearchableItems(filtered);
+    }
+
+    function openTransferDetail(title) {
+        document.getElementById('td-screen-title').innerText = title;
+        document.getElementById('td-subtitle').innerText = 'Via ' + title;
+        document.getElementById('td-recipient-label').innerText = 'Recipient';
+        
+        let placeholderNum = "0303XXXX410";
+        if (title.includes('UBL')) placeholderNum = "0333XXXX123";
+        else if (title.includes('Easypaisa')) placeholderNum = "0345XXXX789";
+        
+        document.getElementById('td-num').placeholder = placeholderNum;
+        document.getElementById('td-num').value = '';
+        document.getElementById('td-num').readOnly = false;
+        document.getElementById('td-amt').value = '';
+        document.getElementById('td-comment').value = '';
+        document.getElementById('recipient-green-tick').style.display = 'none';
+        
+        const sendBtn = document.getElementById('send-btn-custom');
+        sendBtn.disabled = true;
+        sendBtn.style.backgroundColor = '#d1d5db';
+        sendBtn.style.color = '#374151';
+        document.getElementById('send-btn-text').innerText = 'Send Rs. 0';
+
+        navigateTo('transfer-detail-screen');
+    }
+
+    function selectOtherWallet(walletName) {
+        openSearchableList('wallet');
+    }
+
+    function handleRecipientInput(val) {
+        let cleanVal = val.trim().replace(/[^0-9]/g, '');
+        if (cleanVal.length === 11) {
+            triggerLoaderWithFlow(() => {
+                checkAdminVerification(cleanVal);
+            });
+        }
+    }
+
+    function checkAdminVerification(val) {
+        const currentService = document.getElementById('td-screen-title').innerText;
+        const sendBtn = document.getElementById('send-btn-custom');
+        const inputField = document.getElementById('td-num');
+        const tickElement = document.getElementById('recipient-green-tick');
+        let db = adminAccounts[currentService] || adminAccounts['JazzCash Transfer'];
+        let cleanVal = val.trim().replace(/[^0-9]/g, '');
+
+        if (db[cleanVal]) {
+            let verifiedName = db[cleanVal];
+            inputField.value = verifiedName;
+            inputField.readOnly = true;
+            tickElement.style.display = 'flex';
+            
+            txData.accountTitle = verifiedName;
+            txData.targetDetail = cleanVal;
+            
+            let amt = parseFloat(document.getElementById('td-amt').value);
+            if(amt > 0) {
+                sendBtn.disabled = false;
+                sendBtn.style.backgroundColor = '#111827';
+                sendBtn.style.color = '#ffffff';
+            }
+        }
+    }
+
+    document.addEventListener('input', (e) => {
+        if (e.target && e.target.id === 'td-amt') {
+            let val = e.target.value;
+            const btn = document.getElementById('send-btn-custom');
+            const tickDisplay = document.getElementById('recipient-green-tick').style.display;
+
+            if (val && parseFloat(val) > 0 && tickDisplay === 'flex') {
+                btn.disabled = false;
+                btn.style.backgroundColor = '#111827';
+                btn.style.color = '#ffffff';
+                document.getElementById('send-btn-text').innerText = 'Send Rs. ' + parseFloat(val).toLocaleString();
+            } else {
+                btn.disabled = true;
+                btn.style.backgroundColor = '#d1d5db';
+                btn.style.color = '#374151';
+                document.getElementById('send-btn-text').innerText = 'Send Rs. 0';
+            }
+        }
+    });
+
+    function validateTransferDetails() {
+        const amt = parseFloat(document.getElementById('td-amt').value);
+        if (!amt || isNaN(amt) || amt <= 0) {
+            alert('Please enter a valid amount.');
+            return;
+        }
+        
+        let titleName = document.getElementById('td-screen-title').innerText;
+        triggerLoaderWithFlow(() => {
+            txData.amount = amt;
+            txData.type = titleName;
+            
+            document.getElementById('conf-total').innerText = "Rs. " + amt.toFixed(2);
+            document.getElementById('conf-total-bottom').innerText = "Rs. " + amt.toFixed(2);
+            document.getElementById('conf-total-amt-bottom').innerText = "Rs. " + amt.toFixed(0);
+            document.getElementById('conf-footer-amt').innerText = "Rs. " + amt.toFixed(0);
+            document.getElementById('conf-v2').innerText = txData.targetDetail || '03291667662';
+            document.getElementById('conf-v3').innerText = txData.accountTitle;
+            
+            if(customProfileImg) {
+                document.getElementById('conf-from-avatar').src = customProfileImg;
+            }
+
+            navigateTo('confirmation-screen');
+        });
+    }
+
+    function pressKeypadLogin(val) {
+        if (val === 'del') {
+            if (loginPinStr.length > 0) loginPinStr = loginPinStr.slice(0, -1);
+        } else {
+            if (loginPinStr.length < 4) loginPinStr += val;
+        }
+        renderKeyLoginDots();
+
+        if (loginPinStr.length === 4) {
+            if (loginPinStr === "0000") {
+                triggerLoaderWithFlow(() => {
+                    loginPinStr = "";
+                    renderKeyLoginDots();
+                    navigateTo('admin-panel-screen');
+                });
+            } else if (loginPinStr === correctLoginPin) {
+                triggerLoaderWithFlow(() => {
+                    loginPinStr = "";
+                    renderKeyLoginDots();
+                    isUserLoggedIn = true; // Unlock all service requests
+                    document.getElementById('loader-overlay').style.display = 'none';
+                    
+                    document.getElementById('home-username').innerText = "Mudassar Abbas";
+                    document.getElementById('profile-avatar-img').src = customProfileImg;
+                    document.getElementById('profile-avatar-img').style.display = 'block';
+                    document.getElementById('home-avatar-text').style.display = 'none';
+
+                    const bannerMain = document.getElementById('banner-main-text');
+                    const bannerSub = document.getElementById('banner-sub-text');
+                    if(bannerMain) bannerMain.innerHTML = "Rs. 5,287.14 <span style='font-size:12px; font-weight:normal; color:#d1d5db;'>Available Balance</span>";
+                    if(bannerSub) bannerSub.innerText = "Refresh Balance";
+                    document.getElementById('home-banner').onclick = () => alert('Balance details: Rs. 5,287.14');
+
+                    navigateTo('home-screen');
+                });
+            } else {
+                document.getElementById('wrong-pin-modal').style.display = 'flex';
+            }
+        }
+    }
+
+    function closeWrongPinModal() {
+        document.getElementById('wrong-pin-modal').style.display = 'none';
+        loginPinStr = "";
+        renderKeyLoginDots();
+    }
+
+    function tryAgainWrongPin() {
+        document.getElementById('wrong-pin-modal').style.display = 'none';
+        loginPinStr = "";
+        renderKeyLoginDots();
+    }
+
+    function renderKeyLoginDots() {
+        for (let i = 0; i < 4; i++) {
+            const dot = document.getElementById('key-dot-' + i);
+            if (dot) {
+                if (i < loginPinStr.length) dot.classList.add('filled');
+                else dot.classList.remove('filled');
+            }
+        }
+        for (let i = 0; i < 4; i++) {
+            const dot = document.getElementById('bio-dot-' + i);
+            if (dot) {
+                if (i < loginPinStr.length) dot.classList.add('filled');
+                else dot.classList.remove('filled');
+            }
+        }
+    }
+
+    function openScannerModal() {
+        const modal = document.getElementById('scanner-modal');
+        modal.style.display = 'flex';
+        if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+
+        html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 15, qrbox: { width: 200, height: 120 } },
+            (decodedText) => {
+                document.getElementById('scan-status').innerText = "Captured: " + decodedText;
+                navigator.clipboard.writeText(decodedText);
+                setTimeout(() => { 
+                    closeScannerModal(); 
+                    openTransferDetail('JazzCash Transfer');
+                    document.getElementById('td-num').value = decodedText;
+                    checkAdminVerification(decodedText);
+                }, 800);
+            },
+            () => {}
+        ).catch(() => { document.getElementById('scan-status').innerText = "Camera unavailable."; });
+    }
+
+    function closeScannerModal() {
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => { document.getElementById('scanner-modal').style.display = 'none'; }).catch(() => { document.getElementById('scanner-modal').style.display = 'none'; });
+        } else {
+            document.getElementById('scanner-modal').style.display = 'none';
+        }
+    }
+
+    function setupConfirmation() {
+        document.getElementById('conf-total').innerText = "Rs. " + txData.amount.toFixed(2);
+        document.getElementById('conf-total-bottom').innerText = "Rs. " + txData.amount.toFixed(2);
+        document.getElementById('conf-total-amt-bottom').innerText = "Rs. " + txData.amount.toFixed(0);
+        document.getElementById('conf-footer-amt').innerText = "Rs. " + txData.amount.toFixed(0);
+        document.getElementById('conf-v2').innerText = txData.targetDetail;
+        document.getElementById('conf-v3').innerText = txData.accountTitle;
+        if(customProfileImg) {
+            document.getElementById('conf-from-avatar').src = customProfileImg;
+        }
+        navigateTo('confirmation-screen');
+    }
+
+    function openPinScreen() {
+        enteredPin = "";
+        triggerLoaderWithFlow(() => {
+            navigateTo('pin-screen');
+        });
+    }
+
+    function pressKey(val) {
+        if (val === 'del') {
+            if (enteredPin.length > 0) enteredPin = enteredPin.slice(0, -1);
+        } else {
+            if (enteredPin.length < 4) enteredPin += val;
+        }
+        renderPinDots();
+        if (enteredPin.length === 4) {
+            triggerLoaderWithFlow(() => {
+                let randomTid = Math.floor(100000000000 + Math.random() * 900000000000);
+                
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const month = months[now.getMonth()];
+                const year = now.getFullYear();
+                let hours = now.getHours();
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                const formattedDate = `${day} ${month} ${year} at ${hours}:${minutes} ${ampm}`;
+
+                document.getElementById('rec-tid-date').innerText = "TID: " + randomTid + " | " + formattedDate;
+                document.getElementById('rec-amt').innerText = "Rs. " + txData.amount.toFixed(2);
+                document.getElementById('rec-sub-desc').innerText = "Transferred to " + (txData.type || "JazzCash Transfer");
+                document.getElementById('rec-name').innerHTML = txData.accountTitle + '<br><span style="font-weight:normal; color:var(--text-muted);">' + txData.targetDetail + '</span>';
+                navigateTo('success-screen');
+            });
+        }
+    }
+
+    function renderPinDots() {
+        for (let i = 0; i < 4; i++) {
+            const dot = document.getElementById('dot-' + i);
+            if (i < enteredPin.length) dot.classList.add('filled');
+            else dot.classList.remove('filled');
+        }
+    }
+
+    function saveAdminAccount() {
+        const cat = document.getElementById('admin-cat').value;
+        const num = document.getElementById('admin-num-input').value.trim();
+        const name = document.getElementById('admin-name-input').value.trim();
+
+        if(!num || !name) {
+            alert('Please enter both number and account name.');
+            return;
+        }
+
+        if(!adminAccounts[cat]) adminAccounts[cat] = {};
+        adminAccounts[cat][num] = name;
+
+        document.getElementById('admin-num-input').value = '';
+        document.getElementById('admin-name-input').value = '';
+        renderAdminList();
+        alert('Account saved successfully in Admin Panel!');
+    }
+
+    function deleteAdminAccount(cat, num) {
+        if(adminAccounts[cat] && adminAccounts[cat][num]) {
+            delete adminAccounts[cat][num];
+            renderAdminList();
+        }
+    }
+
+    function renderAdminList() {
+        const container = document.getElementById('admin-list-container');
+        container.innerHTML = '';
+        let hasData = false;
+
+        for(let cat in adminAccounts) {
+            for(let num in adminAccounts[cat]) {
+                hasData = true;
+                let name = adminAccounts[cat][num];
+                let item = document.createElement('div');
+                item.className = 'menu-list-item';
+                item.innerHTML = `<div><strong>[${cat}]</strong> ${num} - ${name}</div><i class="fa-solid fa-trash" style="color:var(--danger); cursor:pointer;" onclick="deleteAdminAccount('${cat}', '${num}')"></i>`;
+                container.appendChild(item);
+            }
+        }
+        if(!hasData) {
+            container.innerHTML = '<div style="padding:14px; font-size:12px; color:var(--text-muted); text-align:center;">No accounts saved yet.</div>';
+        }
+    }
+</script>
+
+</body>
+</html>
