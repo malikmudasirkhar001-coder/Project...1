@@ -193,6 +193,13 @@
             font-size: 20px;
             margin-bottom: 8px;
             background: #fff;
+            overflow: hidden;
+        }
+        .bp-icon-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 8px;
         }
         .bp-label {
             font-size: 11px;
@@ -256,7 +263,7 @@
         </div>
     </div>
 
-    <!-- 1. Category Selection Screen -->
+    <!-- 1. Category Selection Screen with reordered custom image links -->
     <div id="screen-categories" class="app-screen active">
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:10px;">
@@ -268,28 +275,34 @@
         <div class="page-content" style="justify-content:flex-start;">
             <div style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 15px;">Select Category</div>
             <div class="bp-grid">
+                <!-- 1. My Favorites -> Link 6 -->
                 <div class="bp-item" onclick="selectBillCategory('My Favorites')">
-                    <div class="bp-icon-circle" style="color:#d97706;"><i class="fa-solid fa-star"></i></div>
+                    <div class="bp-icon-circle"><img src="https://i.ibb.co/wZ1xb5zs/icon6.png" alt="My Favorites" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-star\' style=\'color:#d97706;\'></i>';"></div>
                     <div class="bp-label">My Favorites</div>
                 </div>
+                <!-- 2. Electricity -> Link 5 -->
                 <div class="bp-item" onclick="selectBillCategory('Electricity')">
-                    <div class="bp-icon-circle" style="color:#2563eb;"><i class="fa-solid fa-bolt"></i></div>
+                    <div class="bp-icon-circle"><img src="https://i.ibb.co/20FsYZvd/icon5.png" alt="Electricity" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-bolt\' style=\'color:#2563eb;\'></i>';"></div>
                     <div class="bp-label">Electricity</div>
                 </div>
+                <!-- 3. Gas -> Link 4 -->
                 <div class="bp-item" onclick="selectBillCategory('Gas')">
-                    <div class="bp-icon-circle" style="color:#dc2626;"><i class="fa-solid fa-fire"></i></div>
+                    <div class="bp-icon-circle"><img src="https://i.ibb.co/k2BM6Thy/icon4.png" alt="Gas" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-fire\' style=\'color:#dc2626;\'></i>';"></div>
                     <div class="bp-label">Gas</div>
                 </div>
+                <!-- 4. Water -> Link 3 -->
                 <div class="bp-item" onclick="selectBillCategory('Water')">
-                    <div class="bp-icon-circle" style="color:#0ea5e9;"><i class="fa-solid fa-droplet"></i></div>
+                    <div class="bp-icon-circle"><img src="https://i.ibb.co/pjsHpv4G/icon3.png" alt="Water" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-droplet\' style=\'color:#0ea5e9;\'></i>';"></div>
                     <div class="bp-label">Water</div>
                 </div>
+                <!-- 5. Internet -> Link 2 -->
                 <div class="bp-item" onclick="selectBillCategory('Internet')">
-                    <div class="bp-icon-circle" style="color:#7c3aed;"><i class="fa-solid fa-globe"></i></div>
+                    <div class="bp-icon-circle"><img src="https://i.ibb.co/4Rdkt4sq/icon2.png" alt="Internet" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-globe\' style=\'color:#7c3aed;\'></i>';"></div>
                     <div class="bp-label">Internet</div>
                 </div>
+                <!-- 6. Telephone -> Link 1 -->
                 <div class="bp-item" onclick="selectBillCategory('Telephone')">
-                    <div class="bp-icon-circle" style="color:#059669;"><i class="fa-solid fa-phone"></i></div>
+                    <div class="bp-icon-circle"><img src="https://i.ibb.co/hJYkx251/icon1.png" alt="Telephone" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-phone\' style=\'color:#059669;\'></i>';"></div>
                     <div class="bp-label">Telephone</div>
                 </div>
             </div>
@@ -444,7 +457,7 @@
         </div>
     </div>
 
-    <!-- 5. Transaction Successful Receipt Screen (Matching 105115.jpg) -->
+    <!-- 5. Transaction Successful Receipt Screen -->
     <div id="screen-success" class="app-screen" style="background-color: #121212;">
         <div class="top-bar" style="background:#121212; border:none;">
             <div style="width:32px;"></div>
@@ -653,7 +666,7 @@
 
                     let amt = document.getElementById('bill-amt').value;
 
-                    // Populate success receipt matching 105115.jpg
+                    // Populate success receipt
                     document.getElementById('rec-tid-date').innerText = "TID: " + randomTid + " | " + formattedDate;
                     document.getElementById('rec-amt').innerText = "Rs. " + parseFloat(amt).toFixed(2);
                     document.getElementById('rec-sub-desc').innerText = "Transferred to " + selectedCategoryName + " Bill";
