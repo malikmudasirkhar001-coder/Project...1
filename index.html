@@ -6,6 +6,7 @@
     <title>JazzCash - Digital Wallet App</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="jazzcash-storage.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     
     <style>
@@ -635,11 +636,11 @@
             <div class="input-group-custom">
                 <label class="input-label">Select Wallet / Category</label>
                 <select class="custom-input" id="admin-cat">
-                    <option value="JazzCash">JazzCash Transfer</option>
+                    <option value="JazzCash Transfer">JazzCash Transfer</option>
                     <option value="Easypaisa">Easypaisa Wallet</option>
-                    <option value="Bank">Bank Transfer</option>
-                    <option value="CNIC">CNIC Transfer</option>
-                    <option value="Raast">Raast ID</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="CNIC Transfer">CNIC Transfer</option>
+                    <option value="Raast ID">Raast ID</option>
                 </select>
             </div>
             <div class="input-group-custom">
@@ -651,6 +652,16 @@
                 <input type="text" class="custom-input" id="admin-name-input" placeholder="e.g. MUDASIR ABBAS">
             </div>
             <button class="btn-black-custom" onclick="saveAdminAccount()">Save / Add Account</button>
+
+            <div style="margin-top:24px; padding-top:18px; border-top:1px solid var(--border-color);">
+                <div style="font-weight:700; font-size:14px; margin-bottom:5px;">Add wallet balance</div>
+                <div style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">Simulation-only top-up. It will appear in Account Statement as Received.</div>
+                <div style="display:flex; gap:8px;">
+                    <input type="number" min="1" step="0.01" class="custom-input" id="admin-topup-amount" placeholder="Amount (PKR)">
+                    <button class="btn-black-custom" style="width:auto; white-space:nowrap; padding:12px 16px;" onclick="adminTopUp()">Add</button>
+                </div>
+                <div style="font-size:12px; font-weight:600; margin-top:9px;">Current balance: <span id="admin-balance">Rs. 5,000.00</span></div>
+            </div>
 
             <div style="margin-top: 25px; font-weight:700; font-size:14px; margin-bottom:10px;">Saved Accounts List</div>
             <div class="menu-list-card" id="admin-list-container"></div>
@@ -871,14 +882,14 @@
                 </div>
                 <!-- + Money and Loan buttons linked to add-money.html and loan.html -->
                 <div style="display: flex; gap: 8px;">
-                    <button onclick="triggerLoaderWithFlow(() => window.location.href='add-money.html')" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 700; cursor: pointer;">+ Money</button>
+                    <button onclick="triggerLoaderWithFlow(() => window.location.href='profile.html')" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 700; cursor: pointer;">+ Money</button>
                     <button onclick="triggerLoaderWithFlow(() => window.location.href='loan.html')" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 700; cursor: pointer;">Loan</button>
                 </div>
             </div>
 
-            <div class="login-prompt-banner" id="home-banner" onclick="navigateTo('login-keypad-screen')">
-                <div class="login-title" id="banner-main-text">Log in <i class="fa-solid fa-arrow-right" style="font-size:16px;"></i></div>
-                <div class="login-subtitle" id="banner-sub-text">to Make Payments</div>
+            <div class="login-prompt-banner" id="home-banner" onclick="window.location.href='profile.html'">
+                <div class="login-title" id="banner-main-text">Rs. 5,000.00</div>
+                <div class="login-subtitle" id="banner-sub-text">Available Balance · View account</div>
             </div>
         </div>
 
@@ -1265,7 +1276,7 @@
     let html5QrCode = null;
     let customProfileImg = "https://i.ibb.co/3Y74Vy3y/3Y74Vy3y.png";
     let currentSelectMode = 'bank';
-    let isUserLoggedIn = false; // Auth state flag
+    let isUserLoggedIn = true; // Demo wallet is ready; every payment still requires MPIN.
 
     let adminAccounts = {
         'JazzCash Transfer': { '03291667662': 'MUDASIR ABBAS' },
@@ -1320,8 +1331,22 @@
             if(splash) splash.classList.remove('active');
             if(home) home.classList.add('active');
         }, 3000);
+        refreshHomeBalance();
         renderAdminList();
     });
+
+    function refreshHomeBalance() {
+        const amount = JazzCashStore.getBalance();
+        const bannerMain = document.getElementById('banner-main-text');
+        const bannerSub = document.getElementById('banner-sub-text');
+        const adminBalance = document.getElementById('admin-balance');
+        if (bannerMain) bannerMain.innerText = 'Rs. ' + JazzCashStore.formatMoney(amount);
+        if (bannerSub) bannerSub.innerText = 'Available Balance · View account';
+        if (adminBalance) adminBalance.innerText = 'Rs. ' + JazzCashStore.formatMoney(amount);
+    }
+
+    window.addEventListener('jazzcash:balance', refreshHomeBalance);
+    window.addEventListener('storage', refreshHomeBalance);
 
     function navigateTo(screenId) {
         document.querySelectorAll('.app-screen').forEach(scr => scr.classList.remove('active'));
@@ -1552,9 +1577,7 @@
 
                     const bannerMain = document.getElementById('banner-main-text');
                     const bannerSub = document.getElementById('banner-sub-text');
-                    if(bannerMain) bannerMain.innerHTML = "Rs. 5,287.14 <span style='font-size:12px; font-weight:normal; color:#d1d5db;'>Available Balance</span>";
-                    if(bannerSub) bannerSub.innerText = "Refresh Balance";
-                    document.getElementById('home-banner').onclick = () => alert('Balance details: Rs. 5,287.14');
+                    refreshHomeBalance();
 
                     navigateTo('home-screen');
                 });
@@ -1651,23 +1674,26 @@
         }
         renderPinDots();
         if (enteredPin.length === 4) {
+            if (enteredPin !== correctLoginPin) {
+                alert('Incorrect MPIN! Please enter 0990');
+                enteredPin = "";
+                renderPinDots();
+                return;
+            }
+            const result = JazzCashStore.recordTransaction({
+                title: txData.type || 'JazzCash Transfer',
+                amount: txData.amount,
+                detail: txData.accountTitle + ' · ' + txData.targetDetail
+            });
+            if (!result.ok) {
+                alert(result.error);
+                enteredPin = "";
+                renderPinDots();
+                return;
+            }
             triggerLoaderWithFlow(() => {
-                let randomTid = Math.floor(100000000000 + Math.random() * 900000000000);
-                
-                const now = new Date();
-                const day = String(now.getDate()).padStart(2, '0');
-                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                const month = months[now.getMonth()];
-                const year = now.getFullYear();
-                let hours = now.getHours();
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-                const ampm = hours >= 12 ? 'PM' : 'AM';
-                hours = hours % 12;
-                hours = hours ? hours : 12;
-                const formattedDate = `${day} ${month} ${year} at ${hours}:${minutes} ${ampm}`;
-
-                document.getElementById('rec-tid-date').innerText = "TID: " + randomTid + " | " + formattedDate;
-                document.getElementById('rec-amt').innerText = "Rs. " + txData.amount.toFixed(2);
+                document.getElementById('rec-tid-date').innerText = "TID: " + result.entry.tid + " | " + result.entry.date;
+                document.getElementById('rec-amt').innerText = "Rs. " + JazzCashStore.formatMoney(result.entry.amount);
                 document.getElementById('rec-sub-desc').innerText = "Transferred to " + (txData.type || "JazzCash Transfer");
                 document.getElementById('rec-name').innerHTML = txData.accountTitle + '<br><span style="font-weight:normal; color:var(--text-muted);">' + txData.targetDetail + '</span>';
                 navigateTo('success-screen');
@@ -1707,6 +1733,18 @@
             delete adminAccounts[cat][num];
             renderAdminList();
         }
+    }
+
+    function adminTopUp() {
+        const field = document.getElementById('admin-topup-amount');
+        const result = JazzCashStore.addBalance(field.value, 'Wallet Top-up');
+        if (!result.ok) {
+            alert(result.error);
+            return;
+        }
+        field.value = '';
+        refreshHomeBalance();
+        alert('Balance added successfully: Rs. ' + JazzCashStore.formatMoney(result.entry.amount));
     }
 
     function renderAdminList() {
