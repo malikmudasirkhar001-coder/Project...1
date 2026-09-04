@@ -638,6 +638,62 @@
             border: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
+            position: relative;
+        }
+        .scanner-ocr-loading {
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+            background: rgba(17, 24, 39, .82);
+            color: #fff;
+        }
+        .scanner-ocr-loading.visible {
+            display: flex;
+        }
+        .scanner-ocr-loading-card {
+            width: 100%;
+            padding: 22px 16px;
+            border-radius: 18px;
+            background: rgba(255,255,255,.98);
+            color: #111827;
+            box-shadow: 0 12px 35px rgba(0,0,0,.3);
+        }
+        .scanner-ocr-spinner {
+            width: 42px;
+            height: 42px;
+            margin: 0 auto 12px;
+            border: 4px solid #e5e7eb;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: scannerSpin .8s linear infinite;
+        }
+        @keyframes scannerSpin {
+            to { transform: rotate(360deg); }
+        }
+        .scanner-ocr-progress {
+            height: 6px;
+            margin-top: 12px;
+            overflow: hidden;
+            border-radius: 99px;
+            background: #e5e7eb;
+        }
+        .scanner-ocr-progress::after {
+            content: "";
+            display: block;
+            width: 42%;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--primary), var(--yellow-accent), var(--primary));
+            animation: scannerProgress 1.2s ease-in-out infinite;
+        }
+        @keyframes scannerProgress {
+            0% { transform: translateX(-120%); }
+            100% { transform: translateX(280%); }
         }
         .scanner-header-bar {
             padding: 12px 16px;
@@ -1068,12 +1124,20 @@
                 <span>QR</span>
                 <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeScannerModal()"></i>
             </div>
+            <div id="scanner-ocr-loading" class="scanner-ocr-loading" aria-live="polite">
+                <div class="scanner-ocr-loading-card">
+                    <div class="scanner-ocr-spinner"></div>
+                    <div style="font-size:15px; font-weight:700;">Reading your picture</div>
+                    <div id="scanner-ocr-loading-text" style="font-size:12px; color:var(--text-muted); margin-top:6px;">Preparing the image…</div>
+                    <div class="scanner-ocr-progress"></div>
+                </div>
+            </div>
             <div style="display:flex; background:#fff; border-bottom:1px solid var(--border-color);">
                 <button id="scan-tab-btn" class="btn-outline-custom" style="border:0; border-radius:0; padding:10px; flex:1;" onclick="showScanTab('scan')">Scan QR</button>
                 <button id="my-qr-tab-btn" class="btn-outline-custom" style="border:0; border-radius:0; padding:10px; flex:1; color:var(--text-muted);" onclick="showScanTab('myqr')">My QR</button>
             </div>
             <div id="scan-tab-content">
-                <div class="scanner-preview" id="scanner-preview">
+                <div class="scanner-preview">
                     <div id="reader"></div>
                     <video id="native-camera-video" autoplay muted playsinline></video>
                     <div class="scanner-brand-mark">
@@ -1083,13 +1147,12 @@
                     <div class="scanner-line"></div>
                     <div style="position:absolute; left:0; right:0; bottom:12px; text-align:center; color:#fff; font-size:11px; z-index:3;">Place QR or text inside the frame</div>
                 </div>
-                <div class="scanner-help" id="scan-status">Camera is starting… Smart Scan will read QR codes or visible text automatically.</div>
+                <div class="scanner-help" id="scan-status">Point the camera at a QR code, then confirm the captured text.</div>
                 <div style="padding:10px 12px 14px; background:#fff;">
                     <input id="scan-text-input" class="custom-input" placeholder="Captured text / number / TID">
-                    <button class="btn-black-custom" style="margin-top:8px;" onclick="smartCaptureScannerFrame()"><i class="fa-solid fa-wand-magic-sparkles"></i> Smart Scan QR / Text</button>
+                    <button class="btn-outline-custom" style="margin-top:8px;" onclick="readScannerText()"><i class="fa-solid fa-language"></i> Read Urdu / English text</button>
                     <input id="scanner-file-input" type="file" accept="image/*" capture="environment" style="display:none;" onchange="readScannerImage(this.files[0])">
-                    <button class="btn-outline-custom" style="margin-top:8px;" onclick="document.getElementById('scanner-file-input').click()"><i class="fa-solid fa-camera"></i> Take picture &amp; read automatically</button>
-                    <button class="btn-outline-custom" style="margin-top:8px;" onclick="readScannerText()"><i class="fa-solid fa-language"></i> Read visible Urdu / English text again</button>
+                    <button class="btn-outline-custom" style="margin-top:8px;" onclick="document.getElementById('scanner-file-input').click()"><i class="fa-solid fa-camera"></i> Capture & copy text</button>
                     <button class="btn-outline-custom" style="margin-top:8px;" onclick="useDemoScan()"><i class="fa-solid fa-bolt"></i> Use test scan</button>
                     <button class="btn-black-custom" style="margin-top:8px;" onclick="captureScannerText()">Use captured text <i class="fa-solid fa-arrow-right"></i></button>
                 </div>
@@ -1514,17 +1577,40 @@
         </div>
         <div class="page-content" style="padding:16px 12px 75px;">
             <div style="background:#ecfdf5; border:1px solid #86efac; border-radius:15px; padding:14px; margin-bottom:15px;">
-                <div style="color:#15803d; font-size:12px; font-weight:700;"><i class="fa-solid fa-circle-check"></i> Validated recipient</div>
-                <div style="font-size:17px; font-weight:700; margin-top:9px;" id="scan-recipient-name">NOMAN</div>
+                <div style="color:#15803d; font-size:12px; font-weight:700;"><i class="fa-solid fa-circle-check"></i> Number detected</div>
+                <div style="font-size:17px; font-weight:700; margin-top:9px;" id="scan-recipient-number">—</div>
                 <div style="font-size:11px; color:#166534; margin-top:3px;">TID: <span id="scan-recipient-tid">—</span></div>
-                <div style="font-size:10px; color:#166534; margin-top:3px;">Captured text: <span id="scan-recipient-text">—</span></div>
+                <div style="font-size:10px; color:#166534; margin-top:3px;">Only the numeric recipient number is used from the scan.</div>
             </div>
             <div class="input-group-custom">
-                <label class="input-label">Recipient number / Account ID</label>
+                <label class="input-label">Detected number / Account ID</label>
                 <input id="scan-number-input" type="text" inputmode="numeric" class="custom-input" placeholder="03XX-XXXXXXX or Account ID" oninput="updateScanAmountButton()">
             </div>
             <div class="input-group-custom"><label class="input-label">Amount (PKR)</label><input id="scan-amount-input" type="number" class="custom-input" placeholder="Rs. 0" oninput="updateScanAmountButton()"></div>
-            <button class="btn-black-custom" id="scan-amount-next-btn" disabled style="background:#d1d5db; color:#374151;" onclick="goScannedReview()">Next <i class="fa-solid fa-arrow-right"></i></button>
+            <button class="btn-black-custom" id="scan-amount-next-btn" disabled style="background:#d1d5db; color:#374151;" onclick="goScannedName()">Next <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <div id="scanner-name-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;"><button class="back-btn" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i></button><span class="screen-title">Recipient Details</span></div>
+            <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content" style="padding:18px 12px 75px;">
+            <div style="background:#f9fafb; border:1px solid var(--border-color); border-radius:15px; padding:14px; margin-bottom:18px;">
+                <div style="font-size:11px; color:var(--text-muted);">Amount to send</div>
+                <div id="scan-name-amount" style="font-size:22px; font-weight:700; margin-top:5px;">Rs. 0.00</div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Number: <span id="scan-name-number">—</span></div>
+            </div>
+            <div class="input-group-custom">
+                <label class="input-label">Recipient name</label>
+                <input id="scan-name-input" type="text" class="custom-input" placeholder="Write the recipient name" maxlength="60" oninput="updateScanNameButton()">
+            </div>
+            <div class="input-group-custom">
+                <label class="input-label">Statement (Optional)</label>
+                <input id="scan-statement-input" type="text" class="custom-input" placeholder="Write a statement" maxlength="80">
+            </div>
+            <button class="btn-black-custom" id="scan-name-next-btn" disabled style="background:#d1d5db; color:#374151;" onclick="goScannedReview()">Review transaction <i class="fa-solid fa-arrow-right"></i></button>
         </div>
     </div>
 
@@ -1605,6 +1691,9 @@
                         <div style="font-size:11px; color:var(--text-muted);" id="conf-v2">03291667662</div>
                         <div style="font-size:10px; color:var(--text-muted); margin-top:3px;" id="conf-tid">TID: —</div>
                     </div>
+                </div>
+                <div id="conf-statement-row" style="display:none; margin:0 0 14px; padding:10px 12px; border-radius:10px; background:#f9fafb; font-size:11px; color:var(--text-main);">
+                    <span style="color:var(--text-muted);">Statement:</span> <span id="conf-statement"></span>
                 </div>
 
                 <div style="border-bottom: 1px dashed var(--border-color); margin-bottom: 14px;"></div>
@@ -1737,6 +1826,7 @@
 
                 <div class="receipt-row"><span class="receipt-label">Fee</span><span class="receipt-value">Rs. 0.00</span></div>
                 <div class="receipt-row"><span class="receipt-label">To</span><span class="receipt-value" id="rec-name" style="text-align:right;">MUDASIR ABBAS<br><span style="font-weight:normal; color:var(--text-muted);" id="rec-num">03291667662</span></span></div>
+                <div class="receipt-row" id="rec-statement-row" style="display:none;"><span class="receipt-label">Statement</span><span class="receipt-value" id="rec-statement" style="text-align:right;"></span></div>
                 <div class="receipt-row"><span class="receipt-label">From</span><span class="receipt-value" style="text-align:right;">AZIZ BIBI<br><span style="font-weight:normal; color:var(--text-muted);">03084191378</span></span></div>
 
                 <div style="text-align:center; margin-top:20px; font-size:11px; color:var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 12px; display: flex; align-items: center; justify-content: center; gap: 6px;">
@@ -2080,7 +2170,7 @@
     let navigationStack = ['home-screen'];
     let loginPinStr = "";
     let correctLoginPin = "0303";
-    let txData = { type: '', targetName: '', targetDetail: '', amount: 0, accountTitle: 'MUDASIR ABBAS' };
+    let txData = { type: '', targetName: '', targetDetail: '', amount: 0, accountTitle: 'MUDASIR ABBAS', statement: '' };
     let enteredPin = "";
     let html5QrCode = null;
     let customProfileImg = "https://i.ibb.co/3Y74Vy3y/3Y74Vy3y.png";
@@ -2088,10 +2178,12 @@
     let isUserLoggedIn = false; // Auth state flag
     let billState = { category: '', reference: '', recipient: '', amount: 0, pin: '' };
     let loadState = { service: '', operator: 'Jazz', number: '', amount: 0, pin: '' };
-    let scanState = { text: '', name: 'NOMAN', number: '', tid: '', amount: 0 };
+    let scanState = { text: '', name: '', number: '', tid: '', amount: 0, statement: '' };
     let scannerStarted = false;
     let nativeCameraStream = null;
     let nativeScanTimer = null;
+    let automaticTextCaptureTimer = null;
+    let automaticTextCaptureRunning = false;
     let scannerBusy = false;
     let transactions = [];
     let walletBalance = Number(localStorage.getItem('jazzcash_wallet_balance') || '5287.14');
@@ -2402,6 +2494,7 @@
             type: data.type || 'JazzCash Transfer',
             recipient: data.recipient || 'NOMAN',
             detail: data.detail || '',
+            statement: data.statement || data.comment || '',
             amount: Number(data.amount || 0),
             direction: data.direction || 'out',
             status: 'Successful',
@@ -2432,7 +2525,7 @@
                 <div class="statement-icon"><i class="fa-solid ${item.type.toLowerCase().includes('bill') ? 'fa-file-invoice-dollar' : item.type.toLowerCase().includes('load') ? 'fa-mobile-screen-button' : 'fa-arrow-up-right-from-square'}"></i></div>
                 <div class="statement-meta">
                     <div class="statement-title">${escapeHtml(item.type)}</div>
-                    <div class="statement-subtitle">${escapeHtml(item.recipient)}${item.detail ? ' · ' + escapeHtml(item.detail) : ''}<br>${formatStatementDate(item.date)} · TID ${escapeHtml(item.id)}</div>
+                    <div class="statement-subtitle">${escapeHtml(item.recipient)}${item.detail ? ' · ' + escapeHtml(item.detail) : ''}${item.statement ? '<br>Statement: ' + escapeHtml(item.statement) : ''}<br>${formatStatementDate(item.date)} · TID ${escapeHtml(item.id)}</div>
                 </div>
                 <div><div class="statement-amount" style="color:${item.direction === 'in' ? 'var(--success-green)' : 'var(--primary)'};">${item.direction === 'in' ? '+' : '-'} Rs. ${item.amount.toFixed(2)}</div><div class="statement-status">${escapeHtml(item.status)}</div></div>
             </div>
@@ -3026,7 +3119,8 @@
             );
             scannerStarted = true;
             preview.classList.add('camera-live');
-            status.innerText = 'Camera is on. Point it at the QR code or printed details.';
+            status.innerText = 'Camera is on. Hold text steady; auto-capture will read it.';
+            scheduleAutomaticTextCapture();
         } catch (firstError) {
             try {
                 const cameras = await Html5Qrcode.getCameras();
@@ -3036,7 +3130,8 @@
                 await html5QrCode.start(cameraId, scannerConfig(), onDecoded, () => {});
                 scannerStarted = true;
                 preview.classList.add('camera-live');
-                status.innerText = 'Camera is on. Point it at the QR code or printed details.';
+                status.innerText = 'Camera is on. Hold text steady; auto-capture will read it.';
+                scheduleAutomaticTextCapture();
             } catch (error) {
                 try { await html5QrCode.clear(); } catch (clearError) {}
                 html5QrCode = null;
@@ -3079,8 +3174,9 @@
             try { await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }); } catch (error) {}
         }
         try { await video.play(); } catch (error) {}
-        status.innerText = 'Camera is on. Point it at the QR code or printed details.';
+        status.innerText = 'Camera is on. Hold text steady; auto-capture will read it.';
         startNativeBarcodeDetection(video, onDecoded, status);
+        scheduleAutomaticTextCapture();
     }
 
     async function startNativeBarcodeDetection(video, onDecoded, status) {
@@ -3103,7 +3199,7 @@
             };
             detect();
         } catch (error) {
-            status.innerText = 'Camera is on. Point it at the QR code or use Read visible English text.';
+            status.innerText = 'Camera is on. Hold text steady; auto-capture will read it.';
         }
     }
 
@@ -3115,6 +3211,7 @@
         document.getElementById('scan-text-input').value = '';
         document.getElementById('scanner-file-input').value = '';
         document.getElementById('scan-status').innerText = 'Starting camera…';
+        setScannerOcrLoading(false);
         // Starting after the modal is painted fixes the blank/black preview on mobile browsers.
         requestAnimationFrame(() => startScannerCamera());
     }
@@ -3131,78 +3228,64 @@
         qrButton.style.color = scanning ? 'var(--text-muted)' : '#111827';
     }
 
-    function getScannerVideo() {
-        if (nativeCameraStream) return document.getElementById('native-camera-video');
-        return document.querySelector('#reader video');
+    function setScannerOcrLoading(visible, message) {
+        const overlay = document.getElementById('scanner-ocr-loading');
+        const messageBox = document.getElementById('scanner-ocr-loading-text');
+        if (!overlay) return;
+        overlay.classList.toggle('visible', Boolean(visible));
+        if (message && messageBox) messageBox.innerText = message;
     }
 
-    function normalizeScannerDigits(value) {
-        return String(value || '')
-            .replace(/[۰-۹]/g, digit => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
-            .replace(/[٠-٩]/g, digit => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
+    function scheduleAutomaticTextCapture(delay = 1800) {
+        if (automaticTextCaptureTimer || automaticTextCaptureRunning || scannerBusy) return;
+        automaticTextCaptureTimer = setTimeout(() => {
+            automaticTextCaptureTimer = null;
+            captureAutomaticText();
+        }, delay);
     }
 
-    function normalizeScannerText(value) {
-        return normalizeScannerDigits(value)
-            .replace(/\u200f|\u200e/g, '')
-            .replace(/[ \t\r\n]+/g, ' ')
-            .trim();
-    }
-
-    async function detectBarcodeFromCanvas(canvas) {
-        if (!('BarcodeDetector' in window)) return '';
-        try {
-            const supported = await BarcodeDetector.getSupportedFormats();
-            const formats = supported.filter(format =>
-                ['qr_code', 'aztec', 'data_matrix', 'pdf417', 'code_128'].includes(format)
-            );
-            const detector = formats.length ? new BarcodeDetector({ formats }) : new BarcodeDetector();
-            const codes = await detector.detect(canvas);
-            return String(codes.find(code => code.rawValue)?.rawValue || '').trim();
-        } catch (error) {
-            return '';
-        }
-    }
-
-    async function finishScannerCapture(value, status, message) {
-        const cleanValue = normalizeScannerText(value);
-        if (!cleanValue) return false;
-        document.getElementById('scan-text-input').value = cleanValue;
-        copyText(cleanValue);
-        status.innerText = message || 'Captured successfully. Opening payment details…';
-        setTimeout(() => handleScannedText(cleanValue), 180);
-        return true;
-    }
-
-    async function smartCaptureScannerFrame() {
-        const status = document.getElementById('scan-status');
-        const video = getScannerVideo();
+    async function captureAutomaticText() {
+        if (automaticTextCaptureRunning || scannerBusy) return;
+        const modal = document.getElementById('scanner-modal');
+        if (!modal || modal.style.display === 'none') return;
+        const video = nativeCameraStream
+            ? document.getElementById('native-camera-video')
+            : document.querySelector('#reader video');
         if (!video || video.readyState < 2) {
-            status.innerText = 'Camera image is not ready yet. Wait for the picture, then tap Smart Scan again.';
+            scheduleAutomaticTextCapture(900);
             return;
         }
-        if (scannerBusy) return;
-        scannerBusy = true;
+        if (typeof Tesseract === 'undefined') {
+            document.getElementById('scan-status').innerText = 'Text reader is still loading. Use Capture & copy text in a moment.';
+            scheduleAutomaticTextCapture(2500);
+            return;
+        }
+        automaticTextCaptureRunning = true;
+        const status = document.getElementById('scan-status');
+        let shouldRetry = false;
         try {
-            status.innerText = 'Capturing picture and checking QR / barcode…';
-            const captureCanvas = makeScannerCaptureCanvas(video);
-            const barcode = await detectBarcodeFromCanvas(captureCanvas);
-            if (await finishScannerCapture(barcode, status, 'QR / barcode captured. Opening payment details…')) return;
-            if (typeof Tesseract === 'undefined') {
-                status.innerText = 'Text reader is unavailable. Use the picture button or enter the captured text below.';
-                return;
+            setScannerOcrLoading(true, 'Automatically capturing a clear picture…');
+            const canvas = makeScannerOcrCanvas(video);
+            const found = await recognizeScannerText(canvas, status);
+            if (!found && !scannerBusy) {
+                status.innerText = 'No text yet. Keep the writing inside the frame; trying again automatically…';
+                shouldRetry = true;
             }
-            await recognizeScannerText(makeScannerOcrCanvas(captureCanvas), status);
         } catch (error) {
-            status.innerText = 'Smart Scan failed. Keep the text inside the frame and try again.';
+            setScannerOcrLoading(false);
+            status.innerText = 'Picture could not be read yet. Adjust the camera; trying again automatically…';
+            shouldRetry = true;
         } finally {
-            if (document.getElementById('scanner-modal').style.display !== 'none') scannerBusy = false;
+            automaticTextCaptureRunning = false;
+            if (shouldRetry && !scannerBusy) scheduleAutomaticTextCapture(2500);
         }
     }
 
     async function readScannerText() {
         const status = document.getElementById('scan-status');
-        const video = getScannerVideo();
+        const video = nativeCameraStream
+            ? document.getElementById('native-camera-video')
+            : document.querySelector('#reader video');
         if (!video || video.readyState < 2) {
             status.innerText = 'Camera image is not ready yet. Wait for the picture, then try again.';
             return;
@@ -3211,64 +3294,44 @@
             status.innerText = 'Text reader is unavailable. Enter the captured text below to continue.';
             return;
         }
-        if (scannerBusy) return;
-        scannerBusy = true;
         try {
-            await recognizeScannerText(makeScannerOcrCanvas(video), status);
+            setScannerOcrLoading(true, 'Taking a clear frame from the camera…');
+            const canvas = makeScannerOcrCanvas(video);
+            await recognizeScannerText(canvas, status);
         } catch (error) {
+            setScannerOcrLoading(false);
             status.innerText = 'Text reading failed. Keep the writing inside the frame and try again.';
-        } finally {
-            if (document.getElementById('scanner-modal').style.display !== 'none') scannerBusy = false;
         }
     }
 
     async function readScannerImage(file) {
         if (!file) return;
         const status = document.getElementById('scan-status');
-        if (scannerBusy) return;
-        scannerBusy = true;
+        if (typeof Tesseract === 'undefined') {
+            status.innerText = 'Text reader is unavailable. Enter the captured text below to continue.';
+            return;
+        }
         try {
-            status.innerText = 'Picture captured. Checking QR and applying text filters…';
-            const captureCanvas = await makeScannerImageCanvas(file);
-            const barcode = await detectBarcodeFromCanvas(captureCanvas);
-            if (await finishScannerCapture(barcode, status, 'QR / barcode captured from picture. Opening payment details…')) return;
-            if (typeof Tesseract === 'undefined') {
-                status.innerText = 'Text reader is unavailable. Enter the captured text below to continue.';
-                return;
-            }
-            await recognizeScannerText(makeScannerOcrCanvas(captureCanvas), status);
+            setScannerOcrLoading(true, 'Picture captured. Cleaning and enhancing it…');
+            status.innerText = 'Picture captured. Reading Urdu / English text…';
+            const canvas = await makeScannerImageCanvas(file);
+            await recognizeScannerText(canvas, status);
         } catch (error) {
+            setScannerOcrLoading(false);
             status.innerText = 'Text reading failed. Take a clearer, closer picture and try again.';
-        } finally {
-            if (document.getElementById('scanner-modal').style.display !== 'none') scannerBusy = false;
         }
     }
 
-    function makeScannerCaptureCanvas(source) {
+    function makeScannerOcrCanvas(source) {
         const sourceWidth = source.videoWidth || source.naturalWidth || source.width || 640;
         const sourceHeight = source.videoHeight || source.naturalHeight || source.height || 480;
-        const scale = Math.min(2.5, Math.max(1, 2600 / Math.max(sourceWidth, sourceHeight)));
+        const scale = Math.min(2, 2600 / Math.max(sourceWidth, sourceHeight));
         const canvas = document.createElement('canvas');
-        canvas.width = Math.max(960, Math.round(sourceWidth * scale));
-        canvas.height = Math.max(640, Math.round(sourceHeight * scale));
+        canvas.width = Math.max(640, Math.round(sourceWidth * scale));
+        canvas.height = Math.max(480, Math.round(sourceHeight * scale));
         const context = canvas.getContext('2d', { willReadFrequently: true });
         context.imageSmoothingEnabled = true;
         context.imageSmoothingQuality = 'high';
-        context.drawImage(source, 0, 0, canvas.width, canvas.height);
-        return canvas;
-    }
-
-    function makeScannerOcrCanvas(source) {
-        const isCanvas = source instanceof HTMLCanvasElement;
-        const canvas = isCanvas ? document.createElement('canvas') : makeScannerCaptureCanvas(source);
-        const sourceWidth = source.width || source.videoWidth || source.naturalWidth || 640;
-        const sourceHeight = source.height || source.videoHeight || source.naturalHeight || 480;
-        canvas.width = isCanvas ? source.width : Math.max(960, sourceWidth);
-        canvas.height = isCanvas ? source.height : Math.max(640, sourceHeight);
-        const context = canvas.getContext('2d', { willReadFrequently: true });
-        context.imageSmoothingEnabled = true;
-        context.imageSmoothingQuality = 'high';
-        // Google-Lens-like cleanup: upscale, grayscale, contrast and brightness.
         context.filter = 'grayscale(1) contrast(1.45) brightness(1.08)';
         context.drawImage(source, 0, 0, canvas.width, canvas.height);
         context.filter = 'none';
@@ -3281,7 +3344,7 @@
             const objectUrl = URL.createObjectURL(file);
             image.onload = () => {
                 try {
-                    resolve(makeScannerCaptureCanvas(image));
+                    resolve(makeScannerOcrCanvas(image));
                 } finally {
                     URL.revokeObjectURL(objectUrl);
                 }
@@ -3296,28 +3359,32 @@
 
     async function recognizeScannerText(canvas, status) {
         status.innerText = 'Reading Urdu / English text… (first time may take a moment)';
-        let result;
-        try {
-            result = await Tesseract.recognize(canvas, 'eng+urd', {
-                logger: progress => {
-                    if (progress?.status === 'recognizing text' && Number.isFinite(progress.progress)) {
-                        status.innerText = 'Reading text… ' + Math.round(progress.progress * 100) + '%';
-                    }
-                }
-            });
-        } catch (urduError) {
-            // If Urdu trained data cannot load, English is still useful for IDs and mobile numbers.
-            result = await Tesseract.recognize(canvas, 'eng');
-        }
-        const text = normalizeScannerText(result?.data?.text || '');
+        const result = await Tesseract.recognize(canvas, 'eng+urd', {
+            logger: progress => {
+                if (!progress || !progress.status) return;
+                const percent = progress.progress ? ' ' + Math.round(progress.progress * 100) + '%' : '';
+                const message = progress.status.includes('recognizing')
+                    ? 'Recognizing Urdu / English text…' + percent
+                    : 'Preparing Urdu / English reader…' + percent;
+                setScannerOcrLoading(true, message);
+            }
+        });
+        const text = String(result?.data?.text || '').trim().replace(/\s+/g, ' ');
         document.getElementById('scan-text-input').value = text;
         if (!text) {
+            setScannerOcrLoading(false);
             status.innerText = 'No readable text found. Move closer, keep it steady, and try again.';
-            return;
+            return false;
         }
         copyText(text);
+        setScannerOcrLoading(true, 'Text found. Copying it and opening payment details…');
         status.innerText = 'Text copied successfully. Opening payment details…';
-        setTimeout(() => handleScannedText(text), 180);
+        setTimeout(() => {
+            if (scannerBusy) return;
+            setScannerOcrLoading(false);
+            handleScannedText(text);
+        }, 550);
+        return true;
     }
 
     function captureScannerText() {
@@ -3335,8 +3402,13 @@
         document.getElementById('scan-status').innerText = 'Test scan captured: ' + demoValue;
     }
 
+    function normalizeScannerDigits(value) {
+        return String(value || '').replace(/[۰-۹]/g, digit => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))).replace(/[٠-٩]/g, digit => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
+    }
+
     function extractScanData(value) {
         const raw = String(value || '').trim();
+        const searchableRaw = normalizeScannerDigits(raw);
         let json = {};
         try {
             const parsed = JSON.parse(raw);
@@ -3353,7 +3425,7 @@
         };
         const fromText = (patterns) => {
             for (const pattern of patterns) {
-                const match = raw.match(pattern);
+                const match = searchableRaw.match(pattern);
                 if (match && match[1]) return match[1].trim().replace(/\s+/g, ' ');
             }
             return '';
@@ -3361,19 +3433,19 @@
 
         const tid = fromObject(['tid', 'tId', 'tillId', 'till_id', 'transactionId', 'reference']) ||
             fromText([
-                /(?:tid|till\s*id|tillid|transaction\s*id|transactionid|reference|ref|ٹرانزیکشن\s*آئی\s*ڈی|حوالہ)\s*[:=#-]?\s*([A-Za-z0-9_-]+)/i
+                /(?:tid|till\s*id|tillid|transaction\s*id|transactionid|reference|ref)\s*[:=#-]?\s*([A-Za-z0-9_-]+)/i
             ]);
         const name = fromObject(['name', 'owner', 'ownerName', 'accountTitle', 'account_title', 'recipient']) ||
             fromText([
-                /(?:owner(?:\s*name)?|account\s*(?:title|name)?|recipient|name|نام|اکاؤنٹ\s*کا\s*نام)\s*[:=-]?\s*(.+?)(?=\s+(?:number|mobile|phone|msisdn|account\s*(?:number|no|id)|tid|till\s*id|نمبر|موبائل|ٹرانزیکشن)\b|[|,;\n]|$)/i
+                /(?:owner(?:\s*name)?|account\s*(?:title|name)?|recipient|name)\s*[:=-]?\s*(.+?)(?=\s+(?:number|mobile|phone|msisdn|account\s*(?:number|no|id)|tid|till\s*id)\b|[|,;\n]|$)/i
             ]);
         let number = fromObject(['number', 'mobile', 'phone', 'accountNumber', 'account_number', 'msisdn']) ||
             fromText([
-                /(?:number|mobile|phone|msisdn|account\s*(?:number|no|id)|نمبر|موبائل)\s*[:=#-]?\s*(\+?[0-9][0-9 -]{7,})/i
+                /(?:number|mobile|phone|msisdn|account\s*(?:number|no|id))\s*[:=#-]?\s*(\+?[0-9][0-9 -]{7,})/i
             ]);
-        number = number.replace(/[^0-9+]/g, '');
+        number = normalizeScannerDigits(number).replace(/[^0-9+]/g, '');
         if (!number) {
-            const candidate = raw.match(/(?:^|\D)(0?3\d{9}|92\d{10}|\d{8,16})(?!\d)/);
+            const candidate = searchableRaw.match(/(?:^|\D)(0?3\d{9}|92\d{10}|\d{8,16})(?!\d)/);
             number = candidate ? candidate[1] : '';
         }
         return { raw, tid, name, number };
@@ -3383,17 +3455,16 @@
         const parsed = extractScanData(value);
         const saved = findSavedAdminRecipient(parsed.number || parsed.raw);
         const cleanValue = parsed.raw;
-        const looksLikeNumber = (parsed.number || cleanValue).replace(/[^0-9]/g, '').length >= 8;
         scanState.text = cleanValue;
         scanState.number = parsed.number || (saved ? saved.number : '');
-        scanState.name = saved ? saved.name : (parsed.name || (looksLikeNumber ? 'NOMAN' : cleanValue.toUpperCase()));
+        scanState.name = '';
         scanState.tid = parsed.tid || 'SCN-' + Math.floor(100000000 + Math.random() * 900000000);
         scanState.amount = 0;
-        copyText(cleanValue);
+        scanState.statement = '';
+        copyText(scanState.number || cleanValue);
         closeScannerModal();
-        document.getElementById('scan-recipient-name').innerText = scanState.name;
+        document.getElementById('scan-recipient-number').innerText = scanState.number || 'Number not detected';
         document.getElementById('scan-recipient-tid').innerText = scanState.tid;
-        document.getElementById('scan-recipient-text').innerText = cleanValue;
         document.getElementById('scan-number-input').value = scanState.number;
         document.getElementById('scan-amount-input').value = '';
         updateScanAmountButton();
@@ -3410,7 +3481,16 @@
         button.style.color = enabled ? '#fff' : '#374151';
     }
 
-    function goScannedReview() {
+    function updateScanNameButton() {
+        const name = document.getElementById('scan-name-input').value.trim();
+        const button = document.getElementById('scan-name-next-btn');
+        const enabled = Boolean(name) && Boolean(scanState.number) && scanState.amount > 0;
+        button.disabled = !enabled;
+        button.style.background = enabled ? '#111827' : '#d1d5db';
+        button.style.color = enabled ? '#fff' : '#374151';
+    }
+
+    function goScannedName() {
         const amount = parseFloat(document.getElementById('scan-amount-input').value);
         const number = document.getElementById('scan-number-input').value.trim();
         if (!number || !amount || amount <= 0) return;
@@ -3419,30 +3499,49 @@
             openAddMoneyScreen();
             return;
         }
-        const saved = findSavedAdminRecipient(number);
         scanState.number = number;
-        if (saved) scanState.name = saved.name;
         scanState.amount = amount;
+        document.getElementById('scan-name-amount').innerText = 'Rs. ' + amount.toFixed(2);
+        document.getElementById('scan-name-number').innerText = number;
+        document.getElementById('scan-name-input').value = '';
+        document.getElementById('scan-statement-input').value = '';
+        updateScanNameButton();
+        navigateTo('scanner-name-screen');
+    }
+
+    function goScannedReview() {
+        const name = document.getElementById('scan-name-input').value.trim();
+        const statement = document.getElementById('scan-statement-input').value.trim();
+        if (!name || !scanState.number || !scanState.amount) return;
+        scanState.name = name;
+        scanState.statement = statement;
         txData = {
             type: 'JazzCash Transfer',
             targetName: scanState.name,
             targetDetail: scanState.number,
-            amount,
+            amount: scanState.amount,
             accountTitle: scanState.name,
-            tid: scanState.tid
+            tid: scanState.tid,
+            statement: scanState.statement
         };
-        document.getElementById('conf-total').innerText = 'Rs. ' + amount.toFixed(2);
-        document.getElementById('conf-total-bottom').innerText = 'Rs. ' + amount.toFixed(2);
-        document.getElementById('conf-total-amt-bottom').innerText = 'Rs. ' + amount.toFixed(0);
-        document.getElementById('conf-footer-amt').innerText = 'Rs. ' + amount.toFixed(0);
+        document.getElementById('conf-total').innerText = 'Rs. ' + scanState.amount.toFixed(2);
+        document.getElementById('conf-total-bottom').innerText = 'Rs. ' + scanState.amount.toFixed(2);
+        document.getElementById('conf-total-amt-bottom').innerText = 'Rs. ' + scanState.amount.toFixed(0);
+        document.getElementById('conf-footer-amt').innerText = 'Rs. ' + scanState.amount.toFixed(0);
         document.getElementById('conf-v2').innerText = scanState.number;
         document.getElementById('conf-v3').innerText = scanState.name;
         document.getElementById('conf-tid').innerText = 'TID: ' + scanState.tid;
+        document.getElementById('conf-statement').innerText = scanState.statement;
+        document.getElementById('conf-statement-row').style.display = scanState.statement ? 'block' : 'none';
         navigateTo('confirmation-screen');
     }
 
     async function closeScannerModal() {
         scannerBusy = true;
+        if (automaticTextCaptureTimer) {
+            clearTimeout(automaticTextCaptureTimer);
+            automaticTextCaptureTimer = null;
+        }
         if (nativeScanTimer) {
             clearTimeout(nativeScanTimer);
             nativeScanTimer = null;
@@ -3459,6 +3558,7 @@
         }
         const preview = document.querySelector('.scanner-preview');
         if (preview) preview.classList.remove('camera-live');
+        setScannerOcrLoading(false);
         if (html5QrCode && scannerStarted) {
             try { await html5QrCode.stop(); } catch (error) {}
             scannerStarted = false;
@@ -3477,6 +3577,8 @@
         document.getElementById('conf-v2').innerText = txData.targetDetail;
         document.getElementById('conf-v3').innerText = txData.accountTitle;
         document.getElementById('conf-tid').innerText = txData.tid ? 'TID: ' + txData.tid : 'TID: will be generated after confirmation';
+        document.getElementById('conf-statement').innerText = txData.statement || '';
+        document.getElementById('conf-statement-row').style.display = txData.statement ? 'block' : 'none';
         if(customProfileImg) {
             document.getElementById('conf-from-avatar').src = customProfileImg;
         }
@@ -3518,12 +3620,15 @@
                 document.getElementById('rec-amt').innerText = "Rs. " + txData.amount.toFixed(2);
                 document.getElementById('rec-sub-desc').innerText = "Transferred to " + (txData.type || "JazzCash Transfer");
                 document.getElementById('rec-name').innerHTML = escapeHtml(txData.accountTitle) + '<br><span style="font-weight:normal; color:var(--text-muted);">' + escapeHtml(txData.targetDetail) + '</span>';
+                document.getElementById('rec-statement').innerText = txData.statement || '';
+                document.getElementById('rec-statement-row').style.display = txData.statement ? 'flex' : 'none';
                 recordTransaction({
                     tid: txData.tid,
                     type: txData.type || 'JazzCash Transfer',
                     recipient: txData.accountTitle,
                     detail: txData.targetDetail,
-                    amount: txData.amount
+                    amount: txData.amount,
+                    statement: txData.statement || ''
                 });
                 navigateTo('success-screen');
             });
