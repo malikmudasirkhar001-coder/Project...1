@@ -6,6 +6,7 @@
     <title>Bill Payments - JazzCash</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="jazzcash-storage.js"></script>
     <style>
         :root {
             --primary: #111827;
@@ -650,48 +651,31 @@
         renderPinDots();
 
         if (enteredPin.length === 4) {
-            if (enteredPin === correctLoginPin) {
-                triggerLoader(() => {
-                    let randomTid = Math.floor(100000000000 + Math.random() * 900000000000);
-                    let now = new Date();
-                    let day = String(now.getDate()).padStart(2, '0');
-                    let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                    let month = months[now.getMonth()];
-                    let year = now.getFullYear();
-                    let hours = now.getHours();
-                    let minutes = String(now.getMinutes()).padStart(2, '0');
-                    let ampm = hours >= 12 ? 'PM' : 'AM';
-                    hours = hours % 12 || 12;
-                    let formattedDate = `${day} ${month} ${year} at ${hours}:${minutes} ${ampm}`;
-
-                    let amt = document.getElementById('bill-amt').value;
-
-                    // Populate success receipt
-                    document.getElementById('rec-tid-date').innerText = "TID: " + randomTid + " | " + formattedDate;
-                    document.getElementById('rec-amt').innerText = "Rs. " + parseFloat(amt).toFixed(2);
-                    document.getElementById('rec-sub-desc').innerText = "Transferred to " + selectedCategoryName + " Bill";
-                    document.getElementById('rec-name').innerHTML = verifiedConsumerName + '<br><span style="font-weight:normal; color:var(--text-muted);">' + currentRefNumber + '</span>';
-                    document.getElementById('rec-from').innerHTML = senderAccountInfo.name + '<br><span style="font-weight:normal; color:var(--text-muted);">' + senderAccountInfo.number + '</span>';
-
-                    // Save record to Account Statement sync
-                    let statementRecord = {
-                        title: selectedCategoryName + " Bill Payment",
-                        amount: amt,
-                        date: formattedDate,
-                        tid: randomTid,
-                        status: "Successful"
-                    };
-                    let existingHistory = JSON.parse(localStorage.getItem('jazzcash_statement') || '[]');
-                    existingHistory.push(statementRecord);
-                    localStorage.setItem('jazzcash_statement', JSON.stringify(existingHistory));
-
-                    switchScreen('screen-success');
-                });
-            } else {
+            if (enteredPin !== correctLoginPin) {
                 alert('Incorrect MPIN! Please enter 0990');
                 enteredPin = "";
                 renderPinDots();
+                return;
             }
+            const result = JazzCashStore.recordTransaction({
+                title: selectedCategoryName + " Bill Payment",
+                amount: document.getElementById('bill-amt').value,
+                detail: verifiedConsumerName + ' · ' + currentRefNumber
+            });
+            if (!result.ok) {
+                alert(result.error);
+                enteredPin = "";
+                renderPinDots();
+                return;
+            }
+            triggerLoader(() => {
+                document.getElementById('rec-tid-date').innerText = "TID: " + result.entry.tid + " | " + result.entry.date;
+                document.getElementById('rec-amt').innerText = "Rs. " + JazzCashStore.formatMoney(result.entry.amount);
+                document.getElementById('rec-sub-desc').innerText = "Transferred to " + selectedCategoryName + " Bill";
+                document.getElementById('rec-name').innerHTML = verifiedConsumerName + '<br><span style="font-weight:normal; color:var(--text-muted);">' + currentRefNumber + '</span>';
+                document.getElementById('rec-from').innerHTML = senderAccountInfo.name + '<br><span style="font-weight:normal; color:var(--text-muted);">' + senderAccountInfo.number + '</span>';
+                switchScreen('screen-success');
+            });
         }
     }
 

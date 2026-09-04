@@ -6,435 +6,132 @@
     <title>Load & Packages - JazzCash</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="jazzcash-storage.js"></script>
     <style>
-        :root {
-            --primary: #e60000;
-            --dark-bg: #111111;
-            --light-bg: #f4f5f7;
-            --text-main: #1f2937;
-            --text-muted: #6b7280;
-            --border-color: #e5e7eb;
-            --success-green: #22c55e;
-            --yellow-accent: #facc15;
-            --danger: #ef4444;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            background-color: #121212;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .phone-shell {
-            width: 100%;
-            max-width: 390px;
-            height: 100%;
-            max-height: 800px;
-            background-color: var(--light-bg);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        @media (min-width: 400px) {
-            .phone-shell {
-                border-radius: 36px;
-                border: 8px solid #2b2b2b;
-                height: 90vh;
-            }
-        }
-
-        .app-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--light-bg);
-            display: none;
-            flex-direction: column;
-            z-index: 10;
-            overflow-y: auto;
-        }
-
-        .app-screen.active {
-            display: flex;
-        }
-
-        .top-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 20px;
-            background-color: #111111;
-            border-bottom: 2px solid var(--primary);
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            color: #ffffff;
-        }
-
-        .back-btn {
-            background: #222222;
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
-            color: #ffffff;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .screen-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #ffffff;
-        }
-
-        .page-content {
-            padding: 15px;
-            flex: 1;
-            overflow-y: auto;
-            background-color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .load-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-top: 10px;
-        }
-        .load-item {
-            background: #ffffff;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 14px 6px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(230,0,0,0.06);
-            transition: transform 0.1s;
-        }
-        .load-item:active {
-            transform: scale(0.96);
-        }
-        .load-icon-square {
-            width: 52px;
-            height: 52px;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 6px;
-            background: #fff;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .load-icon-square img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .load-label {
-            font-size: 10px;
-            font-weight: 600;
-            color: #374151;
-            line-height: 1.2;
-        }
-
-        .operators-row {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 8px 4px 12px 4px;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 15px;
-            background: #fff;
-        }
-        .operator-tab {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-            opacity: 0.5;
-            transition: 0.2s;
-        }
-        .operator-tab.active {
-            opacity: 1;
-            font-weight: 700;
-        }
-        .operator-logo {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            background: #f3f4f6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 4px;
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-        }
-        .operator-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .input-group-custom {
-            margin-bottom: 14px;
-        }
-        .input-label {
-            display: block;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-        }
-        .custom-input {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            font-size: 14px;
-            outline: none;
-            background: #ffffff;
-            color: var(--text-main);
-        }
-        
-        .btn-black-custom {
-            width: 100%;
-            background-color: #111827;
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 30px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .receipt-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border-color); font-size: 13px; }
-        .receipt-row:last-child { border-bottom: none; }
-        .receipt-label { color: var(--text-muted); }
-        .receipt-value { font-weight: 600; color: var(--text-main); text-align: right; }
-
-        .pin-container { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 15px; background: #fff; }
-        .pin-dots { display: flex; gap: 14px; margin: 20px 0 25px 0; }
-        .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #111827; background: transparent; }
-        .pin-dot.filled { background: #111827; }
-        .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 35px; width: 100%; max-width: 290px; }
-        .keypad-key { background-color: white; border: 1px solid var(--border-color); border-radius: 50%; width: 58px; height: 58px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; cursor: pointer; }
-
-        #loader-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.75);
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .dots-container {
-            display: flex;
-            gap: 10px;
-        }
-        .dot {
-            width: 16px;
-            height: 16px;
-            background-color: var(--yellow-accent);
-            border-radius: 50%;
-            animation: bounce 1.2s infinite ease-in-out both;
-        }
-        .dot:nth-child(1) { animation-delay: -0.36s; }
-        .dot:nth-child(2) { animation-delay: -0.24s; }
-        .dot:nth-child(3) { animation-delay: -0.12s; }
-        .dot:nth-child(4) { animation-delay: 0s; }
-
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1.0); }
-        }
+        :root{--red:#e60000;--black:#111111;--bg:#f4f5f7;--muted:#6b7280;--line:#e5e7eb;--yellow:#facc15;--green:#22c55e}
+        *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,sans-serif;-webkit-tap-highlight-color:transparent}
+        body{background:#121212;display:flex;justify-content:center;align-items:center;width:100vw;height:100vh;overflow:hidden}
+        .phone{width:100%;max-width:390px;height:100%;max-height:800px;background:var(--bg);position:relative;overflow:hidden;box-shadow:0 10px 30px #0008}
+        @media(min-width:400px){.phone{height:90vh;border:8px solid #2b2b2b;border-radius:36px}}
+        .screen{display:none;position:absolute;inset:0;flex-direction:column;background:#fff;overflow-y:auto}
+        .screen.active{display:flex}
+        .top{height:58px;min-height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:var(--black);color:#fff;border-bottom:2px solid var(--red)}
+        .top-left{display:flex;align-items:center;gap:10px}.top h1{font-size:16px}.home{font-size:16px;cursor:pointer}
+        .back{width:32px;height:32px;border:0;border-radius:50%;background:#292929;color:#fff;cursor:pointer}
+        .content{padding:18px 15px;overflow-y:auto;flex:1}.eyebrow{font-size:12px;color:var(--muted);margin-bottom:14px}
+        .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.tile{border:1px solid var(--line);border-radius:14px;padding:14px 5px;background:#fff;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:0 2px 8px #e600000d}
+        .tile i{font-size:25px;color:var(--red)}.tile span{font-size:10px;text-align:center;color:#1f2937;font-weight:600}
+        .card{border:1px solid var(--line);border-radius:16px;padding:15px;background:#fff;margin-bottom:14px}.label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px}
+        input{width:100%;border:1px solid var(--line);border-radius:12px;padding:13px 14px;font-size:14px;outline:0;color:#1f2937}input:focus{border-color:var(--red);box-shadow:0 0 0 3px #e6000014}
+        .field{margin-bottom:14px}.operator-row{display:flex;gap:8px;overflow-x:auto;margin-bottom:17px;padding-bottom:2px}.operator{flex:0 0 62px;border:1px solid var(--line);border-radius:12px;padding:8px 3px;text-align:center;font-size:10px;cursor:pointer}.operator.active{border:2px solid var(--red);color:var(--red);font-weight:700}.operator-icon{height:31px;width:31px;border-radius:50%;background:#fee2e2;color:var(--red);display:flex;align-items:center;justify-content:center;margin:0 auto 5px}
+        .btn{width:100%;border:0;border-radius:28px;padding:14px;background:var(--black);color:#fff;font-size:14px;font-weight:700;cursor:pointer}.btn:disabled{background:#d1d5db;color:#6b7280;cursor:not-allowed}.btn.outline{background:#fff;border:1px solid var(--line);color:var(--black)}
+        .package{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:9px;cursor:pointer}.package strong{display:block;font-size:12px}.package small{display:block;color:var(--muted);font-size:10px;margin-top:4px}.price{color:var(--red);font-size:13px;font-weight:700;white-space:nowrap}
+        .summary{background:#fafafa;border-radius:14px;padding:14px;margin-bottom:16px}.row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:12px}.row:last-child{border-bottom:0}.row span:first-child{color:var(--muted)}.row span:last-child{text-align:right;font-weight:700}
+        .pin-wrap{display:flex;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:20px}.dots{display:flex;gap:14px;margin:22px 0 28px}.dot{width:14px;height:14px;border:2px solid var(--black);border-radius:50%}.dot.filled{background:var(--black)}.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 28px;width:100%;max-width:280px}.key{width:58px;height:58px;border:1px solid var(--line);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;cursor:pointer;margin:auto;background:#fff}.key:active{background:#f3f4f6}
+        .receipt{margin:auto 0;background:var(--black);color:#fff;border-radius:18px;padding:22px 18px}.receipt .row{border-color:#374151}.receipt .row span:first-child{color:#9ca3af}.receipt .row span:last-child{color:#fff}.check{height:54px;width:54px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 12px}.center{text-align:center}.muted{color:var(--muted);font-size:11px}.balance{font-size:11px;color:var(--muted);background:#fff7cc;border:1px solid #fde68a;border-radius:10px;padding:9px;margin-bottom:14px}
+        .loader{display:none;position:absolute;z-index:20;inset:0;background:#000b;align-items:center;justify-content:center}.loader.show{display:flex}.loader i{color:var(--yellow);font-size:25px;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+        .alert{font-size:11px;color:#b91c1c;background:#fef2f2;border-radius:10px;padding:9px;margin-top:-5px;margin-bottom:12px;display:none}
     </style>
 </head>
 <body>
+<main class="phone">
+    <div class="loader" id="loader"><i class="fa-solid fa-spinner"></i></div>
 
-<div class="phone-shell">
-    <!-- Loader -->
-    <div id="loader-overlay">
-        <div class="dots-container">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
+    <section class="screen active" id="categories">
+        <header class="top"><div class="top-left"><button class="back" onclick="goHome()"><i class="fa-solid fa-arrow-left"></i></button><h1>Load & Packages</h1></div><i class="fa-solid fa-house home" onclick="goHome()"></i></header>
+        <div class="content"><div class="eyebrow">Choose a mobile service</div><div class="grid">
+            <div class="tile" onclick="openForm('Prepaid Load')"><i class="fa-solid fa-mobile-screen"></i><span>Prepaid Load</span></div>
+            <div class="tile" onclick="openPackages()"><i class="fa-solid fa-box-open"></i><span>Mobile Packages</span></div>
+            <div class="tile" onclick="openForm('Postpaid Bill')"><i class="fa-solid fa-file-invoice"></i><span>Postpaid Bill</span></div>
+            <div class="tile" onclick="openForm('ReadyLoad Prepaid')"><i class="fa-solid fa-store"></i><span>ReadyLoad</span></div>
+            <div class="tile" onclick="openPackages()"><i class="fa-solid fa-bolt"></i><span>Best Offers</span></div>
+            <div class="tile" onclick="openForm('My Favorites')"><i class="fa-solid fa-star"></i><span>My Favorites</span></div>
+        </div></div>
+    </section>
+
+    <section class="screen" id="form">
+        <header class="top"><div class="top-left"><button class="back" onclick="show('categories')"><i class="fa-solid fa-arrow-left"></i></button><h1 id="form-title">Prepaid Load</h1></div><i class="fa-solid fa-house home" onclick="goHome()"></i></header>
+        <div class="content"><div class="balance">Available balance: <strong id="form-balance">Rs. 5,000.00</strong></div>
+            <div class="card"><div class="field"><label class="label">Select operator</label><div class="operator-row" id="operators"></div></div>
+                <div class="field"><label class="label">Mobile number (11 digits)</label><input id="number" inputmode="numeric" maxlength="11" placeholder="03XXXXXXXXX" oninput="validateForm()"></div>
+                <div class="field"><label class="label">Amount (PKR) · Minimum Rs. 99</label><input id="amount" type="number" min="99" step="1" placeholder="99" oninput="validateForm()"></div>
+                <div class="alert" id="form-error"></div><button class="btn" id="continue" disabled onclick="openReview()">Review transaction <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+            <p class="muted">Your mobile number is verified before the payment is authorised.</p>
         </div>
-    </div>
+    </section>
 
-    <!-- 1. Menu Screen -->
-    <div id="screen-categories" class="app-screen active">
-        <div class="top-bar">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <button class="back-btn" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i></button>
-                <span class="screen-title">Load & Packages</span>
-            </div>
-            <i class="fa-solid fa-house" style="cursor: pointer; color: #ffffff;" onclick="window.location.href='index.html'"></i>
-        </div>
-        <div class="page-content" style="justify-content:flex-start;">
-            <div style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 15px;">Load & Packages</div>
-            <div class="load-grid">
-                <div class="load-item" onclick="selectLoadService('My Favorites')">
-                    <div class="load-icon-square"><img src="https://i.ibb.co/pBPdTQG6/icon1.png" alt="Icon 1" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-star\' style=\'color:#d97706;\'></i>';"></div>
-                    <div class="load-label">My Favorites</div>
-                </div>
-                <div class="load-item" onclick="selectLoadService('Prepaid Load')">
-                    <div class="load-icon-square"><img src="https://i.ibb.co/27KwRYQH/icon2.png" alt="Icon 2" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-mobile-screen\' style=\'color:#2563eb;\'></i>';"></div>
-                    <div class="load-label">Prepaid Load</div>
-                </div>
-                <div class="load-item" onclick="selectLoadService('Postpaid Bill')">
-                    <div class="load-icon-square"><img src="https://i.ibb.co/zMSNrmF/icon3.png" alt="Icon 3" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-file-invoice\' style=\'color:#7c3aed;\'></i>';"></div>
-                    <div class="load-label">Postpaid Bill</div>
-                </div>
-                <div class="load-item" onclick="selectLoadService('Mobile Packages')">
-                    <div class="load-icon-square"><img src="https://i.ibb.co/KckbBpV0/icon4.png" alt="Icon 4" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-box-archive\' style=\'color:#dc2626;\'></i>';"></div>
-                    <div class="load-label">Mobile Packages</div>
-                </div>
-                <div class="load-item" onclick="selectLoadService('ReadyLoad Prepaid')">
-                    <div class="load-icon-square"><img src="https://i.ibb.co/CpDfTByv/icon5.png" alt="Icon 5" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-store\' style=\'color:#059669;\'></i>';"></div>
-                    <div class="load-label">ReadyLoad Prepaid</div>
-                </div>
-                <div class="load-item" onclick="selectLoadService('ReadyLoad Mobile Pac...')">
-                    <div class="load-icon-square"><img src="https://i.ibb.co/67JBP0Lh/icon6.png" alt="Icon 6" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-boxes-stacked\' style=\'color:#d97706;\'></i>';"></div>
-                    <div class="load-label">ReadyLoad Mobile Pac...</div>
-                </div>
-                <div class="load-item" onclick="selectLoadService('Best Offers for You')">
-                    <div class="load-icon-square"><img src="https://i.ibb.co/QvTmG6YJ/icon7.png" alt="Icon 7" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-gift\' style=\'color:#db2777;\'></i>';"></div>
-                    <div class="load-label">Best Offers for You</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <section class="screen" id="packages">
+        <header class="top"><div class="top-left"><button class="back" onclick="show('categories')"><i class="fa-solid fa-arrow-left"></i></button><h1>Mobile Packages</h1></div><i class="fa-solid fa-house home" onclick="goHome()"></i></header>
+        <div class="content"><div class="eyebrow">Select an operator and package</div><div class="operator-row" id="package-operators"></div><input id="package-search" placeholder="Search packages" oninput="renderPackages()"><div style="height:14px"></div><div id="package-list"></div></div>
+    </section>
 
-    <!-- 2. Number & Amount Input Screen -->
-    <div id="screen-form" class="app-screen">
-        <div class="top-bar">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <button class="back-btn" onclick="switchScreen('screen-categories')"><i class="fa-solid fa-arrow-left"></i></button>
-                <span class="screen-title" id="form-header-title">Prepaid Mobile Load</span>
-            </div>
-            <i class="fa-solid fa-house" style="cursor: pointer; color: #ffffff;" onclick="window.location.href='index.html'"></i>
-        </div>
-        <div class="page-content">
-            <div>
-                <div class="operators-row">
-                    <div class="operator-tab active" onclick="setOperator('Jazz', this)">
-                        <div class="operator-logo"><img src="https://i.brecorder.com/images/2016/04/mobilink.jpg" alt="Jazz"></div>
-                        <span style="font-size:10px;">Jazz</span>
-                    </div>
-                    <div class="operator-tab" onclick="setOperator('Telenor', this)">
-                        <div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_ZJtET5C63Lkv-3Q9M1X2KwZ5akTn6UXx4weMlOQ3odHB3a8ba4jgZ_Mi&s=10" alt="Telenor"></div>
-                        <span style="font-size:10px;">Telenor</span>
-                    </div>
-                    <div class="operator-tab" onclick="setOperator('Ufone', this)">
-                        <div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSyJO1-GNqiSM-RF33rar4Ko4rbDcdjict2CISuNPYPw&s=10" alt="Ufone"></div>
-                        <span style="font-size:10px;">Ufone</span>
-                    </div>
-                    <div class="operator-tab" onclick="setOperator('SCO', this)">
-                        <div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBjFrddLlJBP4Z3fqJb6RKMOPtdFJnTva1hEUNmrxxzw&s" alt="SCO"></div>
-                        <span style="font-size:10px;">SCO</span>
-                    </div>
-                    <div class="operator-tab" onclick="setOperator('Zong', this)">
-                        <div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQr3khCDYb_o1PePpPQE1T8wMX5yvKw7Y776V-JN8SukNKfzHNVTaZBsTt_&s=10" alt="Zong"></div>
-                        <span style="font-size:10px;">Zong</span>
-                    </div>
-                </div>
+    <section class="screen" id="review">
+        <header class="top"><div class="top-left"><button class="back" onclick="show('form')"><i class="fa-solid fa-arrow-left"></i></button><h1>Review Transaction</h1></div><i class="fa-solid fa-house home" onclick="goHome()"></i></header>
+        <div class="content"><div class="summary"><div class="row"><span>Service</span><span id="review-service"></span></div><div class="row"><span>Operator</span><span id="review-operator"></span></div><div class="row"><span>Mobile number</span><span id="review-number"></span></div><div class="row"><span>Total</span><span id="review-amount"></span></div></div><div class="balance">Balance after payment: <strong id="review-after"></strong></div><button class="btn" onclick="openPin()">Confirm & authorise</button></div>
+    </section>
 
-                <div class="input-group-custom">
-                    <label class="input-label" id="input-num-label">Enter or search a number</label>
-                    <div style="position:relative; display:flex; align-items:center;">
-                        <input type="text" class="custom-input" id="load-num" placeholder="03XX-XXXXXXX" style="padding-right:38px;" oninput="handleLoadInput(this.value)">
-                        <div id="load-green-tick" style="position:absolute; right:12px; display:none; width:20px; height:20px; background:var(--success-green); color:white; border-radius:50%; align-items:center; justify-content:center; font-size:11px;"><i class="fa-solid fa-check"></i></div>
-                    </div>
-                </div>
+    <section class="screen" id="pin">
+        <header class="top"><div class="top-left"><button class="back" onclick="show('review')"><i class="fa-solid fa-arrow-left"></i></button><h1>Authorise Payment</h1></div><i class="fa-solid fa-house home" onclick="goHome()"></i></header>
+        <div class="pin-wrap"><strong>Enter your 4-digit MPIN</strong><div class="dots"><i class="dot" id="dot0"></i><i class="dot" id="dot1"></i><i class="dot" id="dot2"></i><i class="dot" id="dot3"></i></div><p class="muted" style="margin-bottom:22px">Never share your MPIN with anyone</p><div class="keypad">
+            <button class="key" onclick="key('1')">1</button><button class="key" onclick="key('2')">2</button><button class="key" onclick="key('3')">3</button><button class="key" onclick="key('4')">4</button><button class="key" onclick="key('5')">5</button><button class="key" onclick="key('6')">6</button><button class="key" onclick="key('7')">7</button><button class="key" onclick="key('8')">8</button><button class="key" onclick="key('9')">9</button><span></span><button class="key" onclick="key('0')">0</button><button class="key" onclick="key('del')"><i class="fa-solid fa-delete-left"></i></button>
+        </div></div>
+    </section>
 
-                <div class="input-group-custom">
-                    <label class="input-label">Amount (PKR) - Min Rs. 99</label>
-                    <input type="number" class="custom-input" id="load-amt" placeholder="Rs. 99">
-                </div>
-            </div>
-
-            <!-- Black Proceed / Send Button -->
-            <button class="btn-black-custom" id="pay-btn" onclick="goToReviewScreen()" disabled style="background-color: #d1d5db; color: #374151;">
-                <span id="pay-btn-text">Send Rs. 0</span> <i class="fa-solid fa-arrow-right"></i>
-            </button>
-        </div>
-    </div>
-
-    <!-- 3. Mobile Packages Screen -->
-    <div id="screen-packages" class="app-screen">
-        <div class="top-bar">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <button class="back-btn" onclick="switchScreen('screen-categories')"><i class="fa-solid fa-arrow-left"></i></button>
-                <span class="screen-title">Prepaid Mobile Packages</span>
-            </div>
-            <i class="fa-solid fa-house" style="cursor: pointer; color: #ffffff;" onclick="window.location.href='index.html'"></i>
-        </div>
-        <div class="page-content" style="justify-content:flex-start;">
-            <div style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">Select an operator to view packages</div>
-            
-            <div class="operators-row">
-                <div class="operator-tab active" onclick="switchPkgOperator('Jazz', this)"><div class="operator-logo"><img src="https://i.brecorder.com/images/2016/04/mobilink.jpg" alt="Jazz"></div><span style="font-size:10px;">Jazz</span></div>
-                <div class="operator-tab" onclick="switchPkgOperator('Telenor', this)"><div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_ZJtET5C63Lkv-3Q9M1X2KwZ5akTn6UXx4weMlOQ3odHB3a8ba4jgZ_Mi&s=10" alt="Telenor"></div><span style="font-size:10px;">Telenor</span></div>
-                <div class="operator-tab" onclick="switchPkgOperator('Ufone', this)"><div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSyJO1-GNqiSM-RF33rar4Ko4rbDcdjict2CISuNPYPw&s=10" alt="Ufone"></div><span style="font-size:10px;">Ufone</span></div>
-                <div class="operator-tab" onclick="switchPkgOperator('SCO', this)"><div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBjFrddLlJBP4Z3fqJb6RKMOPtdFJnTva1hEUNmrxxzw&s" alt="SCO"></div><span style="font-size:10px;">SCO</span></div>
-                <div class="operator-tab" onclick="switchPkgOperator('Zong', this)"><div class="operator-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQr3khCDYb_o1PePpPQE1T8wMX5yvKw7Y776V-JN8SukNKfzHNVTaZBsTt_&s=10" alt="Zong"></div><span style="font-size:10px;">Zong</span></div>
-            </div>
-
-            <div style="position:relative; margin-bottom:15px;">
-                <input type="text" class="custom-input" placeholder="Search a package by name" style="padding-right:35px;">
-                <i class="fa-solid fa-magnifying-glass" style="position:absolute; right:14px; top:14px; color:var(--text-muted);"></i>
-            </div>
-
-            <div id="packages-list-container"></div>
-        </div>
-    </div>
-
-    <!-- 4. Review Transaction Details Screen (Without Name, showing only Number) -->
-    <div id="screen-review" class="app-screen">
-        <div class="top-bar">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <button class="back-btn" onclick="switchScreen('screen-form')"><i class="fa-solid fa-arrow-left"></i></button>
-                <span class="screen-title">Review Transaction Details</span>
-            </div>
-            <i class="fa-solid fa-house" style="cursor: pointer; color: #ffffff;" onclick="window.location.href='index.html'"><
+    <section class="screen" id="success">
+        <header class="top"><div class="top-left"><h1>Payment Successful</h1></div><i class="fa-solid fa-house home" onclick="goHome()"></i></header>
+        <div class="content"><div class="receipt"><div class="check"><i class="fa-solid fa-check"></i></div><div class="center"><strong>Mobile payment complete</strong><p class="muted" style="color:#9ca3af;margin:7px 0 18px" id="success-meta"></p></div><div class="row"><span>Amount</span><span id="success-amount"></span></div><div class="row"><span>Service</span><span id="success-service"></span></div><div class="row"><span>Number</span><span id="success-number"></span></div><div class="row"><span>New balance</span><span id="success-balance"></span></div></div><button class="btn" style="margin-top:16px" onclick="goHome()">Done</button><button class="btn outline" style="margin-top:10px" onclick="window.location.href='history.html'">View statement</button></div>
+    </section>
+</main>
+<script>
+    const operators=['Jazz','Telenor','Ufone','Zong','SCO'];
+    const packages={
+        Jazz:[['Jazz Weekly Super Plus','25 GB · 1000 Jazz mins',430],['Jazz Monthly Mega','100 GB · 3000 mins',999],['Jazz Daily Extreme','2 GB · 1000 SMS',35],['Jazz 3 Day Max','5 GB · 500 mins',120],['Jazz Weekly All Network','10 GB · 500 all-net mins',520]],
+        Telenor:[['Telenor Weekly EasyCard','10 GB · 3000 Telenor mins',450],['Telenor Monthly Extreme','50 GB · 5000 mins',999],['Telenor Daily Social','1 GB social · 100 SMS',25],['Telenor Weekly Pro','25 GB · 750 mins',550],['Telenor Monthly Plus','100 GB · 10000 mins',1400]],
+        Ufone:[['Ufone Super Card','12 GB · 4000 Ufone mins',520],['Ufone Monthly Heavy','40 GB · 5000 mins',999],['Ufone Daily Light','1.5 GB · 150 mins',30],['Ufone Weekly Internet','16 GB · 1000 mins',500],['Ufone Digital Grand','75 GB · 7000 mins',1300]],
+        Zong:[['Zong Weekly Pro','30 GB · 5000 Zong mins',520],['Zong Monthly Pro Max','100 GB · 10000 mins',1500],['Zong Daily Basic','2 GB · 100 SMS',35],['Zong Weekly Digital','20 GB · 1000 mins',450],['Zong Monthly Supreme','50 GB · 5000 mins',999]],
+        SCO:[['SCO Weekly Bundle','10 GB · 1000 SCO mins',300],['SCO Monthly Plus','30 GB · 3000 mins',750],['SCO Daily Data','2 GB data',40],['SCO Weekly Max','20 GB · 500 mins',450],['SCO Monthly Max','60 GB · 5000 mins',1100]]
+    };
+    let service='Prepaid Load', operator='Jazz', pin='', state={};
+    const $=id=>document.getElementById(id);
+    function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');}
+    function goHome(){window.location.href='index.html'}
+    function wait(fn){$('loader').classList.add('show');setTimeout(()=>{$('loader').classList.remove('show');fn()},350)}
+    function money(v){return 'Rs. '+JazzCashStore.formatMoney(v)}
+    function renderOperators(target, callback){
+        $(target).innerHTML=operators.map(name=>`<button class="operator ${name===operator?'active':''}" onclick="${callback}('${name}')"><div class="operator-icon"><i class="fa-solid fa-sim-card"></i></div>${name}</button>`).join('');
+    }
+    function setOperator(name){operator=name;renderOperators('operators','setOperator');validateForm()}
+    function openForm(name){service=name;operator='Jazz';$('form-title').textContent=name;renderOperators('operators','setOperator');$('number').value='';$('amount').value='';$('form-error').style.display='none';$('form-balance').textContent=money(JazzCashStore.getBalance());validateForm();wait(()=>show('form'))}
+    function validateForm(){
+        const number=$('number').value.replace(/\D/g,'');const amount=Number($('amount').value);const okay=number.length===11&&number.startsWith('03')&&amount>=99&&amount<=JazzCashStore.getBalance();
+        $('continue').disabled=!okay;$('form-error').style.display='none';
+    }
+    function openPackages(){operator='Jazz';renderOperators('package-operators','setPackageOperator');renderPackages();wait(()=>show('packages'))}
+    function setPackageOperator(name){operator=name;renderOperators('package-operators','setPackageOperator');renderPackages()}
+    function renderPackages(){
+        const query=($('package-search')?.value||'').toLowerCase();const list=(packages[operator]||[]).filter(p=>p[0].toLowerCase().includes(query));
+        $('package-list').innerHTML=list.map(p=>`<div class="package" onclick="choosePackage(${p[2]},'${p[0].replace(/'/g,"\\'")}')"><div><strong>${p[0]}</strong><small>${p[1]}</small></div><span class="price">${money(p[2])}</span></div>`).join('')||'<p class="muted">No packages found.</p>';
+    }
+    function choosePackage(amount,name){const selectedOperator=operator;openForm('Mobile Package');operator=selectedOperator;service='Mobile Package · '+name;renderOperators('operators','setOperator');$('amount').value=amount;validateForm()}
+    function openReview(){
+        const number=$('number').value.replace(/\D/g,'');const amount=Number($('amount').value);
+        if(number.length!==11||!number.startsWith('03')||amount<99){$('form-error').textContent='Enter a valid 11-digit number and an amount of at least Rs. 99.';$('form-error').style.display='block';return}
+        if(amount>JazzCashStore.getBalance()){ $('form-error').textContent='Insufficient wallet balance.';$('form-error').style.display='block';return}
+        state={number,amount,service,operator};$('review-service').textContent=service;$('review-operator').textContent=operator;$('review-number').textContent=number;$('review-amount').textContent=money(amount);$('review-after').textContent=money(JazzCashStore.getBalance()-amount);wait(()=>show('review'))
+    }
+    function openPin(){pin='';renderDots();wait(()=>show('pin'))}
+    function renderDots(){for(let i=0;i<4;i++)$('dot'+i).classList.toggle('filled',i<pin.length)}
+    function key(value){
+        if(value==='del')pin=pin.slice(0,-1);else if(pin.length<4)pin+=value;renderDots();
+        if(pin.length!==4)return;
+        if(pin!=='0990'){alert('Incorrect MPIN! Please enter 0990');pin='';renderDots();return}
+        const result=JazzCashStore.recordTransaction({title:state.service+' · '+state.operator,amount:state.amount,detail:state.number});
+        if(!result.ok){alert(result.error);pin='';renderDots();return}
+        wait(()=>{$('success-meta').textContent='TID: '+result.entry.tid+' · '+result.entry.date;$('success-amount').textContent=money(result.entry.amount);$('success-service').textContent=result.entry.title;$('success-number').textContent=state.number;$('success-balance').textContent=money(result.balance);show('success')})
+    }
+    window.addEventListener('storage',()=>{if($('form').classList.contains('active'))$('form-balance').textContent=money(JazzCashStore.getBalance())});
+    renderOperators('operators','setOperator');
+</script>
+</body>
+</html>
