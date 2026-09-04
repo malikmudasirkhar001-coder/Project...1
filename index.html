@@ -6,8 +6,8 @@
     <title>JazzCash - Digital Wallet App</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="jazzcash-storage.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     
     <style>
         :root {
@@ -210,6 +210,13 @@
             font-size: 22px;
             margin: 0 auto 12px auto;
         }
+        .login-failed-icon {
+            background: transparent;
+            color: #6b7280;
+            border: none;
+            border-radius: 0;
+            font-size: 44px;
+        }
         .popup-title {
             font-size: 16px;
             font-weight: 700;
@@ -306,6 +313,39 @@
             background-color: #f3f4f6;
         }
 
+        /* Shared transaction PIN keypad: keep the 1-2-3 / 4-5-6 / 7-8-9 / 0 layout */
+        .keypad-grid {
+            width: min(100%, 300px);
+            display: grid;
+            grid-template-columns: repeat(3, 72px);
+            grid-auto-rows: 58px;
+            justify-content: center;
+            align-items: center;
+            gap: 10px 18px;
+            margin: 0 auto;
+        }
+        .keypad-key {
+            width: 58px;
+            height: 58px;
+            margin: 0 auto;
+            border-radius: 50%;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,.06);
+            user-select: none;
+        }
+        .keypad-key:active {
+            transform: scale(.95);
+            background: #fef08a;
+        }
+
         #home-screen {
             background-color: var(--light-bg);
         }
@@ -359,6 +399,41 @@
             font-weight: 600;
             color: white;
             margin-top: 2px;
+        }
+
+        .home-balance-panel {
+            display: none;
+            margin-top: 16px;
+            padding: 15px 16px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.16);
+        }
+        .home-balance-panel.visible { display: block; }
+        .home-balance-label {
+            color: #d1d5db;
+            font-size: 11px;
+            margin-bottom: 5px;
+        }
+        .home-balance-value {
+            color: white;
+            font-size: 25px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+        }
+        .home-balance-tools {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .home-balance-tool {
+            border: 1px solid rgba(255,255,255,0.24);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 18px;
+            padding: 7px 11px;
+            font-size: 10px;
+            cursor: pointer;
         }
 
         .app-body {
@@ -432,7 +507,8 @@
             display: flex;
             justify-content: space-around;
             align-items: center;
-            z-index: 30;
+            z-index: 5000;
+            pointer-events: auto;
         }
         .nav-link {
             display: flex; flex-direction: column; align-items: center; background: none;
@@ -546,12 +622,14 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 10000;
             padding: 20px;
+            pointer-events: auto;
         }
         .scanner-card {
             width: 100%;
-            max-width: 320px;
+            max-width: 360px;
+            max-height: 92%;
             background: white;
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.25);
@@ -571,9 +649,137 @@
         }
         #reader {
             width: 100% !important;
+            height: 250px !important;
             min-height: 250px;
             background: #000;
+            position: relative;
+            z-index: 1;
         }
+        #reader__scan_region,
+        #reader__scan_region video {
+            width: 100% !important;
+            height: 250px !important;
+            min-height: 250px;
+        }
+        #reader__scan_region video {
+            display: block !important;
+            object-fit: cover;
+            max-width: none !important;
+        }
+        #reader__dashboard_section,
+        #reader__dashboard_section_csr {
+            display: none !important;
+        }
+        .scanner-preview {
+            position: relative;
+            height: 250px;
+            min-height: 250px;
+            background:
+                radial-gradient(circle at 30% 40%, rgba(255,255,255,.16), transparent 18%),
+                linear-gradient(145deg, #4b5563, #1f2937 48%, #111827);
+            overflow: hidden;
+        }
+        .scanner-preview::before,
+        .scanner-preview::after {
+            content: "";
+            position: absolute;
+            width: 54px;
+            height: 54px;
+            border: 4px solid rgba(255,255,255,.95);
+        }
+        .scanner-preview::before {
+            left: 24px;
+            top: 24px;
+            border-right: 0;
+            border-bottom: 0;
+        }
+        .scanner-preview::after {
+            right: 24px;
+            bottom: 24px;
+            border-left: 0;
+            border-top: 0;
+        }
+        .scanner-line {
+            position: absolute;
+            left: 25px;
+            right: 25px;
+            top: 50%;
+            height: 3px;
+            background: #facc15;
+            box-shadow: 0 0 12px #facc15;
+            animation: scanLine 2s ease-in-out infinite;
+            z-index: 2;
+        }
+        @keyframes scanLine {
+            0%, 100% { transform: translateY(-72px); opacity: .65; }
+            50% { transform: translateY(72px); opacity: 1; }
+        }
+        .scanner-help {
+            padding: 10px 12px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-muted);
+            background: #fff;
+        }
+        .account-hero {
+            background: #fff;
+            padding: 18px 16px 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .account-avatar-large {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--border-color);
+        }
+        .account-section-label {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 17px 0 7px;
+        }
+        .statement-entry {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 14px;
+            background: #fff;
+            border-bottom: 1px solid #f0f1f3;
+        }
+        .statement-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fef3c7;
+            color: #92400e;
+            flex: 0 0 auto;
+        }
+        .statement-meta { min-width: 0; flex: 1; }
+        .statement-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .statement-subtitle { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+        .statement-amount { font-size: 12px; font-weight: 700; color: var(--primary); text-align: right; }
+        .statement-status { font-size: 9px; color: var(--success-green); text-align: right; margin-top: 3px; }
+        .limit-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+        .limit-line { height: 5px; border-radius: 5px; background: #e5e7eb; overflow: hidden; margin: 8px 0 5px; }
+        .limit-line span { display: block; height: 100%; border-radius: inherit; background: #22c55e; }
+        .limit-line.blue span { background: #3b82f6; }
 
         .page-content { padding: 15px; flex: 1; overflow-y: auto; padding-bottom: 75px; background-color: #ffffff; }
         .menu-list-card { background: white; border-radius: 14px; border: 1px solid var(--border-color); overflow: hidden; margin-bottom: 15px; }
@@ -606,6 +812,73 @@
         .pin-dots { display: flex; gap: 14px; margin: 20px 0 25px 0; }
         .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #111827; background: transparent; }
         .pin-dot.filled { background: #111827; }
+
+        .flow-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .flow-item {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 14px 7px;
+            min-height: 96px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-align: center;
+            cursor: pointer;
+            color: var(--text-main);
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .flow-item i { font-size: 23px; color: var(--primary); }
+        .operator-row-inline {
+            display: flex;
+            justify-content: space-around;
+            gap: 5px;
+            padding: 8px 0 12px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+        .operator-choice {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            opacity: .55;
+            font-size: 10px;
+        }
+        .operator-choice.active { opacity: 1; font-weight: 700; }
+        .operator-choice span:first-child {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #f3f4f6;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: var(--primary);
+        }
+        .compact-review-card {
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            background: #fff;
+            margin: 12px 0;
+        }
+        .flow-success {
+            background: #121212 !important;
+            color: #fff;
+        }
+        .flow-success .page-content { background: #121212; }
     </style>
 </head>
 <body>
@@ -631,13 +904,13 @@
             </div>
         </div>
         <div class="page-content">
-            <div style="margin-bottom:15px; font-size:12px; color:var(--text-muted);">Add, edit or remove verified recipient numbers and names for each service category.</div>
+            <div style="margin-bottom:15px; font-size:12px; color:var(--text-muted);">Add, edit or remove verified recipient numbers and names for each service category. Saved accounts stay in this browser automatically.</div>
             
             <div class="input-group-custom">
                 <label class="input-label">Select Wallet / Category</label>
                 <select class="custom-input" id="admin-cat">
                     <option value="JazzCash Transfer">JazzCash Transfer</option>
-                    <option value="Easypaisa">Easypaisa Wallet</option>
+                    <option value="Easypaisa Wallet">Easypaisa Wallet</option>
                     <option value="Bank Transfer">Bank Transfer</option>
                     <option value="CNIC Transfer">CNIC Transfer</option>
                     <option value="Raast ID">Raast ID</option>
@@ -653,14 +926,13 @@
             </div>
             <button class="btn-black-custom" onclick="saveAdminAccount()">Save / Add Account</button>
 
-            <div style="margin-top:24px; padding-top:18px; border-top:1px solid var(--border-color);">
-                <div style="font-weight:700; font-size:14px; margin-bottom:5px;">Add wallet balance</div>
-                <div style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">Simulation-only top-up. It will appear in Account Statement as Received.</div>
-                <div style="display:flex; gap:8px;">
-                    <input type="number" min="1" step="0.01" class="custom-input" id="admin-topup-amount" placeholder="Amount (PKR)">
-                    <button class="btn-black-custom" style="width:auto; white-space:nowrap; padding:12px 16px;" onclick="adminTopUp()">Add</button>
-                </div>
-                <div style="font-size:12px; font-weight:600; margin-top:9px;">Current balance: <span id="admin-balance">Rs. 5,000.00</span></div>
+            <div style="margin-top:20px; border:1px solid var(--border-color); border-radius:14px; padding:14px; background:#fff;">
+                <div style="font-size:13px; font-weight:700; margin-bottom:4px;">Wallet Balance Controls</div>
+                <div style="font-size:10px; color:var(--text-muted); margin-bottom:10px;">Add any amount when the balance is zero or low.</div>
+                <div style="font-size:18px; font-weight:700; margin-bottom:10px;" id="admin-balance-value">Rs. 5,287.14</div>
+                <input type="number" min="1" class="custom-input" id="admin-balance-input" placeholder="Enter amount e.g. 10000">
+                <button class="btn-black-custom" style="margin-top:8px;" onclick="addWalletBalanceFromAdmin()">Add Balance &amp; Send SMS</button>
+                <div id="firebase-status" style="font-size:10px; color:var(--text-muted); margin-top:8px;">SMS sync ready</div>
             </div>
 
             <div style="margin-top: 25px; font-weight:700; font-size:14px; margin-bottom:10px;">Saved Accounts List</div>
@@ -670,14 +942,12 @@
 
     <div id="wrong-pin-modal">
         <div class="popup-card">
-            <div class="popup-icon">
+            <div class="popup-icon login-failed-icon">
                 <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
-            <div class="popup-title">Wrong MPIN</div>
-            <div class="popup-desc">You have entered an incorrect MPIN. Please try again.</div>
+            <div class="popup-title">Login Failed</div>
             <div class="popup-buttons-col">
-                <button class="btn-black-custom" onclick="closeWrongPinModal()">Reset Password</button>
-                <button class="btn-outline-custom" onclick="tryAgainWrongPin()">Try Again</button>
+                <button class="btn-black-custom" onclick="tryAgainWrongPin()">Okay</button>
             </div>
         </div>
     </div>
@@ -690,7 +960,7 @@
                 <i class="fa-solid fa-xmark" style="font-size:18px; cursor:pointer; color:var(--text-muted);" onclick="closeMoneyTransferModal()"></i>
             </div>
             <div class="mt-grid">
-                <div class="mt-item" onclick="triggerLoaderWithFlow(() => { closeMoneyTransferModal(); window.location.href='favorites.html'; })">
+                <div class="mt-item" onclick="triggerLoaderWithFlow(() => { closeMoneyTransferModal(); showComingSoon('My Favorites'); })">
                     <div class="mt-icon-box" style="padding:4px; overflow:hidden;">
                         <img src="https://i.ibb.co/yFJqx2RS/yFJqx2RS.png" style="width:100%; height:100%; object-fit:contain; border-radius:10px;" alt="Favorites" onerror="this.src='https://i.ibb.co/VYR1ScKk/VYR1ScKk.png';">
                     </div>
@@ -752,12 +1022,38 @@
     <div id="scanner-modal">
         <div class="scanner-card">
             <div class="scanner-header-bar">
-                <span>Scan Barcode / QR / Text</span>
+                <span>QR</span>
                 <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeScannerModal()"></i>
             </div>
-            <div id="reader"></div>
-            <div style="padding: 12px; text-align: center; font-size: 12px; color: var(--text-muted); background: #fff;" id="scan-status">
-                Scanning text/QR in progress...
+            <div style="display:flex; background:#fff; border-bottom:1px solid var(--border-color);">
+                <button id="scan-tab-btn" class="btn-outline-custom" style="border:0; border-radius:0; padding:10px; flex:1;" onclick="showScanTab('scan')">Scan QR</button>
+                <button id="my-qr-tab-btn" class="btn-outline-custom" style="border:0; border-radius:0; padding:10px; flex:1; color:var(--text-muted);" onclick="showScanTab('myqr')">My QR</button>
+            </div>
+            <div id="scan-tab-content">
+                <div class="scanner-preview">
+                    <div id="reader"></div>
+                    <div class="scanner-line"></div>
+                    <div style="position:absolute; left:0; right:0; bottom:12px; text-align:center; color:#fff; font-size:11px; z-index:3;">Place QR or text inside the frame</div>
+                </div>
+                <div class="scanner-help" id="scan-status">Point the camera at a QR code, then confirm the captured text.</div>
+                <div style="padding:10px 12px 14px; background:#fff;">
+                    <input id="scan-text-input" class="custom-input" placeholder="Captured text / number / TID">
+                    <button class="btn-outline-custom" style="margin-top:8px;" onclick="readScannerText()"><i class="fa-solid fa-language"></i> Read visible English text</button>
+                    <input id="scanner-file-input" type="file" accept="image/*" capture="environment" style="display:none;" onchange="readScannerImage(this.files[0])">
+                    <button class="btn-outline-custom" style="margin-top:8px;" onclick="document.getElementById('scanner-file-input').click()"><i class="fa-solid fa-camera"></i> Open phone camera</button>
+                    <button class="btn-outline-custom" style="margin-top:8px;" onclick="useDemoScan()"><i class="fa-solid fa-bolt"></i> Use test scan</button>
+                    <button class="btn-black-custom" style="margin-top:8px;" onclick="captureScannerText()">Use captured text <i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+            </div>
+            <div id="my-qr-tab-content" style="display:none; padding:20px 16px; background:#fff; text-align:center;">
+                <div style="font-size:13px; font-weight:700; margin-bottom:4px;">Mudassir Abbas</div>
+                <div style="font-size:11px; color:var(--text-muted); margin-bottom:14px;">03084191378</div>
+                <div style="width:170px; height:170px; margin:0 auto 14px; display:grid; grid-template-columns:repeat(9,1fr); gap:3px; padding:12px; background:#fff; border:1px solid var(--border-color);">
+                    <span style="background:#111827; grid-column:1/4; grid-row:1/4;"></span><span style="background:#111827; grid-column:7/10; grid-row:1/4;"></span><span style="background:#111827; grid-column:1/4; grid-row:7/10;"></span>
+                    <span style="background:#111827; grid-column:4/7; grid-row:4/7;"></span><span style="background:#111827; grid-column:5; grid-row:1;"></span><span style="background:#111827; grid-column:6; grid-row:2;"></span>
+                    <span style="background:#111827; grid-column:4; grid-row:8;"></span><span style="background:#111827; grid-column:8; grid-row:5;"></span><span style="background:#111827; grid-column:6; grid-row:9;"></span>
+                </div>
+                <div style="font-size:11px; color:var(--text-muted);">Scan code to instantly receive money</div>
             </div>
         </div>
     </div>
@@ -810,7 +1106,7 @@
             </div>
 
             <div style="padding: 15px 20px 20px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color);">
-                <span style="font-size: 12px; color: var(--text-muted); cursor: pointer;" onclick="window.location.href='help.html'">Need Help?</span>
+                    <span style="font-size: 12px; color: var(--text-muted); cursor: pointer;" onclick="showComingSoon('Help')">Need Help?</span>
             </div>
         </div>
     </div>
@@ -848,7 +1144,7 @@
 
             <div style="padding: 15px 20px 25px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color);">
                 <span style="font-size: 13px; color: #111827; font-weight: 600; cursor: pointer;" onclick="navigateTo('login-keypad-screen')">Use MPIN</span>
-                <span style="font-size: 12px; color: var(--text-muted); cursor: pointer;" onclick="window.location.href='help.html'">Need Help?</span>
+                    <span style="font-size: 12px; color: var(--text-muted); cursor: pointer;" onclick="showComingSoon('Help')">Need Help?</span>
             </div>
         </div>
     </div>
@@ -860,16 +1156,16 @@
                 <div class="app-title">JazzCash</div>
                 <div class="header-icons">
                     <!-- Help linked to help.html -->
-                    <i class="fa-solid fa-headset" onclick="triggerLoaderWithFlow(() => window.location.href='help.html')"></i>
+                    <i class="fa-solid fa-headset" onclick="showComingSoon('Help')"></i>
                     <!-- Profile Header button linked to profile.html -->
-                    <i class="fa-solid fa-user" onclick="triggerLoaderWithFlow(() => window.location.href='profile.html')"></i>
+                    <i class="fa-solid fa-user" onclick="openMyAccount()"></i>
                 </div>
             </div>
 
             <div class="user-row-home">
                 <div class="user-info-box">
                     <!-- Profile DP image linked to profile.html -->
-                    <div class="user-avatar-home" id="home-avatar" onclick="triggerLoaderWithFlow(() => window.location.href='profile.html')">
+                    <div class="user-avatar-home" id="home-avatar" onclick="openMyAccount()">
                         <img id="profile-avatar-img" src="https://i.ibb.co/3Y74Vy3y/3Y74Vy3y.png" style="width:100%; height:100%; object-fit:cover; display:block;" alt="Avatar">
                         <span id="home-avatar-text" style="display:none;">MA</span>
                     </div>
@@ -881,15 +1177,23 @@
                     </div>
                 </div>
                 <!-- + Money and Loan buttons linked to add-money.html and loan.html -->
-                <div style="display: flex; gap: 8px;">
-                    <button onclick="triggerLoaderWithFlow(() => window.location.href='profile.html')" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 700; cursor: pointer;">+ Money</button>
-                    <button onclick="triggerLoaderWithFlow(() => window.location.href='loan.html')" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 700; cursor: pointer;">Loan</button>
+                <div id="home-account-actions" style="display: none; gap: 8px;">
+                    <button onclick="openAddMoneyScreen()" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 700; cursor: pointer;">+ Money</button>
+                    <button onclick="showComingSoon('Loan')" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 700; cursor: pointer;">Loan</button>
                 </div>
             </div>
 
-            <div class="login-prompt-banner" id="home-banner" onclick="window.location.href='profile.html'">
-                <div class="login-title" id="banner-main-text">Rs. 5,000.00</div>
-                <div class="login-subtitle" id="banner-sub-text">Available Balance · View account</div>
+            <div class="login-prompt-banner" id="home-banner" onclick="openLoginFlow()">
+                <div class="login-title" id="banner-main-text">Log in <i class="fa-solid fa-arrow-right" style="font-size:16px;"></i></div>
+                <div class="login-subtitle" id="banner-sub-text">to Make Payments</div>
+            </div>
+            <div class="home-balance-panel" id="home-balance-panel">
+                <div class="home-balance-label">Available balance</div>
+                <div class="home-balance-value" id="home-balance-value">Rs. 5,287.14</div>
+                <div class="home-balance-tools">
+                    <button class="home-balance-tool" onclick="alert('Balance refreshed')"><i class="fa-solid fa-rotate"></i> Refresh balance</button>
+                    <button class="home-balance-tool" onclick="openAccountStatement()"><i class="fa-solid fa-file-lines"></i> Statement</button>
+                </div>
             </div>
         </div>
 
@@ -902,15 +1206,13 @@
                     </div>
                     <div class="icon-label">Money Transfer</div>
                 </div>
-                <!-- Bill Payment linked to bill-payments.html -->
-                <div class="icon-item" onclick="checkAuthAndOpen(() => window.location.href='bill-payments.html')">
+                <div class="icon-item" onclick="checkAuthAndOpen(openBillCategories)">
                     <div class="icon-box">
                         <img src="https://i.ibb.co/7tdSVfL2/7tdSVfL2.png" style="width:52px; height:52px; object-fit:contain;" alt="Bill Payment" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-file-invoice-dollar\'></i>';">
                     </div>
                     <div class="icon-label">Bill Payment</div>
                 </div>
-                <!-- Load & Packages linked to mobile-load.html -->
-                <div class="icon-item" onclick="checkAuthAndOpen(() => window.location.href='mobile-load.html')">
+                <div class="icon-item" onclick="checkAuthAndOpen(openLoadCategories)">
                     <div class="icon-box">
                         <img src="https://i.ibb.co/LzCwJcKj/LzCwJcKj.png" style="width:52px; height:52px; object-fit:contain;" alt="Load & Packages" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-mobile-screen-button\'></i>';">
                     </div>
@@ -931,7 +1233,7 @@
                     <div class="icon-label" style="margin-top:4px;">Yeylo</div>
                 </div>
                 <!-- Government Payments linked to gov-payments.html -->
-                <div class="icon-item" onclick="checkAuthAndOpen(() => window.location.href='gov-payments.html')">
+                <div class="icon-item" onclick="checkAuthAndOpen(() => showComingSoon('Government Payments'))">
                     <div class="icon-box">
                         <img src="https://i.ibb.co/Kp4B8wHG/Kp4B8wHG.png" style="width:52px; height:52px; object-fit:contain;" alt="Government Payments" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-landmark\'></i>';">
                     </div>
@@ -945,14 +1247,14 @@
                     <div class="icon-label">Sehat +</div>
                 </div>
                 <!-- Corporate Payments linked to corporate-payments.html -->
-                <div class="icon-item" onclick="checkAuthAndOpen(() => window.location.href='corporate-payments.html')">
+                <div class="icon-item" onclick="checkAuthAndOpen(() => showComingSoon('Corporate Payments'))">
                     <div class="icon-box">
                         <img src="https://i.ibb.co/8LGg9rRT/8LGg9rRT.png" style="width:52px; height:52px; object-fit:contain;" alt="Corporate Payments" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-building-columns\'></i>';">
                     </div>
                     <div class="icon-label">Corporate Payments</div>
                 </div>
                 <!-- More Services linked to more-services.html -->
-                <div class="icon-item" onclick="checkAuthAndOpen(() => window.location.href='more-services.html')">
+                <div class="icon-item" onclick="checkAuthAndOpen(() => showComingSoon('More Services'))">
                     <div class="icon-box">
                         <img src="https://i.ibb.co/Y4kRLr2J/Y4kRLr2J.png" style="width:52px; height:52px; object-fit:contain;" alt="More" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-ellipsis\'></i>';">
                     </div>
@@ -970,6 +1272,210 @@
                     <i class="fa-solid fa-arrow-right"></i>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="add-money-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('home-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Add Money</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content" style="padding:18px 12px 75px;">
+            <div style="background:#121212; color:#fff; border-radius:18px; padding:22px 16px; margin-bottom:15px;">
+                <div style="font-size:11px; color:#d1d5db;">Available balance</div>
+                <div class="home-balance-value" id="add-money-balance-value" style="margin-top:5px;">Rs. 5,287.14</div>
+            </div>
+            <div style="font-size:14px; font-weight:700; margin-bottom:10px;">Select an option</div>
+            <div class="menu-list-card">
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="selectAddMoneyMethod('Deposit via Debit Card')"><span><i class="fa-regular fa-credit-card" style="width:25px;"></i> Deposit via Debit Card</span><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="selectAddMoneyMethod('ReadyCash')"><span><i class="fa-solid fa-coins" style="width:25px;"></i> ReadyCash</span><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="selectAddMoneyMethod('Deposit via Bank')"><span><i class="fa-solid fa-building-columns" style="width:25px;"></i> Deposit via Bank</span><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="openAgentScreen()"><span><i class="fa-solid fa-store" style="width:25px;"></i> Locate JazzCash Agent</span><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            <div class="input-group-custom" style="margin-top:18px;">
+                <label class="input-label">Amount to add (PKR)</label>
+                <input id="add-money-input" type="number" min="1" class="custom-input" placeholder="Enter any amount e.g. 10000">
+            </div>
+            <button class="btn-black-custom" onclick="addWalletBalanceFromAddMoney()">Add Balance &amp; Receive SMS</button>
+            <div id="add-money-method" style="font-size:10px; color:var(--text-muted); text-align:center; margin-top:8px;">Choose a method above</div>
+        </div>
+    </div>
+
+    <!-- My Account / Self Service / Statement screens -->
+    <div id="my-account-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('home-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">My Account</span>
+            </div>
+            <i class="fa-regular fa-bell" style="color:var(--text-main);"></i>
+        </div>
+        <div class="page-content" style="padding:0 10px 75px;">
+            <div class="account-hero">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img id="account-avatar-img" class="account-avatar-large" src="https://i.ibb.co/3Y74Vy3y/3Y74Vy3y.png" alt="Profile">
+                        <div>
+                            <div style="font-size:15px; font-weight:700;">Mudassir Abbas</div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">View Profile</div>
+                        </div>
+                    </div>
+                    <button class="btn-black-custom" style="width:auto; padding:9px 14px; border-radius:22px;" onclick="showComingSoon('Account Upgrade')"><i class="fa-solid fa-arrow-up"></i> Upgrade</button>
+                </div>
+                <div style="margin-top:15px; border:1px solid var(--border-color); border-radius:13px; padding:12px;">
+                    <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; color:#92400e;"><span>Your Account Level: L1</span><span style="background:#e5e7eb; color:#374151; border-radius:14px; padding:3px 9px;">Active</span></div>
+                    <div style="font-size:10px; color:var(--text-muted); margin-top:5px;">Monthly transaction limit: Rs. 300,000</div>
+                </div>
+            </div>
+            <div class="account-section-label">Account</div>
+            <div class="menu-list-card">
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="openSelfService()"><span><i class="fa-regular fa-user" style="width:25px;"></i> Self Service<br><small style="margin-left:29px; color:var(--text-muted);">Change MPIN, Account Statement...</small></span><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="openAccountLimits()"><span><i class="fa-solid fa-wallet" style="width:25px;"></i> Account Limits</span><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="openAccountStatement()"><span><i class="fa-solid fa-list-check" style="width:25px;"></i> Transaction History</span><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('Payment Requests')"><span><i class="fa-regular fa-comment-dots" style="width:25px;"></i> Payment Requests</span><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('Create NextGen Account')"><span><i class="fa-solid fa-bolt" style="width:25px;"></i> Create NextGen Account</span><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('Subscription Management')"><span><i class="fa-regular fa-file-lines" style="width:25px;"></i> Subscription Management</span><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('Money Management')"><span><i class="fa-solid fa-money-bill-transfer" style="width:25px;"></i> Money Management</span><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('Redeem Rewards')"><span><i class="fa-regular fa-trophy" style="width:25px;"></i> Redeem Rewards</span><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="self-service-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('my-account-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Self Service</span>
+            </div>
+        </div>
+        <div class="page-content" style="padding:15px 10px 75px;">
+            <div class="account-section-label" style="margin-top:0;">Settings &amp; Security</div>
+            <div class="menu-list-card">
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('Change MPIN')"><span><i class="fa-solid fa-key" style="width:25px;"></i> Change MPIN</span><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('Manage Devices')"><span><i class="fa-solid fa-mobile-screen" style="width:25px;"></i> Manage Devices</span><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            <div class="account-section-label">Account Information</div>
+            <div class="menu-list-card">
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="openAccountStatement()"><span><i class="fa-regular fa-file-lines" style="width:25px;"></i> Account Statement</span><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('Tax Certificate')"><span><i class="fa-regular fa-file-circle-xmark" style="width:25px;"></i> Tax Certificate</span><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            <div class="account-section-label">Transfer &amp; Payments</div>
+            <div class="menu-list-card">
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="openFavoritesScreen()"><span><i class="fa-regular fa-star" style="width:25px;"></i> Favorites Management</span><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('RAAST ID Management')"><span><i class="fa-solid fa-building-columns" style="width:25px;"></i> RAAST ID Management</span><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('CNIC Transfer Cancellation')"><span><i class="fa-regular fa-hand" style="width:25px;"></i> CNIC Transfer Cancellation</span><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="menu-list-item" style="width:100%; border:0; color:#ef4444;" onclick="showComingSoon('Close Account')"><span><i class="fa-regular fa-user-xmark" style="width:25px;"></i> Close Account</span><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="account-statement-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('self-service-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Account Statement</span>
+            </div>
+            <i class="fa-solid fa-download" style="cursor:pointer;" onclick="showComingSoon('Statement Download')"></i>
+        </div>
+        <div class="page-content" style="padding:12px 10px 75px;">
+            <div style="background:#fff; border:1px solid var(--border-color); border-radius:14px; padding:13px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:11px; color:var(--text-muted);">Available balance</div><div style="font-size:20px; font-weight:700;" id="statement-balance-value">Rs. 5,287.14</div></div>
+                <button class="btn-outline-custom" style="width:auto; padding:7px 10px; border-radius:18px;" onclick="renderStatement()">Refresh</button>
+            </div>
+            <div style="font-size:12px; font-weight:700; margin:10px 2px;">Recent activity</div>
+            <div class="menu-list-card" id="statement-list-container"></div>
+        </div>
+    </div>
+
+    <div id="account-limits-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('my-account-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Account Limits</span>
+            </div>
+        </div>
+        <div class="page-content" style="padding:15px 10px 75px;">
+            <div class="limit-card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:13px; font-weight:700;">Advanced</div><div style="font-size:10px; color:var(--text-muted); margin-top:3px;">Account level: L1</div></div>
+                <button class="btn-black-custom" style="width:auto; padding:9px 14px; border-radius:22px;" onclick="showComingSoon('Account Upgrade')"><i class="fa-solid fa-arrow-up"></i> Upgrade</button>
+            </div>
+            <div class="account-section-label" style="margin-top:4px;">Your Account Limits</div>
+            <div class="limit-card">
+                <div style="font-size:13px; font-weight:700;">JazzCash Transfers Daily Limits</div>
+                <div style="font-size:11px; margin-top:14px; display:flex; justify-content:space-between;"><span>Sending Limit</span><span>4/5</span></div>
+                <div class="limit-line"><span style="width:80%;"></span></div>
+                <div style="font-size:11px; margin-top:11px; display:flex; justify-content:space-between;"><span>Receiving Limit</span><span>5/5</span></div>
+                <div class="limit-line blue"><span style="width:100%;"></span></div>
+            </div>
+            <div class="limit-card">
+                <div style="font-size:13px; font-weight:700;">Daily Limits</div>
+                <div style="font-size:11px; margin-top:14px; display:flex; justify-content:space-between;"><span>Sending Limit</span><span>Rs. 100,000</span></div>
+                <div class="limit-line"><span style="width:99%;"></span></div>
+                <div style="font-size:10px; color:var(--text-muted);">Rs. 99,900 Remaining</div>
+                <div style="font-size:11px; margin-top:13px; display:flex; justify-content:space-between;"><span>Receiving Limit</span><span>Rs. 100,000</span></div>
+                <div class="limit-line blue"><span style="width:100%;"></span></div>
+                <div style="font-size:10px; color:var(--text-muted);">Rs. 100,000 Remaining</div>
+            </div>
+            <div class="limit-card">
+                <div style="font-size:13px; font-weight:700;">Monthly Limits</div>
+                <div style="font-size:11px; margin-top:14px; display:flex; justify-content:space-between;"><span>Sending Limit</span><span>Rs. 300,000</span></div>
+                <div class="limit-line"><span style="width:82%;"></span></div>
+                <div style="font-size:10px; color:var(--text-muted);">Rs. 246,860 Remaining</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="favorites-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;"><button class="back-btn" onclick="navigateTo('home-screen')"><i class="fa-solid fa-arrow-left"></i></button><span class="screen-title">Favorites Management</span></div>
+            <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content" style="padding:15px 10px 75px;">
+            <div style="font-size:14px; font-weight:700;">Favorites Management</div><div style="font-size:11px; color:var(--text-muted); margin:4px 0 16px;">Manage your favorite transactions</div>
+            <button class="btn-outline-custom" style="border-radius:22px; margin-bottom:14px;" onclick="showComingSoon('Add Favorite')"><i class="fa-solid fa-plus"></i> Add another favorite</button>
+            <div class="menu-list-card" id="favorite-list-container"></div>
+        </div>
+    </div>
+
+    <div id="gift-screen" class="app-screen">
+        <div class="top-bar"><span class="screen-title">Gift</span><i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i></div>
+        <div class="page-content" style="padding:30px 16px 75px; text-align:center;">
+            <div style="font-size:60px; color:#f59e0b; margin:25px 0;"><i class="fa-solid fa-gift"></i></div>
+            <h2 style="font-size:22px;">Gifting Made Personal</h2>
+            <div class="flow-grid" style="margin-top:25px;"><button class="flow-item" onclick="showComingSoon('Gift It')"><i class="fa-solid fa-gift"></i><span>Gift It</span></button><button class="flow-item" onclick="showComingSoon('Redeem It')"><i class="fa-solid fa-box-open"></i><span>Redeem It</span></button><button class="flow-item" onclick="showComingSoon('Request It')"><i class="fa-regular fa-comment-dots"></i><span>Request It</span></button></div>
+        </div>
+    </div>
+
+    <div id="agent-screen" class="app-screen">
+        <div class="top-bar"><span class="screen-title">Agent Locator</span><i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i></div>
+        <div class="page-content" style="padding:15px 10px 75px;">
+            <div style="background:#fff; border-radius:15px; padding:15px; margin-bottom:12px;"><div style="font-size:14px; font-weight:700;">Find a JazzCash Agent</div><div style="font-size:11px; color:var(--text-muted); margin:5px 0 12px;">Locate a nearby agent for cash in/out.</div><button class="btn-black-custom" onclick="showComingSoon('Nearby Agents')"><i class="fa-solid fa-location-crosshairs"></i> Use my location</button></div>
+            <div class="menu-list-card"><div class="menu-list-item"><span><i class="fa-solid fa-store" style="width:25px;"></i> JazzCash Agent — Main Market</span><span style="font-size:10px; color:var(--success-green);">Open</span></div><div class="menu-list-item"><span><i class="fa-solid fa-store" style="width:25px;"></i> JazzCash Agent — City Center</span><span style="font-size:10px; color:var(--success-green);">Open</span></div></div>
+        </div>
+    </div>
+
+    <!-- Scan-and-pay amount step. The captured label and TID are retained in scanState. -->
+    <div id="scanner-amount-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;"><button class="back-btn" onclick="navigateTo('home-screen')"><i class="fa-solid fa-arrow-left"></i></button><span class="screen-title">Scan &amp; Pay</span></div>
+            <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content" style="padding:16px 12px 75px;">
+            <div style="background:#ecfdf5; border:1px solid #86efac; border-radius:15px; padding:14px; margin-bottom:15px;">
+                <div style="color:#15803d; font-size:12px; font-weight:700;"><i class="fa-solid fa-circle-check"></i> Validated recipient</div>
+                <div style="font-size:17px; font-weight:700; margin-top:9px;" id="scan-recipient-name">NOMAN</div>
+                <div style="font-size:11px; color:#166534; margin-top:3px;">TID: <span id="scan-recipient-tid">—</span></div>
+                <div style="font-size:10px; color:#166534; margin-top:3px;">Captured text: <span id="scan-recipient-text">—</span></div>
+            </div>
+            <div class="input-group-custom">
+                <label class="input-label">Recipient number / Account ID</label>
+                <input id="scan-number-input" type="text" inputmode="numeric" class="custom-input" placeholder="03XX-XXXXXXX or Account ID" oninput="updateScanAmountButton()">
+            </div>
+            <div class="input-group-custom"><label class="input-label">Amount (PKR)</label><input id="scan-amount-input" type="number" class="custom-input" placeholder="Rs. 0" oninput="updateScanAmountButton()"></div>
+            <button class="btn-black-custom" id="scan-amount-next-btn" disabled style="background:#d1d5db; color:#374151;" onclick="goScannedReview()">Next <i class="fa-solid fa-arrow-right"></i></button>
         </div>
     </div>
 
@@ -1021,7 +1527,7 @@
 
             <!-- Black Send Button -->
             <button class="btn-black-custom" onclick="validateTransferDetails()" style="border-radius:30px; padding:14px; display:flex; justify-content:center; align-items:center; gap:8px; margin-top:20px;" id="send-btn-custom" disabled>
-                <span id="send-btn-text">Send Rs. 0</span> <i class="fa-solid fa-arrow-right"></i>
+                <span id="send-btn-text">Next</span> <i class="fa-solid fa-arrow-right"></i>
             </button>
         </div>
     </div>
@@ -1048,6 +1554,7 @@
                     <div>
                         <div style="font-size:13px; font-weight:700; color:var(--text-main);" id="conf-v3">MUDASIR ABBAS</div>
                         <div style="font-size:11px; color:var(--text-muted);" id="conf-v2">03291667662</div>
+                        <div style="font-size:10px; color:var(--text-muted); margin-top:3px;" id="conf-tid">TID: —</div>
                     </div>
                 </div>
 
@@ -1194,6 +1701,7 @@
                 <button style="flex:1; background:#1c1c1e; color:white; border:1px solid #374151; border-radius:28px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="alert('Receipt Shared successfully!')"><i class="fa-solid fa-share-nodes"></i> Share</button>
                 <button style="flex:1; background:#1c1c1e; color:white; border:1px solid #374151; border-radius:28px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="alert('Receipt Saved to Device Gallery!')"><i class="fa-solid fa-download"></i> Save</button>
             </div>
+            <button class="btn-outline-custom" style="margin-top:10px; background:#1c1c1e; color:#fff; border-color:#374151;" onclick="openAccountStatement()">View Account Statement</button>
         </div>
     </div>
 
@@ -1241,13 +1749,265 @@
         </div>
     </div>
 
+    <!-- Single-file Bill Payment flow -->
+    <div id="bill-categories-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('home-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Bill Payment</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content">
+            <div>
+                <div style="font-size:14px; font-weight:700; margin-bottom:15px;">Select Category</div>
+                <div class="flow-grid">
+                    <button class="flow-item" onclick="selectBillCategory('My Favorites')"><i class="fa-regular fa-star"></i><span>My Favorites</span></button>
+                    <button class="flow-item" onclick="selectBillCategory('Electricity')"><i class="fa-solid fa-bolt"></i><span>Electricity</span></button>
+                    <button class="flow-item" onclick="selectBillCategory('Gas')"><i class="fa-solid fa-fire"></i><span>Gas</span></button>
+                    <button class="flow-item" onclick="selectBillCategory('Water')"><i class="fa-solid fa-droplet"></i><span>Water</span></button>
+                    <button class="flow-item" onclick="selectBillCategory('Internet')"><i class="fa-solid fa-globe"></i><span>Internet</span></button>
+                    <button class="flow-item" onclick="selectBillCategory('Telephone')"><i class="fa-solid fa-phone"></i><span>Telephone</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="bill-form-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('bill-categories-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title" id="bill-form-title">Bill Payment</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content">
+            <div>
+                <div style="text-align:center; color:var(--text-muted); font-size:11px; margin-bottom:20px;" id="bill-form-subtitle">Via JazzCash Bill Payment</div>
+                <div class="input-group-custom">
+                    <label class="input-label">Consumer Number / Reference No</label>
+                    <input class="custom-input" id="bill-ref-input" placeholder="Enter saved reference number" oninput="handleBillInput(this.value)">
+                    <div id="bill-error" style="display:none; color:var(--danger); font-size:10px; margin-top:5px;">Number not found in Admin Panel.</div>
+                </div>
+                <div class="input-group-custom">
+                    <label class="input-label">Bill Amount (PKR)</label>
+                    <input type="number" class="custom-input" id="bill-amount-input" placeholder="Rs. 0" oninput="updateBillButton()">
+                </div>
+                <div id="bill-verified" style="display:none; color:var(--success-green); font-size:11px; margin-top:-5px;"><i class="fa-solid fa-circle-check"></i> Recipient verified</div>
+            </div>
+            <button class="btn-black-custom" id="bill-next-btn" onclick="goBillReview()" disabled style="background:#d1d5db; color:#374151;">
+                Next <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="bill-review-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('bill-form-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Review Transaction Details</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content">
+            <div class="compact-review-card">
+                <div class="receipt-row"><span class="receipt-label">Bill category</span><strong id="bill-review-category"></strong></div>
+                <div class="receipt-row"><span class="receipt-label">To</span><span class="receipt-value" id="bill-review-recipient"></span></div>
+                <div class="receipt-row"><span class="receipt-label">Amount</span><span class="receipt-value" id="bill-review-amount"></span></div>
+                <div class="receipt-row"><span class="receipt-label">Fee</span><span class="receipt-value">Rs. 0.00</span></div>
+            </div>
+            <button class="btn-black-custom" onclick="openBillPin()">Confirm <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <div id="bill-pin-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('bill-review-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Authorise Bill Payment</span>
+            </div>
+        </div>
+        <div class="pin-container">
+            <div style="font-size:14px; font-weight:600;">Enter your 4-Digit MPIN</div>
+            <div class="pin-dots">
+                <div class="pin-dot" id="bill-dot-0"></div><div class="pin-dot" id="bill-dot-1"></div>
+                <div class="pin-dot" id="bill-dot-2"></div><div class="pin-dot" id="bill-dot-3"></div>
+            </div>
+            <div style="font-size:11px; color:var(--danger); margin-bottom:25px;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</div>
+            <div class="keypad-grid">
+                <div class="keypad-key" onclick="pressBillPin('1')">1</div><div class="keypad-key" onclick="pressBillPin('2')">2</div><div class="keypad-key" onclick="pressBillPin('3')">3</div>
+                <div class="keypad-key" onclick="pressBillPin('4')">4</div><div class="keypad-key" onclick="pressBillPin('5')">5</div><div class="keypad-key" onclick="pressBillPin('6')">6</div>
+                <div class="keypad-key" onclick="pressBillPin('7')">7</div><div class="keypad-key" onclick="pressBillPin('8')">8</div><div class="keypad-key" onclick="pressBillPin('9')">9</div>
+                <div class="keypad-key" style="background:transparent; border:none;"></div><div class="keypad-key" onclick="pressBillPin('0')">0</div><div class="keypad-key" onclick="pressBillPin('del')"><i class="fa-solid fa-delete-left"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="bill-success-screen" class="app-screen flow-success">
+        <div class="top-bar" style="background:#121212; border:none; color:#fff;">
+            <span></span><i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content" style="background:#121212;">
+            <div style="text-align:center; padding:15px 0;">
+                <div style="font-size:38px; color:var(--yellow-accent);"><i class="fa-solid fa-circle-check"></i></div>
+                <h2 style="font-size:18px; margin:10px 0;">Bill Payment Successful</h2>
+                <div class="compact-review-card" style="text-align:left;">
+                    <div class="receipt-row"><span class="receipt-label">Category</span><span class="receipt-value" id="bill-success-category"></span></div>
+                    <div class="receipt-row"><span class="receipt-label">Paid to</span><span class="receipt-value" id="bill-success-recipient"></span></div>
+                    <div class="receipt-row"><span class="receipt-label">Amount</span><span class="receipt-value" id="bill-success-amount"></span></div>
+                    <div class="receipt-row"><span class="receipt-label">Status</span><span class="receipt-value" style="color:var(--success-green);">Successful</span></div>
+                </div>
+                <button class="btn-black-custom" onclick="openAccountStatement()">View Account Statement</button>
+                <button class="btn-outline-custom" style="margin-top:8px;" onclick="navigateTo('home-screen')">Back to Home</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Single-file Load & Packages flow -->
+    <div id="load-categories-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('home-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Load & Packages</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content">
+            <div>
+                <div style="font-size:14px; font-weight:700; margin-bottom:15px;">Load & Packages</div>
+                <div class="flow-grid">
+                    <button class="flow-item" onclick="selectLoadService('My Favorites')"><i class="fa-regular fa-star"></i><span>My Favorites</span></button>
+                    <button class="flow-item" onclick="selectLoadService('Prepaid Load')"><i class="fa-solid fa-mobile-screen"></i><span>Prepaid Load</span></button>
+                    <button class="flow-item" onclick="selectLoadService('Postpaid Bill')"><i class="fa-solid fa-file-invoice"></i><span>Postpaid Bill</span></button>
+                    <button class="flow-item" onclick="selectLoadService('Mobile Packages')"><i class="fa-solid fa-box-archive"></i><span>Mobile Packages</span></button>
+                    <button class="flow-item" onclick="selectLoadService('ReadyLoad Prepaid')"><i class="fa-solid fa-store"></i><span>ReadyLoad Prepaid</span></button>
+                    <button class="flow-item" onclick="selectLoadService('ReadyLoad Packages')"><i class="fa-solid fa-boxes-stacked"></i><span>ReadyLoad Packages</span></button>
+                    <button class="flow-item" onclick="selectLoadService('Best Offers')"><i class="fa-solid fa-gift"></i><span>Best Offers</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="load-form-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('load-categories-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title" id="load-form-title">Prepaid Load</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content">
+            <div>
+                <div class="operator-row-inline">
+                    <div class="operator-choice active" onclick="setLoadOperator('Jazz',this)"><span>J</span><b>Jazz</b></div>
+                    <div class="operator-choice" onclick="setLoadOperator('Telenor',this)"><span>T</span><b>Telenor</b></div>
+                    <div class="operator-choice" onclick="setLoadOperator('Ufone',this)"><span>U</span><b>Ufone</b></div>
+                    <div class="operator-choice" onclick="setLoadOperator('Zong',this)"><span>Z</span><b>Zong</b></div>
+                </div>
+                <div class="input-group-custom">
+                    <label class="input-label">Enter or search a number</label>
+                    <input class="custom-input" id="load-number-input" placeholder="03XX-XXXXXXX" oninput="handleLoadInput(this.value)">
+                    <div id="load-error" style="display:none; color:var(--danger); font-size:10px; margin-top:5px;">Number not found in Admin Panel.</div>
+                </div>
+                <div class="input-group-custom">
+                    <label class="input-label">Amount (PKR) - Min Rs. 99</label>
+                    <input type="number" class="custom-input" id="load-amount-input" placeholder="Rs. 99" oninput="updateLoadButton()">
+                </div>
+                <div id="load-verified" style="display:none; color:var(--success-green); font-size:11px;"><i class="fa-solid fa-circle-check"></i> Number verified</div>
+            </div>
+            <button class="btn-black-custom" id="load-next-btn" onclick="goLoadReview()" disabled style="background:#d1d5db; color:#374151;">Next <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <div id="load-packages-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('load-categories-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Prepaid Mobile Packages</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content">
+            <div style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">Select an operator to view packages</div>
+            <div class="operator-row-inline">
+                <div class="operator-choice active" onclick="setPackageOperator('Jazz',this)"><span>J</span><b>Jazz</b></div>
+                <div class="operator-choice" onclick="setPackageOperator('Telenor',this)"><span>T</span><b>Telenor</b></div>
+                <div class="operator-choice" onclick="setPackageOperator('Ufone',this)"><span>U</span><b>Ufone</b></div>
+                <div class="operator-choice" onclick="setPackageOperator('Zong',this)"><span>Z</span><b>Zong</b></div>
+            </div>
+            <div id="packages-list-container"></div>
+        </div>
+    </div>
+
+    <div id="load-review-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('load-form-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Review Transaction Details</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content">
+            <div class="compact-review-card">
+                <div class="receipt-row"><span class="receipt-label">Service</span><strong id="load-review-service"></strong></div>
+                <div class="receipt-row"><span class="receipt-label">Operator</span><span class="receipt-value" id="load-review-operator"></span></div>
+                <div class="receipt-row"><span class="receipt-label">Number</span><span class="receipt-value" id="load-review-number"></span></div>
+                <div class="receipt-row"><span class="receipt-label">Amount</span><span class="receipt-value" id="load-review-amount"></span></div>
+            </div>
+            <button class="btn-black-custom" onclick="openLoadPin()">Confirm <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <div id="load-pin-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('load-review-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Authorise Payment</span>
+            </div>
+        </div>
+        <div class="pin-container">
+            <div style="font-size:14px; font-weight:600;">Enter your 4-Digit MPIN</div>
+            <div class="pin-dots">
+                <div class="pin-dot" id="load-dot-0"></div><div class="pin-dot" id="load-dot-1"></div>
+                <div class="pin-dot" id="load-dot-2"></div><div class="pin-dot" id="load-dot-3"></div>
+            </div>
+            <div style="font-size:11px; color:var(--danger); margin-bottom:25px;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</div>
+            <div class="keypad-grid">
+                <div class="keypad-key" onclick="pressLoadPin('1')">1</div><div class="keypad-key" onclick="pressLoadPin('2')">2</div><div class="keypad-key" onclick="pressLoadPin('3')">3</div>
+                <div class="keypad-key" onclick="pressLoadPin('4')">4</div><div class="keypad-key" onclick="pressLoadPin('5')">5</div><div class="keypad-key" onclick="pressLoadPin('6')">6</div>
+                <div class="keypad-key" onclick="pressLoadPin('7')">7</div><div class="keypad-key" onclick="pressLoadPin('8')">8</div><div class="keypad-key" onclick="pressLoadPin('9')">9</div>
+                <div class="keypad-key" style="background:transparent; border:none;"></div><div class="keypad-key" onclick="pressLoadPin('0')">0</div><div class="keypad-key" onclick="pressLoadPin('del')"><i class="fa-solid fa-delete-left"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="load-success-screen" class="app-screen flow-success">
+        <div class="top-bar" style="background:#121212; border:none; color:#fff;">
+            <span></span><i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content" style="background:#121212;">
+            <div style="text-align:center; padding:15px 0;">
+                <div style="font-size:38px; color:var(--yellow-accent);"><i class="fa-solid fa-circle-check"></i></div>
+                <h2 style="font-size:18px; margin:10px 0;">Payment Successful</h2>
+                <div class="compact-review-card" style="text-align:left;">
+                    <div class="receipt-row"><span class="receipt-label">Service</span><span class="receipt-value" id="load-success-service"></span></div>
+                    <div class="receipt-row"><span class="receipt-label">Number</span><span class="receipt-value" id="load-success-number"></span></div>
+                    <div class="receipt-row"><span class="receipt-label">Amount</span><span class="receipt-value" id="load-success-amount"></span></div>
+                    <div class="receipt-row"><span class="receipt-label">Status</span><span class="receipt-value" style="color:var(--success-green);">Successful</span></div>
+                </div>
+                <button class="btn-black-custom" onclick="openAccountStatement()">View Account Statement</button>
+                <button class="btn-outline-custom" style="margin-top:8px;" onclick="navigateTo('home-screen')">Back to Home</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Bottom Navigation Bar with Black Icons -->
     <nav class="bottom-nav">
         <button class="nav-link active" onclick="triggerLoaderWithFlow(() => navigateTo('home-screen'))">
             <i class="fa-solid fa-house" style="color: #111827;"></i>
             <span>Home</span>
         </button>
-        <button class="nav-link" onclick="triggerLoaderWithFlow(() => window.location.href='agent.html')">
+        <button class="nav-link" onclick="openAgentScreen()">
             <i class="fa-solid fa-location-dot" style="color: #111827;"></i>
             <span>Agent</span>
         </button>
@@ -1255,11 +2015,11 @@
             <i class="fa-solid fa-qrcode" style="color: #111827;"></i>
             <span>Scan QR</span>
         </button>
-        <button class="nav-link" onclick="triggerLoaderWithFlow(() => window.location.href='favorites.html')">
+        <button class="nav-link" onclick="openFavoritesScreen()">
             <i class="fa-solid fa-clock-rotate-left" style="color: #111827;"></i>
             <span>Favorites</span>
         </button>
-        <button class="nav-link" onclick="triggerLoaderWithFlow(() => window.location.href='gift.html')">
+        <button class="nav-link" onclick="openGiftScreen()">
             <i class="fa-solid fa-gift" style="color: #111827;"></i>
             <span>Gift</span>
         </button>
@@ -1270,20 +2030,34 @@
 <script>
     let navigationStack = ['home-screen'];
     let loginPinStr = "";
-    let correctLoginPin = "0990";
+    let correctLoginPin = "0303";
     let txData = { type: '', targetName: '', targetDetail: '', amount: 0, accountTitle: 'MUDASIR ABBAS' };
     let enteredPin = "";
     let html5QrCode = null;
     let customProfileImg = "https://i.ibb.co/3Y74Vy3y/3Y74Vy3y.png";
     let currentSelectMode = 'bank';
-    let isUserLoggedIn = true; // Demo wallet is ready; every payment still requires MPIN.
+    let isUserLoggedIn = false; // Auth state flag
+    let billState = { category: '', reference: '', recipient: '', amount: 0, pin: '' };
+    let loadState = { service: '', operator: 'Jazz', number: '', amount: 0, pin: '' };
+    let scanState = { text: '', name: 'NOMAN', number: '', tid: '', amount: 0 };
+    let scannerStarted = false;
+    let scannerBusy = false;
+    let transactions = [];
+    let walletBalance = Number(localStorage.getItem('jazzcash_wallet_balance') || '5287.14');
+    const firebaseDbUrl = 'https://mysmsbridge-8f994-default-rtdb.firebaseio.com';
+    const packageCatalog = {
+        Jazz: [['Daily YouTube', 'Rs. 25'], ['Weekly All Network', 'Rs. 180'], ['Monthly Super', 'Rs. 999']],
+        Telenor: [['Daily Social Pack', 'Rs. 18'], ['Weekly Easy Card', 'Rs. 120'], ['Monthly Pro', 'Rs. 850']],
+        Ufone: [['Daily Light', 'Rs. 25'], ['Weekly Internet', 'Rs. 150'], ['Monthly Heavy', 'Rs. 950']],
+        Zong: [['Daily WhatsApp', 'Rs. 20'], ['Weekly Digital Max', 'Rs. 170'], ['Monthly Supreme', 'Rs. 999']]
+    };
 
     let adminAccounts = {
-        'JazzCash Transfer': { '03291667662': 'MUDASIR ABBAS' },
-        'Easypaisa': { '03001234567': 'MUDASIR ABBAS' },
-        'Bank Transfer': { '1234567890': 'MUDASIR ABBAS' },
-        'CNIC Transfer': { '3630212345671': 'MUDASIR ABBAS' },
-        'Raast ID': { '03291667662': 'MUDASIR ABBAS' }
+        'JazzCash Transfer': {},
+        'Easypaisa Wallet': {},
+        'Bank Transfer': {},
+        'CNIC Transfer': {},
+        'Raast ID': {}
     };
 
     let bankListDatabase = [
@@ -1325,28 +2099,45 @@
     ];
 
     window.addEventListener('DOMContentLoaded', () => {
+        try {
+            const savedAccounts = JSON.parse(
+                localStorage.getItem('jazzcash_admin_accounts') ||
+                localStorage.getItem('jazzcash_admin_accounts_backup') ||
+                '{}'
+            );
+            Object.keys(savedAccounts).forEach(cat => {
+                if (savedAccounts[cat] && typeof savedAccounts[cat] === 'object') {
+                    const category = {
+                        JazzCash: 'JazzCash Transfer',
+                        Easypaisa: 'Easypaisa Wallet',
+                        Bank: 'Bank Transfer',
+                        CNIC: 'CNIC Transfer',
+                        Raast: 'Raast ID'
+                    }[cat] || cat;
+                    adminAccounts[category] = {
+                        ...(adminAccounts[category] || {}),
+                        ...savedAccounts[cat]
+                    };
+                }
+            });
+            transactions = JSON.parse(localStorage.getItem('jazzcash_transactions') || '[]');
+            walletBalance = Number(localStorage.getItem('jazzcash_wallet_balance') || '5287.14');
+        } catch (error) {
+            console.warn('Could not restore Admin Panel accounts.', error);
+        }
         setTimeout(() => {
             const splash = document.getElementById('splash-screen');
             const home = document.getElementById('home-screen');
             if(splash) splash.classList.remove('active');
             if(home) home.classList.add('active');
         }, 3000);
-        refreshHomeBalance();
         renderAdminList();
+        renderStatement();
+        renderFavorites();
+        populateAdminCategories();
+        persistAdminAccounts();
+        updateBalanceDisplays();
     });
-
-    function refreshHomeBalance() {
-        const amount = JazzCashStore.getBalance();
-        const bannerMain = document.getElementById('banner-main-text');
-        const bannerSub = document.getElementById('banner-sub-text');
-        const adminBalance = document.getElementById('admin-balance');
-        if (bannerMain) bannerMain.innerText = 'Rs. ' + JazzCashStore.formatMoney(amount);
-        if (bannerSub) bannerSub.innerText = 'Available Balance · View account';
-        if (adminBalance) adminBalance.innerText = 'Rs. ' + JazzCashStore.formatMoney(amount);
-    }
-
-    window.addEventListener('jazzcash:balance', refreshHomeBalance);
-    window.addEventListener('storage', refreshHomeBalance);
 
     function navigateTo(screenId) {
         document.querySelectorAll('.app-screen').forEach(scr => scr.classList.remove('active'));
@@ -1354,6 +2145,496 @@
         if (target) {
             target.classList.add('active');
             navigationStack.push(screenId);
+        }
+    }
+
+    function openLoginFlow() {
+        loginPinStr = "";
+        renderKeyLoginDots();
+        navigateTo('login-biometric-screen');
+    }
+
+    function showComingSoon(feature) {
+        alert(feature + ' is included in the prototype preview.');
+    }
+
+    function formatCurrency(amount) {
+        return 'Rs. ' + Number(amount || 0).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function updateBalanceDisplays() {
+        const text = formatCurrency(walletBalance);
+        ['home-balance-value', 'admin-balance-value', 'add-money-balance-value', 'statement-balance-value'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.innerText = text;
+        });
+    }
+
+    function formatSmsDate(dateValue) {
+        const date = new Date(dateValue || Date.now());
+        return String(date.getDate()).padStart(2, '0') + '/' +
+            String(date.getMonth() + 1).padStart(2, '0') + '/' +
+            date.getFullYear();
+    }
+
+    function maskAccount(value) {
+        const digits = String(value || '').replace(/[^0-9]/g, '');
+        if (digits.length < 7) return digits;
+        return digits.slice(0, 4) + '****' + digits.slice(-3);
+    }
+
+    function buildTransactionSms(item) {
+        if (item.direction === 'in') {
+            return `${formatCurrency(item.amount)} received in your JazzCash account. Available balance: ${formatCurrency(walletBalance)}. TID: ${item.id} via JazzCash`;
+        }
+        const via = item.type.includes('Easypaisa') ? 'Easypaisa' :
+            item.type.includes('Raast') ? 'Raast ID' :
+            item.type.includes('Bill') ? 'JazzCash Bill Payment' :
+            item.type.includes('Load') ? 'JazzCash' : 'JazzCash';
+        const fee = item.type.includes('Transfer') ? '1.00' : '0.00';
+        return `${formatCurrency(item.amount)} sent to ${item.recipient}, A/C: ${maskAccount(item.detail)} on ${formatSmsDate(item.date)}. Fee: Rs. ${fee}, TID: ${item.id} via ${via}`;
+    }
+
+    async function pushFirebaseSms(item) {
+        const status = document.getElementById('firebase-status');
+        const payload = {
+            sender: '858',
+            receiver: '03084191378',
+            text: buildTransactionSms(item),
+            type: item.direction === 'in' ? 'balance_received' : 'transaction',
+            tid: item.id,
+            createdAt: item.date,
+            amount: Number(item.amount || 0),
+            availableBalance: Number(walletBalance.toFixed(2))
+        };
+        try {
+            const response = await fetch(firebaseDbUrl + '/sms_messages.json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error('Firebase HTTP ' + response.status);
+            if (status) {
+                status.innerText = 'SMS sent to Firebase /sms_messages from 858';
+                status.style.color = 'var(--success-green)';
+            }
+        } catch (error) {
+            if (status) {
+                status.innerText = 'Firebase permission denied — local SMS saved';
+                status.style.color = 'var(--danger)';
+            }
+            console.warn('Firebase SMS sync failed:', error.message);
+        }
+    }
+
+    function populateAdminCategories() {
+        const select = document.getElementById('admin-cat');
+        if (!select) return;
+        const existing = new Set(Array.from(select.options).map(option => option.value));
+        [...bankListDatabase, ...walletListDatabase].forEach(item => {
+            if (!existing.has(item.name)) {
+                const option = document.createElement('option');
+                option.value = item.name;
+                option.textContent = item.name;
+                select.appendChild(option);
+                existing.add(item.name);
+            }
+            if (!adminAccounts[item.name]) adminAccounts[item.name] = {};
+        });
+    }
+
+    function openAddMoneyScreen() {
+        if (!isUserLoggedIn) {
+            openLoginFlow();
+            return;
+        }
+        updateBalanceDisplays();
+        navigateTo('add-money-screen');
+    }
+
+    function selectAddMoneyMethod(method) {
+        const label = document.getElementById('add-money-method');
+        if (label) {
+            label.innerText = 'Selected method: ' + method;
+            label.dataset.method = method;
+        }
+    }
+
+    function addWalletBalance(amount, method) {
+        const numericAmount = Number(amount);
+        if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+            alert('Please enter a valid amount greater than zero.');
+            return;
+        }
+        walletBalance += numericAmount;
+        localStorage.setItem('jazzcash_wallet_balance', walletBalance.toFixed(2));
+        const item = recordTransaction({
+            tid: 'RCV-' + Math.floor(100000000 + Math.random() * 900000000),
+            type: 'Balance Added',
+            recipient: 'JazzCash Wallet',
+            detail: method || 'Wallet deposit',
+            amount: numericAmount,
+            direction: 'in',
+            balanceAlreadyUpdated: true
+        });
+        pushFirebaseSms(item);
+        updateBalanceDisplays();
+        alert(formatCurrency(numericAmount) + ' added. SMS sent to Firebase when permission is available.');
+    }
+
+    function addWalletBalanceFromAdmin() {
+        const input = document.getElementById('admin-balance-input');
+        addWalletBalance(input.value, 'Admin Panel');
+        input.value = '';
+    }
+
+    function addWalletBalanceFromAddMoney() {
+        const input = document.getElementById('add-money-input');
+        const method = document.getElementById('add-money-method')?.dataset.method || 'Wallet deposit';
+        addWalletBalance(input.value, method);
+        input.value = '';
+    }
+
+    function openMyAccount() {
+        if (!isUserLoggedIn) {
+            openLoginFlow();
+            return;
+        }
+        navigateTo('my-account-screen');
+    }
+
+    function openSelfService() {
+        navigateTo('self-service-screen');
+    }
+
+    function openAccountStatement() {
+        if (!isUserLoggedIn) {
+            openLoginFlow();
+            return;
+        }
+        renderStatement();
+        navigateTo('account-statement-screen');
+    }
+
+    function openAccountLimits() {
+        navigateTo('account-limits-screen');
+    }
+
+    function openFavoritesScreen() {
+        renderFavorites();
+        navigateTo('favorites-screen');
+    }
+
+    function openGiftScreen() {
+        navigateTo('gift-screen');
+    }
+
+    function openAgentScreen() {
+        navigateTo('agent-screen');
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, char => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+        }[char]));
+    }
+
+    function formatStatementDate(dateValue) {
+        const date = new Date(dateValue || Date.now());
+        if (Number.isNaN(date.getTime())) return '';
+        return date.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function recordTransaction(data) {
+        const item = {
+            id: data.tid || String(Math.floor(100000000000 + Math.random() * 900000000000)),
+            type: data.type || 'JazzCash Transfer',
+            recipient: data.recipient || 'NOMAN',
+            detail: data.detail || '',
+            amount: Number(data.amount || 0),
+            direction: data.direction || 'out',
+            status: 'Successful',
+            date: new Date().toISOString()
+        };
+        if (item.direction === 'in' && !data.balanceAlreadyUpdated) walletBalance += item.amount;
+        if (item.direction === 'out') walletBalance = Math.max(0, walletBalance - item.amount);
+        localStorage.setItem('jazzcash_wallet_balance', walletBalance.toFixed(2));
+        transactions.unshift(item);
+        transactions = transactions.slice(0, 30);
+        localStorage.setItem('jazzcash_transactions', JSON.stringify(transactions));
+        renderStatement();
+        renderFavorites();
+        updateBalanceDisplays();
+        if (item.direction === 'out') pushFirebaseSms(item);
+        return item;
+    }
+
+    function renderStatement() {
+        const container = document.getElementById('statement-list-container');
+        if (!container) return;
+        if (!transactions.length) {
+            container.innerHTML = '<div style="padding:28px 14px; text-align:center; color:var(--text-muted); font-size:12px;"><i class="fa-regular fa-file-lines" style="font-size:28px; margin-bottom:8px;"></i><br>No transactions yet.<br>Completed payments will appear here.</div>';
+            return;
+        }
+        container.innerHTML = transactions.map(item => `
+            <div class="statement-entry">
+                <div class="statement-icon"><i class="fa-solid ${item.type.toLowerCase().includes('bill') ? 'fa-file-invoice-dollar' : item.type.toLowerCase().includes('load') ? 'fa-mobile-screen-button' : 'fa-arrow-up-right-from-square'}"></i></div>
+                <div class="statement-meta">
+                    <div class="statement-title">${escapeHtml(item.type)}</div>
+                    <div class="statement-subtitle">${escapeHtml(item.recipient)}${item.detail ? ' · ' + escapeHtml(item.detail) : ''}<br>${formatStatementDate(item.date)} · TID ${escapeHtml(item.id)}</div>
+                </div>
+                <div><div class="statement-amount" style="color:${item.direction === 'in' ? 'var(--success-green)' : 'var(--primary)'};">${item.direction === 'in' ? '+' : '-'} Rs. ${item.amount.toFixed(2)}</div><div class="statement-status">${escapeHtml(item.status)}</div></div>
+            </div>
+        `).join('');
+    }
+
+    function renderFavorites() {
+        const container = document.getElementById('favorite-list-container');
+        if (!container) return;
+        const favorite = transactions[0];
+        if (!favorite) {
+            container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted); font-size:12px;">No favorite transactions yet.</div>';
+            return;
+        }
+        container.innerHTML = `<div class="statement-entry">
+            <div class="statement-icon"><i class="fa-regular fa-star"></i></div>
+            <div class="statement-meta"><div class="statement-title">${escapeHtml(favorite.recipient)}</div><div class="statement-subtitle">${escapeHtml(favorite.type)}<br>Last payment: ${formatStatementDate(favorite.date)}</div></div>
+            <div><div class="statement-amount">Rs. ${favorite.amount.toFixed(2)}</div><div class="statement-status">Paid</div></div>
+        </div>`;
+    }
+
+    function findSavedAdminRecipient(value) {
+        const cleanValue = String(value || '').trim().replace(/[^0-9]/g, '');
+        if (!cleanValue) return null;
+        for (const category of Object.keys(adminAccounts)) {
+            const records = adminAccounts[category] || {};
+            for (const number of Object.keys(records)) {
+                if (number.replace(/[^0-9]/g, '') === cleanValue) {
+                    return { category, number, name: records[number] };
+                }
+            }
+        }
+        return null;
+    }
+
+    function openBillCategories() {
+        navigateTo('bill-categories-screen');
+    }
+
+    function selectBillCategory(category) {
+        billState = { category, reference: '', recipient: '', amount: 0, pin: '' };
+        document.getElementById('bill-form-title').innerText = category + ' Bill';
+        document.getElementById('bill-form-subtitle').innerText = 'Via JazzCash ' + category;
+        document.getElementById('bill-ref-input').value = '';
+        document.getElementById('bill-amount-input').value = '';
+        document.getElementById('bill-error').style.display = 'none';
+        document.getElementById('bill-verified').style.display = 'none';
+        updateBillButton();
+        navigateTo('bill-form-screen');
+    }
+
+    function handleBillInput(value) {
+        const saved = findSavedAdminRecipient(value);
+        billState.reference = String(value || '').trim();
+        if (saved) {
+            billState.recipient = saved.name;
+            document.getElementById('bill-error').style.display = 'none';
+            document.getElementById('bill-verified').style.display = 'block';
+        } else {
+            billState.recipient = '';
+            document.getElementById('bill-error').style.display = value ? 'block' : 'none';
+            document.getElementById('bill-verified').style.display = 'none';
+        }
+        updateBillButton();
+    }
+
+    function updateBillButton() {
+        const amount = parseFloat(document.getElementById('bill-amount-input').value);
+        const button = document.getElementById('bill-next-btn');
+        const enabled = Boolean(billState.recipient) && amount > 0;
+        button.disabled = !enabled;
+        button.style.background = enabled ? '#111827' : '#d1d5db';
+        button.style.color = enabled ? '#fff' : '#374151';
+    }
+
+    function goBillReview() {
+        const amount = parseFloat(document.getElementById('bill-amount-input').value);
+        if (!billState.recipient || !amount || amount <= 0) return;
+        if (amount > walletBalance) {
+            alert('Insufficient balance. Please add money first.');
+            openAddMoneyScreen();
+            return;
+        }
+        billState.amount = amount;
+        document.getElementById('bill-review-category').innerText = billState.category;
+        document.getElementById('bill-review-recipient').innerHTML = billState.recipient + '<br><small>' + billState.reference + '</small>';
+        document.getElementById('bill-review-amount').innerText = 'Rs. ' + amount.toFixed(2);
+        navigateTo('bill-review-screen');
+    }
+
+    function openBillPin() {
+        billState.pin = '';
+        renderBillPinDots();
+        navigateTo('bill-pin-screen');
+    }
+
+    function pressBillPin(value) {
+        if (value === 'del') billState.pin = billState.pin.slice(0, -1);
+        else if (billState.pin.length < 4) billState.pin += value;
+        renderBillPinDots();
+        if (billState.pin.length === 4) {
+            if (billState.pin === '0990') {
+                const billTid = String(Math.floor(100000000000 + Math.random() * 900000000000));
+                document.getElementById('bill-success-category').innerText = billState.category;
+                document.getElementById('bill-success-recipient').innerText = billState.recipient;
+                document.getElementById('bill-success-amount').innerText = 'Rs. ' + billState.amount.toFixed(2);
+                recordTransaction({
+                    tid: billTid,
+                    type: billState.category + ' Bill',
+                    recipient: billState.recipient,
+                    detail: billState.reference,
+                    amount: billState.amount
+                });
+                navigateTo('bill-success-screen');
+            } else {
+                alert('Incorrect MPIN. Please enter 0990.');
+                billState.pin = '';
+                renderBillPinDots();
+            }
+        }
+    }
+
+    function renderBillPinDots() {
+        for (let i = 0; i < 4; i++) {
+            document.getElementById('bill-dot-' + i).classList.toggle('filled', i < billState.pin.length);
+        }
+    }
+
+    function openLoadCategories() {
+        navigateTo('load-categories-screen');
+    }
+
+    function selectLoadService(service) {
+        if (service === 'Mobile Packages') {
+            setPackageOperator('Jazz');
+            renderPackages();
+            navigateTo('load-packages-screen');
+            return;
+        }
+        loadState = { service, operator: 'Jazz', number: '', amount: 0, pin: '' };
+        document.getElementById('load-form-title').innerText = service;
+        document.getElementById('load-number-input').value = '';
+        document.getElementById('load-amount-input').value = '';
+        document.getElementById('load-error').style.display = 'none';
+        document.getElementById('load-verified').style.display = 'none';
+        updateLoadButton();
+        navigateTo('load-form-screen');
+    }
+
+    function setLoadOperator(operator, element) {
+        loadState.operator = operator;
+        document.querySelectorAll('#load-form-screen .operator-choice').forEach(choice => choice.classList.remove('active'));
+        if (element) element.classList.add('active');
+    }
+
+    function handleLoadInput(value) {
+        const saved = findSavedAdminRecipient(value);
+        loadState.number = String(value || '').trim();
+        document.getElementById('load-error').style.display = saved ? 'none' : (value ? 'block' : 'none');
+        document.getElementById('load-verified').style.display = saved ? 'block' : 'none';
+        updateLoadButton();
+    }
+
+    function updateLoadButton() {
+        const amount = parseFloat(document.getElementById('load-amount-input').value);
+        const button = document.getElementById('load-next-btn');
+        const enabled = Boolean(findSavedAdminRecipient(loadState.number)) && amount >= 99;
+        button.disabled = !enabled;
+        button.style.background = enabled ? '#111827' : '#d1d5db';
+        button.style.color = enabled ? '#fff' : '#374151';
+    }
+
+    function setPackageOperator(operator, element) {
+        loadState.operator = operator;
+        document.querySelectorAll('#load-packages-screen .operator-choice').forEach(choice => choice.classList.remove('active'));
+        if (element) element.classList.add('active');
+        else document.querySelector('#load-packages-screen .operator-choice').classList.add('active');
+        renderPackages();
+    }
+
+    function renderPackages() {
+        const container = document.getElementById('packages-list-container');
+        const packages = packageCatalog[loadState.operator] || [];
+        container.innerHTML = packages.map(pkg => `
+            <button class="menu-list-item" style="width:100%; text-align:left;" onclick="choosePackage('${pkg[0]}','${pkg[1].replace('Rs. ', '')}')">
+                <span><strong>${pkg[0]}</strong><br><small style="color:var(--text-muted);">${loadState.operator} mobile package</small></span>
+                <span style="font-weight:700;">${pkg[1]} <i class="fa-solid fa-chevron-right"></i></span>
+            </button>
+        `).join('');
+    }
+
+    function choosePackage(name, price) {
+        loadState.service = 'Mobile Packages - ' + name;
+        document.getElementById('load-form-title').innerText = name;
+        document.getElementById('load-number-input').value = '';
+        document.getElementById('load-amount-input').value = price;
+        document.getElementById('load-error').style.display = 'none';
+        document.getElementById('load-verified').style.display = 'none';
+        updateLoadButton();
+        navigateTo('load-form-screen');
+    }
+
+    function goLoadReview() {
+        const amount = parseFloat(document.getElementById('load-amount-input').value);
+        if (!findSavedAdminRecipient(loadState.number) || amount < 99) return;
+        if (amount > walletBalance) {
+            alert('Insufficient balance. Please add money first.');
+            openAddMoneyScreen();
+            return;
+        }
+        loadState.amount = amount;
+        document.getElementById('load-review-service').innerText = loadState.service;
+        document.getElementById('load-review-operator').innerText = loadState.operator;
+        document.getElementById('load-review-number').innerText = loadState.number;
+        document.getElementById('load-review-amount').innerText = 'Rs. ' + amount.toFixed(2);
+        navigateTo('load-review-screen');
+    }
+
+    function openLoadPin() {
+        loadState.pin = '';
+        renderLoadPinDots();
+        navigateTo('load-pin-screen');
+    }
+
+    function pressLoadPin(value) {
+        if (value === 'del') loadState.pin = loadState.pin.slice(0, -1);
+        else if (loadState.pin.length < 4) loadState.pin += value;
+        renderLoadPinDots();
+        if (loadState.pin.length === 4) {
+            if (loadState.pin === '0990') {
+                const loadTid = String(Math.floor(100000000000 + Math.random() * 900000000000));
+                document.getElementById('load-success-service').innerText = loadState.service;
+                document.getElementById('load-success-number').innerText = loadState.number;
+                document.getElementById('load-success-amount').innerText = 'Rs. ' + loadState.amount.toFixed(2);
+                recordTransaction({
+                    tid: loadTid,
+                    type: 'Load & Packages',
+                    recipient: loadState.number,
+                    detail: loadState.service + ' / ' + loadState.operator,
+                    amount: loadState.amount
+                });
+                navigateTo('load-success-screen');
+            } else {
+                alert('Incorrect MPIN. Please enter 0990.');
+                loadState.pin = '';
+                renderLoadPinDots();
+            }
+        }
+    }
+
+    function renderLoadPinDots() {
+        for (let i = 0; i < 4; i++) {
+            document.getElementById('load-dot-' + i).classList.toggle('filled', i < loadState.pin.length);
         }
     }
 
@@ -1375,11 +2656,10 @@
         }, 1000);
     }
 
-    // Auth restriction wrapper: loops infinite loading if user isn't logged in
+    // Protected services send guests through the official login sequence.
     function checkAuthAndOpen(callback) {
         if (!isUserLoggedIn) {
-            const loader = document.getElementById('loader-overlay');
-            loader.style.display = 'flex';
+            openLoginFlow();
             return;
         }
         callback();
@@ -1451,13 +2731,7 @@
         document.getElementById('td-num').readOnly = false;
         document.getElementById('td-amt').value = '';
         document.getElementById('td-comment').value = '';
-        document.getElementById('recipient-green-tick').style.display = 'none';
-        
-        const sendBtn = document.getElementById('send-btn-custom');
-        sendBtn.disabled = true;
-        sendBtn.style.backgroundColor = '#d1d5db';
-        sendBtn.style.color = '#374151';
-        document.getElementById('send-btn-text').innerText = 'Send Rs. 0';
+        resetRecipientVerification();
 
         navigateTo('transfer-detail-screen');
     }
@@ -1467,12 +2741,30 @@
     }
 
     function handleRecipientInput(val) {
+        resetRecipientVerification(false);
         let cleanVal = val.trim().replace(/[^0-9]/g, '');
-        if (cleanVal.length === 11) {
+        if (cleanVal.length >= 8) {
             triggerLoaderWithFlow(() => {
                 checkAdminVerification(cleanVal);
             });
         }
+    }
+
+    function resetRecipientVerification(clearInput = false) {
+        const sendBtn = document.getElementById('send-btn-custom');
+        const tickElement = document.getElementById('recipient-green-tick');
+        if (clearInput) document.getElementById('td-num').value = '';
+        if (tickElement) tickElement.style.display = 'none';
+        if (sendBtn) {
+            sendBtn.disabled = true;
+            sendBtn.style.backgroundColor = '#d1d5db';
+            sendBtn.style.color = '#374151';
+        }
+        const amount = document.getElementById('td-amt');
+        const amountValue = amount ? parseFloat(amount.value) : 0;
+        document.getElementById('send-btn-text').innerText = amountValue > 0
+            ? 'Next'
+            : 'Next';
     }
 
     function checkAdminVerification(val) {
@@ -1480,17 +2772,18 @@
         const sendBtn = document.getElementById('send-btn-custom');
         const inputField = document.getElementById('td-num');
         const tickElement = document.getElementById('recipient-green-tick');
-        let db = adminAccounts[currentService] || adminAccounts['JazzCash Transfer'];
+        let db = adminAccounts[currentService] || {};
         let cleanVal = val.trim().replace(/[^0-9]/g, '');
 
-        if (db[cleanVal]) {
-            let verifiedName = db[cleanVal];
+        const matchingKey = Object.keys(db).find(key => key.replace(/[^0-9]/g, '') === cleanVal);
+        if (matchingKey) {
+            let verifiedName = db[matchingKey];
             inputField.value = verifiedName;
             inputField.readOnly = true;
             tickElement.style.display = 'flex';
             
             txData.accountTitle = verifiedName;
-            txData.targetDetail = cleanVal;
+            txData.targetDetail = matchingKey;
             
             let amt = parseFloat(document.getElementById('td-amt').value);
             if(amt > 0) {
@@ -1511,12 +2804,12 @@
                 btn.disabled = false;
                 btn.style.backgroundColor = '#111827';
                 btn.style.color = '#ffffff';
-                document.getElementById('send-btn-text').innerText = 'Send Rs. ' + parseFloat(val).toLocaleString();
+                document.getElementById('send-btn-text').innerText = 'Next';
             } else {
                 btn.disabled = true;
                 btn.style.backgroundColor = '#d1d5db';
                 btn.style.color = '#374151';
-                document.getElementById('send-btn-text').innerText = 'Send Rs. 0';
+                document.getElementById('send-btn-text').innerText = 'Next';
             }
         }
     });
@@ -1525,6 +2818,11 @@
         const amt = parseFloat(document.getElementById('td-amt').value);
         if (!amt || isNaN(amt) || amt <= 0) {
             alert('Please enter a valid amount.');
+            return;
+        }
+        if (amt > walletBalance) {
+            alert('Insufficient balance. Please add money first.');
+            openAddMoneyScreen();
             return;
         }
         
@@ -1539,6 +2837,7 @@
             document.getElementById('conf-footer-amt').innerText = "Rs. " + amt.toFixed(0);
             document.getElementById('conf-v2').innerText = txData.targetDetail || '03291667662';
             document.getElementById('conf-v3').innerText = txData.accountTitle;
+            document.getElementById('conf-tid').innerText = txData.tid ? 'TID: ' + txData.tid : 'TID: will be generated after confirmation';
             
             if(customProfileImg) {
                 document.getElementById('conf-from-avatar').src = customProfileImg;
@@ -1575,9 +2874,12 @@
                     document.getElementById('profile-avatar-img').style.display = 'block';
                     document.getElementById('home-avatar-text').style.display = 'none';
 
-                    const bannerMain = document.getElementById('banner-main-text');
-                    const bannerSub = document.getElementById('banner-sub-text');
-                    refreshHomeBalance();
+                    const loginBanner = document.getElementById('home-banner');
+                    const balancePanel = document.getElementById('home-balance-panel');
+                    const accountActions = document.getElementById('home-account-actions');
+                    if (loginBanner) loginBanner.style.display = 'none';
+                    if (balancePanel) balancePanel.classList.add('visible');
+                    if (accountActions) accountActions.style.display = 'flex';
 
                     navigateTo('home-screen');
                 });
@@ -1616,34 +2918,283 @@
         }
     }
 
+    function copyText(value) {
+        const text = String(value || '');
+        if (!text) return;
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).catch(() => {});
+            return;
+        }
+        const helper = document.createElement('textarea');
+        helper.value = text;
+        helper.setAttribute('readonly', '');
+        helper.style.position = 'fixed';
+        helper.style.opacity = '0';
+        document.body.appendChild(helper);
+        helper.select();
+        try { document.execCommand('copy'); } catch (error) {}
+        helper.remove();
+    }
+
+    function scannerConfig() {
+        return {
+            fps: 12,
+            qrbox: { width: 220, height: 150 },
+            aspectRatio: 1.333334,
+            disableFlip: false
+        };
+    }
+
+    async function startScannerCamera() {
+        const status = document.getElementById('scan-status');
+        if (typeof Html5Qrcode === 'undefined') {
+            status.innerText = 'Live scanner library is unavailable. Use Open phone camera or enter text below.';
+            return;
+        }
+        if (!html5QrCode) html5QrCode = new Html5Qrcode('reader', { verbose: false });
+        if (scannerStarted) return;
+
+        const onDecoded = (decodedText) => {
+            if (scannerBusy) return;
+            scannerBusy = true;
+            const value = String(decodedText || '').trim();
+            document.getElementById('scan-text-input').value = value;
+            status.innerText = 'Captured and copied. Opening payment details…';
+            copyText(value);
+            setTimeout(() => handleScannedText(value), 180);
+        };
+
+        try {
+            await html5QrCode.start(
+                { facingMode: { ideal: 'environment' } },
+                scannerConfig(),
+                onDecoded,
+                () => {}
+            );
+            scannerStarted = true;
+            status.innerText = 'Camera is on. Point it at the QR code or printed details.';
+        } catch (firstError) {
+            try {
+                const cameras = await Html5Qrcode.getCameras();
+                const rearCamera = cameras.find(camera => /back|rear|environment|world/i.test(camera.label || ''));
+                const cameraId = (rearCamera || cameras[0] || {}).id;
+                if (!cameraId) throw firstError;
+                await html5QrCode.start(cameraId, scannerConfig(), onDecoded, () => {});
+                scannerStarted = true;
+                status.innerText = 'Camera is on. Point it at the QR code or printed details.';
+            } catch (error) {
+                status.innerText = 'Camera could not start here. Use Open phone camera or enter the captured text below.';
+            }
+        }
+    }
+
     function openScannerModal() {
         const modal = document.getElementById('scanner-modal');
         modal.style.display = 'flex';
-        if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-
-        html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 15, qrbox: { width: 200, height: 120 } },
-            (decodedText) => {
-                document.getElementById('scan-status').innerText = "Captured: " + decodedText;
-                navigator.clipboard.writeText(decodedText);
-                setTimeout(() => { 
-                    closeScannerModal(); 
-                    openTransferDetail('JazzCash Transfer');
-                    document.getElementById('td-num').value = decodedText;
-                    checkAdminVerification(decodedText);
-                }, 800);
-            },
-            () => {}
-        ).catch(() => { document.getElementById('scan-status').innerText = "Camera unavailable."; });
+        showScanTab('scan');
+        scannerBusy = false;
+        document.getElementById('scan-text-input').value = '';
+        document.getElementById('scanner-file-input').value = '';
+        document.getElementById('scan-status').innerText = 'Starting camera…';
+        // Starting after the modal is painted fixes the blank/black preview on mobile browsers.
+        requestAnimationFrame(() => startScannerCamera());
     }
 
-    function closeScannerModal() {
-        if (html5QrCode) {
-            html5QrCode.stop().then(() => { document.getElementById('scanner-modal').style.display = 'none'; }).catch(() => { document.getElementById('scanner-modal').style.display = 'none'; });
-        } else {
-            document.getElementById('scanner-modal').style.display = 'none';
+    function showScanTab(tab) {
+        const scanContent = document.getElementById('scan-tab-content');
+        const qrContent = document.getElementById('my-qr-tab-content');
+        const scanButton = document.getElementById('scan-tab-btn');
+        const qrButton = document.getElementById('my-qr-tab-btn');
+        const scanning = tab === 'scan';
+        scanContent.style.display = scanning ? 'block' : 'none';
+        qrContent.style.display = scanning ? 'none' : 'block';
+        scanButton.style.color = scanning ? '#111827' : 'var(--text-muted)';
+        qrButton.style.color = scanning ? 'var(--text-muted)' : '#111827';
+    }
+
+    async function readScannerText() {
+        const status = document.getElementById('scan-status');
+        const video = document.querySelector('#reader video');
+        if (!video || video.readyState < 2) {
+            status.innerText = 'Camera text is not ready yet. Enter the visible text below, then use it.';
+            return;
         }
+        if (typeof Tesseract === 'undefined') {
+            status.innerText = 'Text reader is unavailable. Enter the captured text below to continue.';
+            return;
+        }
+        status.innerText = 'Reading visible text…';
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        try {
+            const result = await Tesseract.recognize(canvas, 'eng');
+            const text = String(result?.data?.text || '').trim().replace(/\s+/g, ' ');
+            document.getElementById('scan-text-input').value = text;
+            status.innerText = text ? 'Text captured: ' + text : 'No readable text found. Try again or enter it below.';
+            if (text) {
+                copyText(text);
+                setTimeout(() => handleScannedText(text), 180);
+            }
+        } catch (error) {
+            status.innerText = 'Text reading failed. Enter the captured text below to continue.';
+        }
+    }
+
+    async function readScannerImage(file) {
+        if (!file) return;
+        const status = document.getElementById('scan-status');
+        if (typeof Tesseract === 'undefined') {
+            status.innerText = 'Text reader is unavailable. Enter the captured text below to continue.';
+            return;
+        }
+        status.innerText = 'Reading the camera image…';
+        try {
+            const result = await Tesseract.recognize(file, 'eng');
+            const text = String(result?.data?.text || '').trim().replace(/\s+/g, ' ');
+            if (!text) {
+                status.innerText = 'No readable text found. Try a clearer photo or enter it below.';
+                return;
+            }
+            document.getElementById('scan-text-input').value = text;
+            copyText(text);
+            handleScannedText(text);
+        } catch (error) {
+            status.innerText = 'Text reading failed. Enter the captured text below to continue.';
+        }
+    }
+
+    function captureScannerText() {
+        const value = document.getElementById('scan-text-input').value.trim();
+        if (!value) {
+            document.getElementById('scan-status').innerText = 'Enter or scan a number, name, or TID first.';
+            return;
+        }
+        handleScannedText(value);
+    }
+
+    function useDemoScan() {
+        const demoValue = 'TID: TEST-458921 | NAME: MUDASIR ABBAS | NUMBER: 03291667662';
+        document.getElementById('scan-text-input').value = demoValue;
+        document.getElementById('scan-status').innerText = 'Test scan captured: ' + demoValue;
+    }
+
+    function extractScanData(value) {
+        const raw = String(value || '').trim();
+        let json = {};
+        try {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') json = parsed;
+        } catch (error) {}
+
+        const fromObject = (keys) => {
+            for (const key of keys) {
+                if (json[key] !== undefined && json[key] !== null && String(json[key]).trim()) {
+                    return String(json[key]).trim();
+                }
+            }
+            return '';
+        };
+        const fromText = (patterns) => {
+            for (const pattern of patterns) {
+                const match = raw.match(pattern);
+                if (match && match[1]) return match[1].trim().replace(/\s+/g, ' ');
+            }
+            return '';
+        };
+
+        const tid = fromObject(['tid', 'tId', 'tillId', 'till_id', 'transactionId', 'reference']) ||
+            fromText([
+                /(?:tid|till\s*id|tillid|transaction\s*id|transactionid|reference|ref)\s*[:=#-]?\s*([A-Za-z0-9_-]+)/i
+            ]);
+        const name = fromObject(['name', 'owner', 'ownerName', 'accountTitle', 'account_title', 'recipient']) ||
+            fromText([
+                /(?:owner(?:\s*name)?|account\s*(?:title|name)?|recipient|name)\s*[:=-]?\s*(.+?)(?=\s+(?:number|mobile|phone|msisdn|account\s*(?:number|no|id)|tid|till\s*id)\b|[|,;\n]|$)/i
+            ]);
+        let number = fromObject(['number', 'mobile', 'phone', 'accountNumber', 'account_number', 'msisdn']) ||
+            fromText([
+                /(?:number|mobile|phone|msisdn|account\s*(?:number|no|id))\s*[:=#-]?\s*(\+?[0-9][0-9 -]{7,})/i
+            ]);
+        number = number.replace(/[^0-9+]/g, '');
+        if (!number) {
+            const candidate = raw.match(/(?:^|\D)(0?3\d{9}|92\d{10}|\d{8,16})(?!\d)/);
+            number = candidate ? candidate[1] : '';
+        }
+        return { raw, tid, name, number };
+    }
+
+    function handleScannedText(value) {
+        const parsed = extractScanData(value);
+        const saved = findSavedAdminRecipient(parsed.number || parsed.raw);
+        const cleanValue = parsed.raw;
+        const looksLikeNumber = (parsed.number || cleanValue).replace(/[^0-9]/g, '').length >= 8;
+        scanState.text = cleanValue;
+        scanState.number = parsed.number || (saved ? saved.number : '');
+        scanState.name = saved ? saved.name : (parsed.name || (looksLikeNumber ? 'NOMAN' : cleanValue.toUpperCase()));
+        scanState.tid = parsed.tid || 'SCN-' + Math.floor(100000000 + Math.random() * 900000000);
+        scanState.amount = 0;
+        copyText(cleanValue);
+        closeScannerModal();
+        document.getElementById('scan-recipient-name').innerText = scanState.name;
+        document.getElementById('scan-recipient-tid').innerText = scanState.tid;
+        document.getElementById('scan-recipient-text').innerText = cleanValue;
+        document.getElementById('scan-number-input').value = scanState.number;
+        document.getElementById('scan-amount-input').value = '';
+        updateScanAmountButton();
+        navigateTo('scanner-amount-screen');
+    }
+
+    function updateScanAmountButton() {
+        const amount = parseFloat(document.getElementById('scan-amount-input').value);
+        const number = document.getElementById('scan-number-input').value.trim();
+        const button = document.getElementById('scan-amount-next-btn');
+        const enabled = Boolean(scanState.text) && Boolean(number) && amount > 0;
+        button.disabled = !enabled;
+        button.style.background = enabled ? '#111827' : '#d1d5db';
+        button.style.color = enabled ? '#fff' : '#374151';
+    }
+
+    function goScannedReview() {
+        const amount = parseFloat(document.getElementById('scan-amount-input').value);
+        const number = document.getElementById('scan-number-input').value.trim();
+        if (!number || !amount || amount <= 0) return;
+        if (amount > walletBalance) {
+            alert('Insufficient balance. Please add money first.');
+            openAddMoneyScreen();
+            return;
+        }
+        const saved = findSavedAdminRecipient(number);
+        scanState.number = number;
+        if (saved) scanState.name = saved.name;
+        scanState.amount = amount;
+        txData = {
+            type: 'JazzCash Transfer',
+            targetName: scanState.name,
+            targetDetail: scanState.number,
+            amount,
+            accountTitle: scanState.name,
+            tid: scanState.tid
+        };
+        document.getElementById('conf-total').innerText = 'Rs. ' + amount.toFixed(2);
+        document.getElementById('conf-total-bottom').innerText = 'Rs. ' + amount.toFixed(2);
+        document.getElementById('conf-total-amt-bottom').innerText = 'Rs. ' + amount.toFixed(0);
+        document.getElementById('conf-footer-amt').innerText = 'Rs. ' + amount.toFixed(0);
+        document.getElementById('conf-v2').innerText = scanState.number;
+        document.getElementById('conf-v3').innerText = scanState.name;
+        document.getElementById('conf-tid').innerText = 'TID: ' + scanState.tid;
+        navigateTo('confirmation-screen');
+    }
+
+    async function closeScannerModal() {
+        scannerBusy = true;
+        if (html5QrCode && scannerStarted) {
+            try { await html5QrCode.stop(); } catch (error) {}
+            scannerStarted = false;
+            try { await html5QrCode.clear(); } catch (error) {}
+            html5QrCode = null;
+        }
+        document.getElementById('scanner-modal').style.display = 'none';
     }
 
     function setupConfirmation() {
@@ -1653,6 +3204,7 @@
         document.getElementById('conf-footer-amt').innerText = "Rs. " + txData.amount.toFixed(0);
         document.getElementById('conf-v2').innerText = txData.targetDetail;
         document.getElementById('conf-v3').innerText = txData.accountTitle;
+        document.getElementById('conf-tid').innerText = txData.tid ? 'TID: ' + txData.tid : 'TID: will be generated after confirmation';
         if(customProfileImg) {
             document.getElementById('conf-from-avatar').src = customProfileImg;
         }
@@ -1674,28 +3226,33 @@
         }
         renderPinDots();
         if (enteredPin.length === 4) {
-            if (enteredPin !== correctLoginPin) {
-                alert('Incorrect MPIN! Please enter 0990');
-                enteredPin = "";
-                renderPinDots();
-                return;
-            }
-            const result = JazzCashStore.recordTransaction({
-                title: txData.type || 'JazzCash Transfer',
-                amount: txData.amount,
-                detail: txData.accountTitle + ' · ' + txData.targetDetail
-            });
-            if (!result.ok) {
-                alert(result.error);
-                enteredPin = "";
-                renderPinDots();
-                return;
-            }
             triggerLoaderWithFlow(() => {
-                document.getElementById('rec-tid-date').innerText = "TID: " + result.entry.tid + " | " + result.entry.date;
-                document.getElementById('rec-amt').innerText = "Rs. " + JazzCashStore.formatMoney(result.entry.amount);
+                const generatedTid = String(Math.floor(100000000000 + Math.random() * 900000000000));
+                txData.tid = txData.tid || generatedTid;
+                
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const month = months[now.getMonth()];
+                const year = now.getFullYear();
+                let hours = now.getHours();
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                const formattedDate = `${day} ${month} ${year} at ${hours}:${minutes} ${ampm}`;
+
+                document.getElementById('rec-tid-date').innerText = "TID: " + txData.tid + " | " + formattedDate;
+                document.getElementById('rec-amt').innerText = "Rs. " + txData.amount.toFixed(2);
                 document.getElementById('rec-sub-desc').innerText = "Transferred to " + (txData.type || "JazzCash Transfer");
-                document.getElementById('rec-name').innerHTML = txData.accountTitle + '<br><span style="font-weight:normal; color:var(--text-muted);">' + txData.targetDetail + '</span>';
+                document.getElementById('rec-name').innerHTML = escapeHtml(txData.accountTitle) + '<br><span style="font-weight:normal; color:var(--text-muted);">' + escapeHtml(txData.targetDetail) + '</span>';
+                recordTransaction({
+                    tid: txData.tid,
+                    type: txData.type || 'JazzCash Transfer',
+                    recipient: txData.accountTitle,
+                    detail: txData.targetDetail,
+                    amount: txData.amount
+                });
                 navigateTo('success-screen');
             });
         }
@@ -1706,6 +3263,17 @@
             const dot = document.getElementById('dot-' + i);
             if (i < enteredPin.length) dot.classList.add('filled');
             else dot.classList.remove('filled');
+        }
+    }
+
+    function persistAdminAccounts() {
+        const saved = JSON.stringify(adminAccounts);
+        try {
+            localStorage.setItem('jazzcash_admin_accounts', saved);
+            // Keep a second copy so a future UI/code update cannot replace saved entries with an empty object.
+            localStorage.setItem('jazzcash_admin_accounts_backup', saved);
+        } catch (error) {
+            console.warn('Admin Panel accounts could not be saved.', error);
         }
     }
 
@@ -1721,6 +3289,7 @@
 
         if(!adminAccounts[cat]) adminAccounts[cat] = {};
         adminAccounts[cat][num] = name;
+        persistAdminAccounts();
 
         document.getElementById('admin-num-input').value = '';
         document.getElementById('admin-name-input').value = '';
@@ -1731,20 +3300,9 @@
     function deleteAdminAccount(cat, num) {
         if(adminAccounts[cat] && adminAccounts[cat][num]) {
             delete adminAccounts[cat][num];
+            persistAdminAccounts();
             renderAdminList();
         }
-    }
-
-    function adminTopUp() {
-        const field = document.getElementById('admin-topup-amount');
-        const result = JazzCashStore.addBalance(field.value, 'Wallet Top-up');
-        if (!result.ok) {
-            alert(result.error);
-            return;
-        }
-        field.value = '';
-        refreshHomeBalance();
-        alert('Balance added successfully: Rs. ' + JazzCashStore.formatMoney(result.entry.amount));
     }
 
     function renderAdminList() {
