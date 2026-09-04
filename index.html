@@ -1073,7 +1073,7 @@
                 <button id="my-qr-tab-btn" class="btn-outline-custom" style="border:0; border-radius:0; padding:10px; flex:1; color:var(--text-muted);" onclick="showScanTab('myqr')">My QR</button>
             </div>
             <div id="scan-tab-content">
-                <div class="scanner-preview">
+                <div class="scanner-preview" id="scanner-preview">
                     <div id="reader"></div>
                     <video id="native-camera-video" autoplay muted playsinline></video>
                     <div class="scanner-brand-mark">
@@ -1083,12 +1083,13 @@
                     <div class="scanner-line"></div>
                     <div style="position:absolute; left:0; right:0; bottom:12px; text-align:center; color:#fff; font-size:11px; z-index:3;">Place QR or text inside the frame</div>
                 </div>
-                <div class="scanner-help" id="scan-status">Point the camera at a QR code, then confirm the captured text.</div>
+                <div class="scanner-help" id="scan-status">Camera is starting… Smart Scan will read QR codes or visible text automatically.</div>
                 <div style="padding:10px 12px 14px; background:#fff;">
                     <input id="scan-text-input" class="custom-input" placeholder="Captured text / number / TID">
-                    <button class="btn-outline-custom" style="margin-top:8px;" onclick="readScannerText()"><i class="fa-solid fa-language"></i> Read Urdu / English text</button>
+                    <button class="btn-black-custom" style="margin-top:8px;" onclick="smartCaptureScannerFrame()"><i class="fa-solid fa-wand-magic-sparkles"></i> Smart Scan QR / Text</button>
                     <input id="scanner-file-input" type="file" accept="image/*" capture="environment" style="display:none;" onchange="readScannerImage(this.files[0])">
-                    <button class="btn-outline-custom" style="margin-top:8px;" onclick="document.getElementById('scanner-file-input').click()"><i class="fa-solid fa-camera"></i> Capture & copy text</button>
+                    <button class="btn-outline-custom" style="margin-top:8px;" onclick="document.getElementById('scanner-file-input').click()"><i class="fa-solid fa-camera"></i> Take picture &amp; read automatically</button>
+                    <button class="btn-outline-custom" style="margin-top:8px;" onclick="readScannerText()"><i class="fa-solid fa-language"></i> Read visible Urdu / English text again</button>
                     <button class="btn-outline-custom" style="margin-top:8px;" onclick="useDemoScan()"><i class="fa-solid fa-bolt"></i> Use test scan</button>
                     <button class="btn-black-custom" style="margin-top:8px;" onclick="captureScannerText()">Use captured text <i class="fa-solid fa-arrow-right"></i></button>
                 </div>
@@ -3130,11 +3131,78 @@
         qrButton.style.color = scanning ? 'var(--text-muted)' : '#111827';
     }
 
+    function getScannerVideo() {
+        if (nativeCameraStream) return document.getElementById('native-camera-video');
+        return document.querySelector('#reader video');
+    }
+
+    function normalizeScannerDigits(value) {
+        return String(value || '')
+            .replace(/[۰-۹]/g, digit => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
+            .replace(/[٠-٩]/g, digit => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
+    }
+
+    function normalizeScannerText(value) {
+        return normalizeScannerDigits(value)
+            .replace(/\u200f|\u200e/g, '')
+            .replace(/[ \t\r\n]+/g, ' ')
+            .trim();
+    }
+
+    async function detectBarcodeFromCanvas(canvas) {
+        if (!('BarcodeDetector' in window)) return '';
+        try {
+            const supported = await BarcodeDetector.getSupportedFormats();
+            const formats = supported.filter(format =>
+                ['qr_code', 'aztec', 'data_matrix', 'pdf417', 'code_128'].includes(format)
+            );
+            const detector = formats.length ? new BarcodeDetector({ formats }) : new BarcodeDetector();
+            const codes = await detector.detect(canvas);
+            return String(codes.find(code => code.rawValue)?.rawValue || '').trim();
+        } catch (error) {
+            return '';
+        }
+    }
+
+    async function finishScannerCapture(value, status, message) {
+        const cleanValue = normalizeScannerText(value);
+        if (!cleanValue) return false;
+        document.getElementById('scan-text-input').value = cleanValue;
+        copyText(cleanValue);
+        status.innerText = message || 'Captured successfully. Opening payment details…';
+        setTimeout(() => handleScannedText(cleanValue), 180);
+        return true;
+    }
+
+    async function smartCaptureScannerFrame() {
+        const status = document.getElementById('scan-status');
+        const video = getScannerVideo();
+        if (!video || video.readyState < 2) {
+            status.innerText = 'Camera image is not ready yet. Wait for the picture, then tap Smart Scan again.';
+            return;
+        }
+        if (scannerBusy) return;
+        scannerBusy = true;
+        try {
+            status.innerText = 'Capturing picture and checking QR / barcode…';
+            const captureCanvas = makeScannerCaptureCanvas(video);
+            const barcode = await detectBarcodeFromCanvas(captureCanvas);
+            if (await finishScannerCapture(barcode, status, 'QR / barcode captured. Opening payment details…')) return;
+            if (typeof Tesseract === 'undefined') {
+                status.innerText = 'Text reader is unavailable. Use the picture button or enter the captured text below.';
+                return;
+            }
+            await recognizeScannerText(makeScannerOcrCanvas(captureCanvas), status);
+        } catch (error) {
+            status.innerText = 'Smart Scan failed. Keep the text inside the frame and try again.';
+        } finally {
+            if (document.getElementById('scanner-modal').style.display !== 'none') scannerBusy = false;
+        }
+    }
+
     async function readScannerText() {
         const status = document.getElementById('scan-status');
-        const video = nativeCameraStream
-            ? document.getElementById('native-camera-video')
-            : document.querySelector('#reader video');
+        const video = getScannerVideo();
         if (!video || video.readyState < 2) {
             status.innerText = 'Camera image is not ready yet. Wait for the picture, then try again.';
             return;
@@ -3143,41 +3211,65 @@
             status.innerText = 'Text reader is unavailable. Enter the captured text below to continue.';
             return;
         }
+        if (scannerBusy) return;
+        scannerBusy = true;
         try {
-            const canvas = makeScannerOcrCanvas(video);
-            await recognizeScannerText(canvas, status);
+            await recognizeScannerText(makeScannerOcrCanvas(video), status);
         } catch (error) {
             status.innerText = 'Text reading failed. Keep the writing inside the frame and try again.';
+        } finally {
+            if (document.getElementById('scanner-modal').style.display !== 'none') scannerBusy = false;
         }
     }
 
     async function readScannerImage(file) {
         if (!file) return;
         const status = document.getElementById('scan-status');
-        if (typeof Tesseract === 'undefined') {
-            status.innerText = 'Text reader is unavailable. Enter the captured text below to continue.';
-            return;
-        }
+        if (scannerBusy) return;
+        scannerBusy = true;
         try {
-            status.innerText = 'Picture captured. Reading Urdu / English text…';
-            const canvas = await makeScannerImageCanvas(file);
-            await recognizeScannerText(canvas, status);
+            status.innerText = 'Picture captured. Checking QR and applying text filters…';
+            const captureCanvas = await makeScannerImageCanvas(file);
+            const barcode = await detectBarcodeFromCanvas(captureCanvas);
+            if (await finishScannerCapture(barcode, status, 'QR / barcode captured from picture. Opening payment details…')) return;
+            if (typeof Tesseract === 'undefined') {
+                status.innerText = 'Text reader is unavailable. Enter the captured text below to continue.';
+                return;
+            }
+            await recognizeScannerText(makeScannerOcrCanvas(captureCanvas), status);
         } catch (error) {
             status.innerText = 'Text reading failed. Take a clearer, closer picture and try again.';
+        } finally {
+            if (document.getElementById('scanner-modal').style.display !== 'none') scannerBusy = false;
         }
     }
 
-    function makeScannerOcrCanvas(source) {
+    function makeScannerCaptureCanvas(source) {
         const sourceWidth = source.videoWidth || source.naturalWidth || source.width || 640;
         const sourceHeight = source.videoHeight || source.naturalHeight || source.height || 480;
-        const scale = Math.min(2, 2600 / Math.max(sourceWidth, sourceHeight));
+        const scale = Math.min(2.5, Math.max(1, 2600 / Math.max(sourceWidth, sourceHeight)));
         const canvas = document.createElement('canvas');
-        canvas.width = Math.max(640, Math.round(sourceWidth * scale));
-        canvas.height = Math.max(480, Math.round(sourceHeight * scale));
+        canvas.width = Math.max(960, Math.round(sourceWidth * scale));
+        canvas.height = Math.max(640, Math.round(sourceHeight * scale));
         const context = canvas.getContext('2d', { willReadFrequently: true });
         context.imageSmoothingEnabled = true;
         context.imageSmoothingQuality = 'high';
-        context.filter = 'grayscale(1) contrast(1.3) brightness(1.05)';
+        context.drawImage(source, 0, 0, canvas.width, canvas.height);
+        return canvas;
+    }
+
+    function makeScannerOcrCanvas(source) {
+        const isCanvas = source instanceof HTMLCanvasElement;
+        const canvas = isCanvas ? document.createElement('canvas') : makeScannerCaptureCanvas(source);
+        const sourceWidth = source.width || source.videoWidth || source.naturalWidth || 640;
+        const sourceHeight = source.height || source.videoHeight || source.naturalHeight || 480;
+        canvas.width = isCanvas ? source.width : Math.max(960, sourceWidth);
+        canvas.height = isCanvas ? source.height : Math.max(640, sourceHeight);
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = 'high';
+        // Google-Lens-like cleanup: upscale, grayscale, contrast and brightness.
+        context.filter = 'grayscale(1) contrast(1.45) brightness(1.08)';
         context.drawImage(source, 0, 0, canvas.width, canvas.height);
         context.filter = 'none';
         return canvas;
@@ -3189,7 +3281,7 @@
             const objectUrl = URL.createObjectURL(file);
             image.onload = () => {
                 try {
-                    resolve(makeScannerOcrCanvas(image));
+                    resolve(makeScannerCaptureCanvas(image));
                 } finally {
                     URL.revokeObjectURL(objectUrl);
                 }
@@ -3204,8 +3296,20 @@
 
     async function recognizeScannerText(canvas, status) {
         status.innerText = 'Reading Urdu / English text… (first time may take a moment)';
-        const result = await Tesseract.recognize(canvas, 'eng+urd');
-        const text = String(result?.data?.text || '').trim().replace(/\s+/g, ' ');
+        let result;
+        try {
+            result = await Tesseract.recognize(canvas, 'eng+urd', {
+                logger: progress => {
+                    if (progress?.status === 'recognizing text' && Number.isFinite(progress.progress)) {
+                        status.innerText = 'Reading text… ' + Math.round(progress.progress * 100) + '%';
+                    }
+                }
+            });
+        } catch (urduError) {
+            // If Urdu trained data cannot load, English is still useful for IDs and mobile numbers.
+            result = await Tesseract.recognize(canvas, 'eng');
+        }
+        const text = normalizeScannerText(result?.data?.text || '');
         document.getElementById('scan-text-input').value = text;
         if (!text) {
             status.innerText = 'No readable text found. Move closer, keep it steady, and try again.';
@@ -3257,15 +3361,15 @@
 
         const tid = fromObject(['tid', 'tId', 'tillId', 'till_id', 'transactionId', 'reference']) ||
             fromText([
-                /(?:tid|till\s*id|tillid|transaction\s*id|transactionid|reference|ref)\s*[:=#-]?\s*([A-Za-z0-9_-]+)/i
+                /(?:tid|till\s*id|tillid|transaction\s*id|transactionid|reference|ref|ٹرانزیکشن\s*آئی\s*ڈی|حوالہ)\s*[:=#-]?\s*([A-Za-z0-9_-]+)/i
             ]);
         const name = fromObject(['name', 'owner', 'ownerName', 'accountTitle', 'account_title', 'recipient']) ||
             fromText([
-                /(?:owner(?:\s*name)?|account\s*(?:title|name)?|recipient|name)\s*[:=-]?\s*(.+?)(?=\s+(?:number|mobile|phone|msisdn|account\s*(?:number|no|id)|tid|till\s*id)\b|[|,;\n]|$)/i
+                /(?:owner(?:\s*name)?|account\s*(?:title|name)?|recipient|name|نام|اکاؤنٹ\s*کا\s*نام)\s*[:=-]?\s*(.+?)(?=\s+(?:number|mobile|phone|msisdn|account\s*(?:number|no|id)|tid|till\s*id|نمبر|موبائل|ٹرانزیکشن)\b|[|,;\n]|$)/i
             ]);
         let number = fromObject(['number', 'mobile', 'phone', 'accountNumber', 'account_number', 'msisdn']) ||
             fromText([
-                /(?:number|mobile|phone|msisdn|account\s*(?:number|no|id))\s*[:=#-]?\s*(\+?[0-9][0-9 -]{7,})/i
+                /(?:number|mobile|phone|msisdn|account\s*(?:number|no|id)|نمبر|موبائل)\s*[:=#-]?\s*(\+?[0-9][0-9 -]{7,})/i
             ]);
         number = number.replace(/[^0-9+]/g, '');
         if (!number) {
