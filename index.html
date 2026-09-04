@@ -653,7 +653,8 @@
             height: 250px !important;
             min-height: 250px;
             background: #000;
-            position: relative;
+            position: absolute;
+            inset: 0;
             z-index: 1;
         }
         #reader__scan_region,
@@ -666,6 +667,47 @@
             display: block !important;
             object-fit: cover;
             max-width: none !important;
+        }
+        #native-camera-video {
+            display: none;
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 250px;
+            min-height: 250px;
+            object-fit: cover;
+            background: #111827;
+            z-index: 1;
+        }
+        .scanner-brand-mark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .2px;
+            text-shadow: 0 2px 8px rgba(0,0,0,.8);
+            pointer-events: none;
+            transition: opacity .2s ease;
+        }
+        .scanner-brand-mark img {
+            width: 58px;
+            height: 58px;
+            object-fit: contain;
+            border-radius: 14px;
+            background: rgba(255,255,255,.95);
+            padding: 5px;
+            box-shadow: 0 4px 18px rgba(0,0,0,.35);
+        }
+        .scanner-preview.camera-live .scanner-brand-mark {
+            opacity: 0;
         }
         #reader__dashboard_section,
         #reader__dashboard_section_csr {
@@ -1033,6 +1075,11 @@
             <div id="scan-tab-content">
                 <div class="scanner-preview">
                     <div id="reader"></div>
+                    <video id="native-camera-video" autoplay muted playsinline></video>
+                    <div class="scanner-brand-mark">
+                        <img src="https://i.ibb.co/9k5QGt2K/9k5QGt2K.png" alt="JazzCash" onerror="this.src='https://i.ibb.co/9HSRyfTC/1.png';">
+                        <span>JazzCash Scanner</span>
+                    </div>
                     <div class="scanner-line"></div>
                     <div style="position:absolute; left:0; right:0; bottom:12px; text-align:center; color:#fff; font-size:11px; z-index:3;">Place QR or text inside the frame</div>
                 </div>
@@ -2042,6 +2089,8 @@
     let loadState = { service: '', operator: 'Jazz', number: '', amount: 0, pin: '' };
     let scanState = { text: '', name: 'NOMAN', number: '', tid: '', amount: 0 };
     let scannerStarted = false;
+    let nativeCameraStream = null;
+    let nativeScanTimer = null;
     let scannerBusy = false;
     let transactions = [];
     let walletBalance = Number(localStorage.getItem('jazzcash_wallet_balance') || '5287.14');
@@ -2948,13 +2997,8 @@
 
     async function startScannerCamera() {
         const status = document.getElementById('scan-status');
-        if (typeof Html5Qrcode === 'undefined') {
-            status.innerText = 'Live scanner library is unavailable. Use Open phone camera or enter text below.';
-            return;
-        }
-        if (!html5QrCode) html5QrCode = new Html5Qrcode('reader', { verbose: false });
-        if (scannerStarted) return;
-
+        const preview = document.querySelector('.scanner-preview');
+        const nativeVideo = document.getElementById('native-camera-video');
         const onDecoded = (decodedText) => {
             if (scannerBusy) return;
             scannerBusy = true;
@@ -2965,6 +3009,13 @@
             setTimeout(() => handleScannedText(value), 180);
         };
 
+        if (typeof Html5Qrcode === 'undefined') {
+            await startNativeCamera(status, nativeVideo, preview, onDecoded);
+            return;
+        }
+        if (!html5QrCode) html5QrCode = new Html5Qrcode('reader', { verbose: false });
+        if (scannerStarted || nativeCameraStream) return;
+
         try {
             await html5QrCode.start(
                 { facingMode: { ideal: 'environment' } },
@@ -2973,6 +3024,7 @@
                 () => {}
             );
             scannerStarted = true;
+            preview.classList.add('camera-live');
             status.innerText = 'Camera is on. Point it at the QR code or printed details.';
         } catch (firstError) {
             try {
@@ -2982,10 +3034,71 @@
                 if (!cameraId) throw firstError;
                 await html5QrCode.start(cameraId, scannerConfig(), onDecoded, () => {});
                 scannerStarted = true;
+                preview.classList.add('camera-live');
                 status.innerText = 'Camera is on. Point it at the QR code or printed details.';
             } catch (error) {
-                status.innerText = 'Camera could not start here. Use Open phone camera or enter the captured text below.';
+                try { await html5QrCode.clear(); } catch (clearError) {}
+                html5QrCode = null;
+                await startNativeCamera(status, nativeVideo, preview, onDecoded);
             }
+        }
+    }
+
+    async function startNativeCamera(status, video, preview, onDecoded) {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            status.innerText = 'This browser does not allow camera access. Use Open phone camera or enter text below.';
+            return;
+        }
+        const constraints = [
+            { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+            { video: { facingMode: 'environment' }, audio: false },
+            { video: true, audio: false }
+        ];
+        let lastError = null;
+        for (const setting of constraints) {
+            try {
+                nativeCameraStream = await navigator.mediaDevices.getUserMedia(setting);
+                break;
+            } catch (error) {
+                lastError = error;
+            }
+        }
+        if (!nativeCameraStream) {
+            const reason = lastError?.name === 'NotAllowedError'
+                ? 'Camera permission is blocked. Allow Camera for this site in Chrome, then reopen Scanner.'
+                : 'Camera could not start. Use Open phone camera or enter text below.';
+            status.innerText = reason;
+            return;
+        }
+        video.srcObject = nativeCameraStream;
+        video.style.display = 'block';
+        preview.classList.add('camera-live');
+        try { await video.play(); } catch (error) {}
+        status.innerText = 'Camera is on. Point it at the QR code or printed details.';
+        startNativeBarcodeDetection(video, onDecoded, status);
+    }
+
+    async function startNativeBarcodeDetection(video, onDecoded, status) {
+        if (!('BarcodeDetector' in window)) return;
+        try {
+            const supported = await BarcodeDetector.getSupportedFormats();
+            const formats = supported.filter(format => ['qr_code', 'aztec', 'data_matrix', 'pdf417', 'code_128'].includes(format));
+            const detector = formats.length ? new BarcodeDetector({ formats }) : new BarcodeDetector();
+            const detect = async () => {
+                if (!nativeCameraStream || scannerBusy) return;
+                try {
+                    const codes = await detector.detect(video);
+                    const value = codes.find(code => code.rawValue)?.rawValue;
+                    if (value) {
+                        onDecoded(value);
+                        return;
+                    }
+                } catch (error) {}
+                nativeScanTimer = setTimeout(detect, 350);
+            };
+            detect();
+        } catch (error) {
+            status.innerText = 'Camera is on. Point it at the QR code or use Read visible English text.';
         }
     }
 
@@ -3189,12 +3302,29 @@
 
     async function closeScannerModal() {
         scannerBusy = true;
+        if (nativeScanTimer) {
+            clearTimeout(nativeScanTimer);
+            nativeScanTimer = null;
+        }
+        if (nativeCameraStream) {
+            nativeCameraStream.getTracks().forEach(track => track.stop());
+            nativeCameraStream = null;
+        }
+        const nativeVideo = document.getElementById('native-camera-video');
+        if (nativeVideo) {
+            nativeVideo.pause();
+            nativeVideo.srcObject = null;
+            nativeVideo.style.display = 'none';
+        }
+        const preview = document.querySelector('.scanner-preview');
+        if (preview) preview.classList.remove('camera-live');
         if (html5QrCode && scannerStarted) {
             try { await html5QrCode.stop(); } catch (error) {}
             scannerStarted = false;
             try { await html5QrCode.clear(); } catch (error) {}
             html5QrCode = null;
         }
+        scannerStarted = false;
         document.getElementById('scanner-modal').style.display = 'none';
     }
 
