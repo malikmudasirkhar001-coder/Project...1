@@ -150,6 +150,50 @@
             align-items: center;
             z-index: 9999;
         }
+        #guest-loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.82);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            color: #fff;
+            text-align: center;
+            padding: 24px;
+        }
+        .guest-loading-card {
+            width: 100%;
+            max-width: 300px;
+            padding: 26px 20px 20px;
+            border-radius: 20px;
+            background: #1c1c1e;
+            border: 1px solid #374151;
+            box-shadow: 0 12px 36px rgba(0,0,0,.4);
+        }
+        .guest-loading-spinner {
+            width: 42px;
+            height: 42px;
+            margin: 0 auto 14px;
+            border: 4px solid #4b5563;
+            border-top-color: var(--yellow-accent);
+            border-radius: 50%;
+            animation: scannerSpin .8s linear infinite;
+        }
+        .guest-loading-title { font-size: 15px; font-weight: 700; }
+        .guest-loading-copy { font-size: 11px; color: #d1d5db; margin-top: 6px; line-height: 1.45; }
+        .guest-loading-actions { display: flex; gap: 8px; margin-top: 18px; }
+        .guest-loading-actions button {
+            flex: 1;
+            border-radius: 22px;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .guest-loading-cancel { background: transparent; color: #fff; border: 1px solid #6b7280; }
+        .guest-loading-back { background: var(--yellow-accent); color: #111827; border: 1px solid var(--yellow-accent); }
         .dots-container {
             display: flex;
             gap: 10px;
@@ -511,6 +555,9 @@
             z-index: 5000;
             pointer-events: auto;
         }
+        /* The bottom navigation belongs to Home only. It must not cover PIN,
+           receipt, scanner, or form actions on smaller screens. */
+        .app-screen.active:not(#home-screen) ~ .bottom-nav { display: none; }
         .nav-link {
             display: flex; flex-direction: column; align-items: center; background: none;
             border: none; cursor: pointer; color: #111827; font-size: 10px; font-weight: 500; gap: 2px;
@@ -714,6 +761,26 @@
             position: relative;
             transform: translateY(22px);
         }
+        /* The scanner is intentionally kept clean: camera first, no extra
+           tabs or test controls in the primary scanner view. */
+        #scanner-modal .scanner-hero,
+        #scanner-modal > .scanner-card > .scanner-header-bar + .scanner-hero,
+        #scanner-modal #my-qr-tab-btn,
+        #scanner-modal #my-qr-tab-content,
+        #scanner-modal #scan-text-input,
+        #scanner-modal #scan-tab-content > div:last-child {
+            display: none !important;
+        }
+        #scanner-modal .scanner-card { max-height: 78%; }
+        #scanner-modal .scanner-preview { height: 330px; min-height: 330px; }
+        #scanner-modal #reader,
+        #scanner-modal #reader__scan_region,
+        #scanner-modal #reader__scan_region video,
+        #scanner-modal #native-camera-video {
+            height: 330px !important;
+            min-height: 330px;
+        }
+        #scanner-modal .scanner-help { padding: 14px 12px; }
         .scanner-hero {
             position: relative;
             height: 78px;
@@ -1114,6 +1181,30 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
+        .reference-samples {
+            width: 100%;
+            margin-top: 12px;
+            color: #d1d5db;
+            font-size: 11px;
+        }
+        .reference-samples summary {
+            cursor: pointer;
+            text-align: center;
+            padding: 8px;
+        }
+        .reference-sample-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 7px;
+            margin-top: 5px;
+        }
+        .reference-sample-grid img {
+            width: 100%;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #374151;
+        }
     </style>
 </head>
 <body>
@@ -1127,6 +1218,18 @@
             <div class="dot"></div>
             <div class="dot"></div>
             <div class="dot"></div>
+        </div>
+    </div>
+
+    <div id="guest-loading-overlay" aria-live="polite">
+        <div class="guest-loading-card">
+            <div class="guest-loading-spinner"></div>
+            <div class="guest-loading-title">Please wait</div>
+            <div class="guest-loading-copy">This service needs login. Loading will remain here until you cancel or go back.</div>
+            <div class="guest-loading-actions">
+                <button class="guest-loading-cancel" onclick="closeGuestLoading()">Cancel</button>
+                <button class="guest-loading-back" onclick="closeGuestLoading(); navigateTo('home-screen')">Back</button>
+            </div>
         </div>
     </div>
 
@@ -1160,6 +1263,9 @@
                 <input type="text" class="custom-input" id="admin-name-input" placeholder="e.g. MUDASIR ABBAS">
             </div>
             <button class="btn-black-custom" onclick="saveAdminAccount()">Save / Add Account</button>
+            <button class="btn-outline-custom" style="margin-top:8px;" onclick="document.getElementById('admin-list-container').scrollIntoView({behavior:'smooth', block:'start'})">
+                View Saved Accounts
+            </button>
 
             <div style="margin-top:20px; border:1px solid var(--border-color); border-radius:14px; padding:14px; background:#fff;">
                 <div style="font-size:13px; font-weight:700; margin-bottom:4px;">Wallet Balance Controls</div>
@@ -1696,9 +1802,9 @@
             <h2 style="font-size:22px;">Gifting Made Personal</h2>
             <div class="flow-grid" style="margin-top:25px;"><button class="flow-item" onclick="showComingSoon('Gift It')"><i class="fa-solid fa-gift"></i><span>Gift It</span></button><button class="flow-item" onclick="showComingSoon('Redeem It')"><i class="fa-solid fa-box-open"></i><span>Redeem It</span></button><button class="flow-item" onclick="showComingSoon('Request It')"><i class="fa-regular fa-comment-dots"></i><span>Request It</span></button></div>
             <div style="margin-top:24px; padding:14px; border:1px solid var(--border-color); border-radius:15px; background:#fff; text-align:left;">
-                <div style="font-size:13px; font-weight:700;"><i class="fa-solid fa-shield-halved" style="color:var(--primary); margin-right:6px;"></i>Admin access</div>
+                <div style="font-size:13px; font-weight:700;"><i class="fa-solid fa-shield-halved" style="color:var(--primary); margin-right:6px;"></i>Admin Panel Access...</div>
                 <div style="font-size:10px; color:var(--text-muted); margin:5px 0 10px;">Enter the admin PIN again to open account controls without leaving the Gift section.</div>
-                <button class="btn-black-custom" style="margin-top:0;" onclick="openGiftAdminLogin()">Enter PIN for Admin Login <i class="fa-solid fa-arrow-right"></i></button>
+                <button class="btn-black-custom" style="margin-top:0;" onclick="openGiftAdminLogin()">Enter PIN... <i class="fa-solid fa-arrow-right"></i></button>
             </div>
         </div>
     </div>
@@ -1729,8 +1835,8 @@
                 <input id="scan-number-input" type="text" inputmode="numeric" class="custom-input" placeholder="03XX-XXXXXXX or Account ID" oninput="updateScanAmountButton()">
             </div>
             <div class="input-group-custom"><label class="input-label">Amount (PKR)</label><input id="scan-amount-input" type="number" class="custom-input" placeholder="Rs. 0" oninput="updateScanAmountButton()"></div>
-            <div style="font-size:10px; color:var(--text-muted); margin:-3px 0 10px;">Number is ready from the scanner. Enter the amount, then press Done.</div>
-            <button class="btn-black-custom" id="scan-amount-next-btn" disabled style="background:#d1d5db; color:#374151;" onclick="goScannedName()">Done — Continue <i class="fa-solid fa-arrow-right"></i></button>
+            <div style="font-size:10px; color:var(--text-muted); margin:-3px 0 10px;">The Till ID is ready from the scanner. Enter the amount, then continue to send.</div>
+            <button class="btn-black-custom" id="scan-amount-next-btn" disabled style="background:#d1d5db; color:#374151;" onclick="goScannedName()">Review payment <i class="fa-solid fa-arrow-right"></i></button>
         </div>
     </div>
 
@@ -1815,7 +1921,7 @@
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:10px;">
                 <button class="back-btn" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i></button>
-                <span class="screen-title">Review Transaction Details</span>
+                <span class="screen-title">Send Money</span>
             </div>
             <i class="fa-solid fa-house" style="cursor: pointer; color: var(--text-main);" onclick="navigateTo('home-screen')"></i>
         </div>
@@ -1898,7 +2004,7 @@
                     <div style="font-size: 16px; font-weight: 700; color: var(--text-main);" id="conf-footer-amt">Rs. 100</div>
                 </div>
                 <button class="btn-black-custom" onclick="openPinScreen()" style="border-radius:30px; padding:12px 28px; display:flex; align-items:center; gap:8px; width: auto;">
-                    <span>Confirm</span> <i class="fa-solid fa-arrow-right"></i>
+                    <span>Confirm &amp; Send</span> <i class="fa-solid fa-arrow-right"></i>
                 </button>
             </div>
         </div>
@@ -1985,9 +2091,17 @@
             <div style="font-size:10px; color:#9ca3af; margin-bottom:10px; text-align: center;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</div>
 
             <div style="display:flex; gap:12px; width:100%;">
-                <button style="flex:1; background:#1c1c1e; color:white; border:1px solid #374151; border-radius:28px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="shareReceiptOnWhatsApp()"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
-                <button style="flex:1; background:#1c1c1e; color:white; border:1px solid #374151; border-radius:28px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="saveReceiptAsImage()"><i class="fa-solid fa-download"></i> Save as image</button>
+                <button style="flex:1; background:#1c1c1e; color:white; border:1px solid #374151; border-radius:28px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="shareReceiptOnWhatsApp()"><i class="fa-solid fa-share-nodes"></i> Share</button>
+                <button style="flex:1; background:#1c1c1e; color:white; border:1px solid #374151; border-radius:28px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="saveReceiptAsImage()"><i class="fa-solid fa-download"></i> Save</button>
             </div>
+            <details class="reference-samples">
+                <summary>View sample designs</summary>
+                <div class="reference-sample-grid">
+                    <img src="./sample-mpin-reference.jpg" alt="MPIN sample">
+                    <img src="./sample-success-reference.jpg" alt="Success screen sample">
+                    <img src="./sample-receipt-reference.jpg" alt="Receipt sample">
+                </div>
+            </details>
             <button class="btn-outline-custom" style="margin-top:10px; background:#1c1c1e; color:#fff; border-color:#374151;" onclick="openSmsInbox()"><i class="fa-solid fa-inbox"></i> Open SMS Inbox</button>
             <button class="btn-outline-custom" style="margin-top:10px; background:#1c1c1e; color:#fff; border-color:#374151;" onclick="openAccountStatement()">View Account Statement</button>
         </div>
@@ -2036,24 +2150,6 @@
         </div>
     </div>
 
-    <!-- Searchable Selection List Screen -->
-    <div id="searchable-list-screen" class="app-screen">
-        <div class="top-bar">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <button class="back-btn" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i></button>
-                <span class="screen-title" id="sl-title">Select Bank</span>
-            </div>
-        </div>
-        <div class="page-content" style="background:#ffffff; padding: 15px;">
-            <div style="position:relative; margin-bottom:15px;">
-                <input type="text" class="custom-input" id="sl-search-input" placeholder="Search Bank" style="padding-right:35px;" oninput="filterSearchableList(this.value)">
-                <i class="fa-solid fa-magnifying-glass" style="position:absolute; right:14px; top:14px; color:var(--text-muted);"></i>
-            </div>
-            <div style="font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:10px;" id="sl-subtitle">Select Bank</div>
-            <div class="menu-list-card" id="sl-items-container"></div>
-        </div>
-    </div>
-
     <!-- Single-file Bill Payment flow -->
     <div id="bill-categories-screen" class="app-screen">
         <div class="top-bar">
@@ -2078,10 +2174,28 @@
         </div>
     </div>
 
-    <div id="bill-form-screen" class="app-screen">
+    <div id="bill-company-screen" class="app-screen">
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:10px;">
                 <button class="back-btn" onclick="navigateTo('bill-categories-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">Select Bill Company</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content">
+            <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px;" id="bill-company-subtitle">Select a company</div>
+            <div style="position:relative; margin-bottom:14px;">
+                <input id="bill-company-search" class="custom-input" placeholder="Search bill company" oninput="filterBillCompanies(this.value)">
+                <i class="fa-solid fa-magnifying-glass" style="position:absolute; right:14px; top:14px; color:var(--text-muted);"></i>
+            </div>
+            <div class="menu-list-card" id="bill-company-list"></div>
+        </div>
+    </div>
+
+    <div id="bill-form-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo(billState.company ? 'bill-company-screen' : 'bill-categories-screen')"><i class="fa-solid fa-arrow-left"></i></button>
                 <span class="screen-title" id="bill-form-title">Bill Payment</span>
             </div>
             <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
@@ -2110,7 +2224,7 @@
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:10px;">
                 <button class="back-btn" onclick="navigateTo('bill-form-screen')"><i class="fa-solid fa-arrow-left"></i></button>
-                <span class="screen-title">Review Transaction Details</span>
+                <span class="screen-title">Confirm Bill Payment</span>
             </div>
             <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
         </div>
@@ -2121,7 +2235,7 @@
                 <div class="receipt-row"><span class="receipt-label">Amount</span><span class="receipt-value" id="bill-review-amount"></span></div>
                 <div class="receipt-row"><span class="receipt-label">Fee</span><span class="receipt-value">Rs. 0.00</span></div>
             </div>
-            <button class="btn-black-custom" onclick="openBillPin()">Confirm <i class="fa-solid fa-arrow-right"></i></button>
+            <button class="btn-black-custom" onclick="openBillPin()">Confirm &amp; Pay <i class="fa-solid fa-arrow-right"></i></button>
         </div>
     </div>
 
@@ -2204,10 +2318,10 @@
         <div class="page-content">
             <div>
                 <div class="operator-row-inline">
-                    <div class="operator-choice active" onclick="setLoadOperator('Jazz',this)"><span>J</span><b>Jazz</b></div>
-                    <div class="operator-choice" onclick="setLoadOperator('Telenor',this)"><span>T</span><b>Telenor</b></div>
-                    <div class="operator-choice" onclick="setLoadOperator('Ufone',this)"><span>U</span><b>Ufone</b></div>
-                    <div class="operator-choice" onclick="setLoadOperator('Zong',this)"><span>Z</span><b>Zong</b></div>
+                    <div class="operator-choice active" data-operator="Jazz" onclick="setLoadOperator('Jazz',this)"><span>J</span><b>Jazz</b></div>
+                    <div class="operator-choice" data-operator="Telenor" onclick="setLoadOperator('Telenor',this)"><span>T</span><b>Telenor</b></div>
+                    <div class="operator-choice" data-operator="Ufone" onclick="setLoadOperator('Ufone',this)"><span>U</span><b>Ufone</b></div>
+                    <div class="operator-choice" data-operator="Zong" onclick="setLoadOperator('Zong',this)"><span>Z</span><b>Zong</b></div>
                 </div>
                 <div class="input-group-custom">
                     <label class="input-label">Enter or search a number</label>
@@ -2352,6 +2466,7 @@
     let automaticTextCaptureTimer = null;
     let automaticTextCaptureRunning = false;
     let scannerOpenLoadingTimer = null;
+    let scannerTransitionTimer = null;
     let scannerBusy = false;
     let transactions = [];
     let smsMessages = [];
@@ -2374,6 +2489,21 @@
         Ufone: [['Daily Light', 'Rs. 25'], ['Weekly Internet', 'Rs. 150'], ['Monthly Heavy', 'Rs. 950']],
         Zong: [['Daily WhatsApp', 'Rs. 20'], ['Weekly Digital Max', 'Rs. 170'], ['Monthly Supreme', 'Rs. 999']]
     };
+    const billCompanies = [
+        { category: 'Electricity', name: 'LESCO', code: 'Reference number' },
+        { category: 'Electricity', name: 'MEPCO', code: 'Reference number' },
+        { category: 'Electricity', name: 'FESCO', code: 'Reference number' },
+        { category: 'Electricity', name: 'IESCO', code: 'Reference number' },
+        { category: 'Electricity', name: 'K-Electric', code: '13-digit account number' },
+        { category: 'Gas', name: 'SNGPL', code: 'Consumer number' },
+        { category: 'Gas', name: 'SSGC', code: 'Customer number' },
+        { category: 'Water', name: 'KWSB', code: 'Account number' },
+        { category: 'Water', name: 'WASA Lahore', code: 'Consumer number' },
+        { category: 'Internet', name: 'PTCL', code: 'Landline / account number' },
+        { category: 'Internet', name: 'Nayatel', code: 'Customer ID' },
+        { category: 'Internet', name: 'StormFiber', code: 'Customer ID' },
+        { category: 'Telephone', name: 'PTCL Telephone', code: 'Landline number' }
+    ];
 
     let adminAccounts = {
         'JazzCash Transfer': {},
@@ -2522,7 +2652,9 @@
     function openLoginFlow() {
         loginPinStr = "";
         renderKeyLoginDots();
-        navigateTo('login-biometric-screen');
+        // Login opens directly on the MPIN keypad. Biometrics stays available
+        // only as an optional screen from the keypad, matching the sample.
+        navigateTo('login-keypad-screen');
     }
 
     function showComingSoon(feature) {
@@ -2610,7 +2742,7 @@
         const select = document.getElementById('admin-cat');
         if (!select) return;
         const existing = new Set(Array.from(select.options).map(option => option.value));
-        [...bankListDatabase, ...walletListDatabase].forEach(item => {
+        [...bankListDatabase, ...walletListDatabase, ...billCompanies].forEach(item => {
             if (!existing.has(item.name)) {
                 const option = document.createElement('option');
                 option.value = item.name;
@@ -2897,14 +3029,66 @@
 
     function selectBillCategory(category) {
         billState = { category, reference: '', recipient: '', amount: 0, pin: '' };
-        document.getElementById('bill-form-title').innerText = category + ' Bill';
-        document.getElementById('bill-form-subtitle').innerText = 'Via JazzCash ' + category;
+        if (category !== 'My Favorites') {
+            openBillCompanies(category);
+            return;
+        }
+        prepareBillForm();
+    }
+
+    function prepareBillForm(company = null) {
+        billState.company = company ? company.name : '';
+        billState.companyCode = company ? company.code : '';
+        document.getElementById('bill-form-title').innerText = company ? company.name : billState.category + ' Bill';
+        document.getElementById('bill-form-subtitle').innerText = company
+            ? 'Via JazzCash ' + billState.category
+            : 'Via JazzCash Bill Payment';
+        document.getElementById('bill-ref-input').placeholder = company
+            ? company.code
+            : 'Enter saved reference number';
         document.getElementById('bill-ref-input').value = '';
         document.getElementById('bill-amount-input').value = '';
         document.getElementById('bill-error').style.display = 'none';
         document.getElementById('bill-verified').style.display = 'none';
         updateBillButton();
         navigateTo('bill-form-screen');
+    }
+
+    function openBillCompanies(category) {
+        billState = { category, reference: '', recipient: '', amount: 0, pin: '', company: '', companyCode: '' };
+        document.getElementById('bill-company-subtitle').innerText = 'Select a ' + category + ' company';
+        document.getElementById('bill-company-search').value = '';
+        renderBillCompanies(category);
+        navigateTo('bill-company-screen');
+    }
+
+    function renderBillCompanies(category, query = '') {
+        const container = document.getElementById('bill-company-list');
+        if (!container) return;
+        const normalizedQuery = String(query || '').toLowerCase();
+        const matches = billCompanies.filter(company =>
+            company.category === category &&
+            (!normalizedQuery || company.name.toLowerCase().includes(normalizedQuery))
+        );
+        container.innerHTML = matches.length ? matches.map(company => `
+            <div class="menu-list-item" onclick="selectBillCompany('${escapeHtml(company.name)}')">
+                <div>
+                    <strong>${escapeHtml(company.name)}</strong>
+                    <div style="font-size:10px; color:var(--text-muted); margin-top:3px;">${escapeHtml(company.code)}</div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="font-size:12px; color:var(--text-muted);"></i>
+            </div>
+        `).join('') : '<div style="padding:18px; text-align:center; color:var(--text-muted); font-size:12px;">No company found.</div>';
+    }
+
+    function filterBillCompanies(query) {
+        renderBillCompanies(billState.category, query);
+    }
+
+    function selectBillCompany(name) {
+        const company = billCompanies.find(item => item.name === name && item.category === billState.category);
+        if (!company) return;
+        prepareBillForm(company);
     }
 
     function handleBillInput(value) {
@@ -2940,8 +3124,11 @@
             return;
         }
         billState.amount = amount;
-        document.getElementById('bill-review-category').innerText = billState.category;
-        document.getElementById('bill-review-recipient').innerHTML = billState.recipient + '<br><small>' + billState.reference + '</small>';
+        document.getElementById('bill-review-category').innerText = billState.company
+            ? billState.category + ' · ' + billState.company
+            : billState.category;
+        document.getElementById('bill-review-recipient').innerHTML =
+            escapeHtml(billState.recipient) + '<br><small>' + escapeHtml(billState.reference) + '</small>';
         document.getElementById('bill-review-amount').innerText = 'Rs. ' + amount.toFixed(2);
         navigateTo('bill-review-screen');
     }
@@ -3011,9 +3198,29 @@
         if (element) element.classList.add('active');
     }
 
+    function detectMobileOperator(value) {
+        const digits = String(value || '').replace(/\D/g, '');
+        const prefix = digits.slice(0, 4);
+        if (/^03(00|01|02|03|04|05|06|07|08|09|20|21|22|23|24|25|26|27|28|29)$/.test(prefix)) return 'Jazz';
+        if (/^03(40|41|42|43|44|45|46|47|48|49)$/.test(prefix)) return 'Telenor';
+        if (/^03(30|31|32|33|34|35|36|37|38|39)$/.test(prefix)) return 'Ufone';
+        if (/^03(10|11|12|13|14|15|16|17|18|19)$/.test(prefix)) return 'Zong';
+        return '';
+    }
+
+    function syncDetectedOperator(value) {
+        const operator = detectMobileOperator(value);
+        if (!operator) return;
+        loadState.operator = operator;
+        document.querySelectorAll('#load-form-screen .operator-choice').forEach(choice => {
+            choice.classList.toggle('active', choice.dataset.operator === operator);
+        });
+    }
+
     function handleLoadInput(value) {
         const saved = findSavedAdminRecipient(value);
         loadState.number = String(value || '').trim();
+        syncDetectedOperator(value);
         document.getElementById('load-error').style.display = saved ? 'none' : (value ? 'block' : 'none');
         document.getElementById('load-verified').style.display = saved ? 'block' : 'none';
         updateLoadButton();
@@ -3133,10 +3340,21 @@
     // Protected services send guests through the official login sequence.
     function checkAuthAndOpen(callback) {
         if (!isUserLoggedIn) {
-            openLoginFlow();
+            pendingAuthAction = null;
+            showGuestLoading();
             return;
         }
         callback();
+    }
+
+    function showGuestLoading() {
+        const overlay = document.getElementById('guest-loading-overlay');
+        if (overlay) overlay.style.display = 'flex';
+    }
+
+    function closeGuestLoading() {
+        const overlay = document.getElementById('guest-loading-overlay');
+        if (overlay) overlay.style.display = 'none';
     }
 
     function openMoneyTransferModal() {
@@ -3437,8 +3655,13 @@
             }
             scannerBusy = true;
             document.getElementById('scan-text-input').value = number;
-            status.innerText = 'Number copied. Check it, then press Continue.';
+            status.innerText = 'Number detected. Opening payment…';
             copyText(number);
+            if (scannerTransitionTimer) clearTimeout(scannerTransitionTimer);
+            scannerTransitionTimer = setTimeout(() => {
+                scannerTransitionTimer = null;
+                handleScannedText(number);
+            }, 2200);
         };
 
         if (typeof Html5Qrcode === 'undefined') {
@@ -3757,8 +3980,14 @@
         }
         document.getElementById('scan-text-input').value = best;
         copyText(best);
-        setScannerOcrLoading(true, 'Number found. Copying it…');
-        status.innerText = 'Number copied. Check the number, then press Continue.';
+        scannerBusy = true;
+        setScannerOcrLoading(true, 'Number found. Opening payment…');
+        status.innerText = 'Number detected. Opening payment…';
+        if (scannerTransitionTimer) clearTimeout(scannerTransitionTimer);
+        scannerTransitionTimer = setTimeout(() => {
+            scannerTransitionTimer = null;
+            handleScannedText(best);
+        }, 2200);
         setTimeout(() => setScannerOcrLoading(false), 500);
         return true;
     }
@@ -3884,12 +4113,26 @@
         }
         scanState.number = number;
         scanState.amount = amount;
-        document.getElementById('scan-name-amount').innerText = 'Rs. ' + amount.toFixed(2);
-        document.getElementById('scan-name-number').innerText = number;
-        document.getElementById('scan-name-input').value = '';
-        document.getElementById('scan-statement-input').value = '';
-        updateScanNameButton();
-        navigateTo('scanner-name-screen');
+        const saved = findSavedAdminRecipient(number);
+        scanState.name = scanState.name || (saved ? saved.name : 'Till ID ' + number);
+        txData = {
+            type: 'JazzCash Transfer',
+            targetName: scanState.name,
+            targetDetail: number,
+            amount,
+            accountTitle: scanState.name,
+            tid: scanState.tid || 'SCN-' + Math.floor(100000000 + Math.random() * 900000000),
+            statement: ''
+        };
+        document.getElementById('conf-total').innerText = 'Rs. ' + amount.toFixed(2);
+        document.getElementById('conf-total-bottom').innerText = 'Rs. ' + amount.toFixed(2);
+        document.getElementById('conf-total-amt-bottom').innerText = 'Rs. ' + amount.toFixed(0);
+        document.getElementById('conf-footer-amt').innerText = 'Rs. ' + amount.toFixed(0);
+        document.getElementById('conf-v2').innerText = number;
+        document.getElementById('conf-v3').innerText = scanState.name;
+        document.getElementById('conf-tid').innerText = 'TID: ' + txData.tid;
+        document.getElementById('conf-statement-row').style.display = 'none';
+        navigateTo('confirmation-screen');
     }
 
     function goScannedReview() {
@@ -3928,6 +4171,10 @@
         if (automaticTextCaptureTimer) {
             clearTimeout(automaticTextCaptureTimer);
             automaticTextCaptureTimer = null;
+        }
+        if (scannerTransitionTimer) {
+            clearTimeout(scannerTransitionTimer);
+            scannerTransitionTimer = null;
         }
         if (nativeScanTimer) {
             clearTimeout(nativeScanTimer);
@@ -4015,8 +4262,13 @@
 
     function shareReceiptOnWhatsApp() {
         const message = receiptShareText(currentReceiptItem);
-        const whatsappUrl = 'https://wa.me/?text=' + encodeURIComponent(message);
-        window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+        const encoded = encodeURIComponent(message);
+        const appUrl = 'whatsapp://send?text=' + encoded;
+        const webUrl = 'https://wa.me/?text=' + encoded;
+        // Open the native WhatsApp app when available, then fall back to
+        // WhatsApp Web for desktop browsers.
+        window.location.href = appUrl;
+        setTimeout(() => window.open(webUrl, '_blank', 'noopener,noreferrer'), 650);
     }
 
     function saveReceiptAsImage() {
@@ -4031,45 +4283,112 @@
         };
         const canvas = document.createElement('canvas');
         canvas.width = 900;
-        canvas.height = 1080;
+        canvas.height = 1240;
         const context = canvas.getContext('2d');
         context.fillStyle = '#121212';
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.fillStyle = '#ffffff';
-        context.fillRect(70, 60, 760, 960);
+        context.fillRect(60, 45, 780, 1150);
+
+        // Small semicircle cut-outs reproduce the receipt edge in the
+        // supplied JazzCash samples without relying on an external image.
+        context.fillStyle = '#121212';
+        for (let x = 70; x <= 830; x += 32) {
+            context.beginPath();
+            context.arc(x, 45, 7, 0, Math.PI * 2);
+            context.fill();
+            context.beginPath();
+            context.arc(x, 1195, 7, 0, Math.PI * 2);
+            context.fill();
+        }
+        for (let y = 78; y <= 1160; y += 32) {
+            context.beginPath();
+            context.arc(60, y, 7, 0, Math.PI * 2);
+            context.fill();
+            context.beginPath();
+            context.arc(840, y, 7, 0, Math.PI * 2);
+            context.fill();
+        }
+
+        const receiptLeft = 110;
+        const receiptRight = 790;
+        const drawRule = y => {
+            context.strokeStyle = '#e5e7eb';
+            context.lineWidth = 1;
+            context.beginPath();
+            context.moveTo(receiptLeft, y);
+            context.lineTo(receiptRight, y);
+            context.stroke();
+        };
+        const drawWrapped = (value, x, y, maxWidth, lineHeight = 28) => {
+            const words = String(value || '—').split(/\s+/);
+            let line = '';
+            let currentY = y;
+            words.forEach(word => {
+                const testLine = line ? line + ' ' + word : word;
+                if (context.measureText(testLine).width > maxWidth && line) {
+                    context.fillText(line, x, currentY);
+                    line = word;
+                    currentY += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            });
+            if (line) context.fillText(line, x, currentY);
+            return currentY;
+        };
+
         context.fillStyle = '#1f2937';
-        context.font = '700 34px Inter, Arial, sans-serif';
-        context.fillText('JazzCash Payment Receipt', 120, 140);
+        context.textAlign = 'center';
+        context.font = '800 34px Inter, Arial, sans-serif';
+        context.fillText('Transaction Successful', 450, 125);
         context.font = '500 22px Inter, Arial, sans-serif';
         context.fillStyle = '#6b7280';
-        context.fillText('Status: Successful', 120, 185);
-        context.strokeStyle = '#e5e7eb';
-        context.beginPath();
-        context.moveTo(120, 225);
-        context.lineTo(780, 225);
-        context.stroke();
+        context.fillText('TID: ' + (item.id || '—'), 450, 165);
+        context.fillText(formatStatementDate(item.date), 450, 200);
+        drawRule(235);
+
+        context.fillStyle = '#1f2937';
+        context.font = '800 48px Inter, Arial, sans-serif';
+        context.fillText(formatCurrency(item.amount), 450, 310);
+        context.font = '700 28px Inter, Arial, sans-serif';
+        const transferLabel = item.type && item.type.includes('JazzCash') ? 'Transferred to JazzCash' : 'Transferred to ' + (item.type || 'JazzCash');
+        context.fillText(transferLabel, 450, 355);
+        drawRule(395);
+
         const rows = [
-            ['Amount', formatCurrency(item.amount)],
-            ['To', item.recipient || '—'],
-            ['Number', item.detail || '—'],
-            ['Transaction ID', item.id || '—'],
-            ['Date', formatStatementDate(item.date)]
+            ['Fee', 'Rs. 0.00'],
+            ['To', (item.recipient || '—') + '\n' + (item.detail || '—')],
+            ['From', 'AZIZ BIBI\n03084191378']
         ];
         if (item.statement) rows.push(['Statement', item.statement]);
         rows.forEach((row, index) => {
-            const y = 290 + index * 92;
+            const y = 455 + index * 125;
             context.fillStyle = '#6b7280';
             context.font = '500 22px Inter, Arial, sans-serif';
-            context.fillText(row[0], 120, y);
+            context.textAlign = 'left';
+            context.fillText(row[0], receiptLeft, y);
             context.fillStyle = '#1f2937';
             context.font = '700 24px Inter, Arial, sans-serif';
-            context.fillText(String(row[1]).slice(0, 42), 430, y);
-            context.strokeStyle = '#e5e7eb';
-            context.beginPath();
-            context.moveTo(120, y + 22);
-            context.lineTo(780, y + 22);
-            context.stroke();
+            const valueLines = String(row[1] || '—').split('\n');
+            valueLines.forEach((line, lineIndex) => context.fillText(line.slice(0, 42), 430, y + lineIndex * 29));
+            drawRule(y + 45 + Math.max(0, valueLines.length - 1) * 29);
         });
+        context.textAlign = 'center';
+        context.fillStyle = '#6b7280';
+        context.font = '500 22px Inter, Arial, sans-serif';
+        context.fillText('Securely paid via', 380, 1115);
+        context.fillStyle = '#facc15';
+        context.beginPath();
+        context.arc(505, 1107, 18, 0, Math.PI * 2);
+        context.fill();
+        context.fillStyle = '#dc2626';
+        context.beginPath();
+        context.arc(525, 1107, 14, 0, Math.PI * 2);
+        context.fill();
+        context.fillStyle = '#111827';
+        context.font = '800 22px Inter, Arial, sans-serif';
+        context.fillText('JazzCash', 590, 1115);
         const link = document.createElement('a');
         link.download = 'jazzcash-receipt-' + (item.id || 'payment') + '.png';
         link.href = canvas.toDataURL('image/png');
