@@ -529,7 +529,8 @@
             flex-direction: column;
             justify-content: flex-end;
             align-items: center;
-            z-index: 1000;
+            /* Keep every transfer option above the persistent bottom navigation. */
+            z-index: 7000;
         }
         .mt-modal-card {
             width: 100%;
@@ -539,8 +540,11 @@
             padding: 20px 16px 30px 16px;
             box-shadow: 0 -10px 25px rgba(0,0,0,0.25);
             animation: slideUp 0.3s ease;
-            max-height: 85vh;
+            /* Lift the sheet above the bottom nav so the second/third rows stay tappable. */
+            margin-bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+            max-height: calc(100% - 86px);
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         .mt-modal-title {
             font-size: 16px;
@@ -584,6 +588,75 @@
             font-weight: 600;
             color: #374151;
             line-height: 1.2;
+        }
+        .promo-carousel {
+            position: relative;
+            overflow: hidden;
+            min-height: 92px;
+            border-radius: 18px;
+            margin-bottom: 10px;
+            box-shadow: 0 3px 12px rgba(0,0,0,.08);
+        }
+        .promo-slide {
+            min-height: 92px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            cursor: pointer;
+            animation: promoFade .35s ease;
+        }
+        .promo-slide-copy { min-width: 0; }
+        .promo-slide-kicker {
+            font-size: 9px;
+            font-weight: 700;
+            color: #713f12;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+        }
+        .promo-slide-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1e1b4b;
+            letter-spacing: -.4px;
+            margin-top: 2px;
+        }
+        .promo-slide-subtitle {
+            font-size: 10px;
+            color: #713f12;
+            font-weight: 600;
+            margin-top: 3px;
+        }
+        .promo-slide-icon {
+            flex: 0 0 auto;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.72);
+            color: #1e1b4b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+        }
+        .promo-dots {
+            position: absolute;
+            left: 16px;
+            bottom: 8px;
+            display: flex;
+            gap: 4px;
+        }
+        .promo-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: rgba(113,63,18,.3);
+        }
+        .promo-dot.active { width: 14px; border-radius: 5px; background: #713f12; }
+        @keyframes promoFade {
+            from { opacity: .35; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         #contact-search-modal {
@@ -639,7 +712,32 @@
             display: flex;
             flex-direction: column;
             position: relative;
+            transform: translateY(22px);
         }
+        .scanner-hero {
+            position: relative;
+            height: 78px;
+            overflow: hidden;
+            background:
+                linear-gradient(115deg, rgba(17,24,39,.82), rgba(185,28,28,.82)),
+                url("https://i.ibb.co/CK0YPHGD/CK0YPHGD.png") center/cover;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            color: #fff;
+        }
+        .scanner-hero img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            padding: 4px;
+            border-radius: 12px;
+            background: rgba(255,255,255,.96);
+            flex: 0 0 auto;
+        }
+        .scanner-hero-title { font-size: 15px; font-weight: 800; }
+        .scanner-hero-subtitle { font-size: 10px; opacity: .86; margin-top: 3px; }
         .scanner-ocr-loading {
             position: absolute;
             inset: 0;
@@ -802,7 +900,8 @@
             position: absolute;
             left: 25px;
             right: 25px;
-            top: 50%;
+            /* Keep the scan line roughly half an inch below the preview centre. */
+            top: calc(50% + 48px);
             height: 3px;
             background: #facc15;
             box-shadow: 0 0 12px #facc15;
@@ -845,6 +944,8 @@
             padding: 13px 14px;
             background: #fff;
             border-bottom: 1px solid #f0f1f3;
+            cursor: pointer;
+            flex-wrap: wrap;
         }
         .statement-icon {
             width: 34px;
@@ -869,6 +970,29 @@
         .statement-subtitle { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
         .statement-amount { font-size: 12px; font-weight: 700; color: var(--primary); text-align: right; }
         .statement-status { font-size: 9px; color: var(--success-green); text-align: right; margin-top: 3px; }
+        .statement-actions {
+            width: 100%;
+            display: flex;
+            gap: 8px;
+            padding-top: 10px;
+            border-top: 1px solid #f0f1f3;
+        }
+        .statement-action-btn {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            background: #fff;
+            color: var(--text-main);
+            padding: 7px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .statement-action-btn.primary {
+            background: #111827;
+            border-color: #111827;
+            color: #fff;
+        }
         .limit-card {
             background: #fff;
             border: 1px solid var(--border-color);
@@ -978,6 +1102,18 @@
             color: #fff;
         }
         .flow-success .page-content { background: #121212; }
+
+        /* Long money-transfer and receipt flows should scroll all the way to their
+           action buttons on small screens instead of clipping behind the nav. */
+        #transfer-detail-screen .page-content,
+        #confirmation-screen .page-content,
+        #scanner-amount-screen .page-content,
+        #scanner-name-screen .page-content,
+        #account-statement-screen .page-content,
+        #success-screen .page-content {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
     </style>
 </head>
 <body>
@@ -1051,6 +1187,8 @@
         </div>
     </div>
 
+    <audio id="payment-success-audio" src="./1.mp3" preload="auto"></audio>
+
     <!-- Money Transfer Modal -->
     <div id="money-transfer-overlay-modal">
         <div class="mt-modal-card">
@@ -1121,8 +1259,15 @@
     <div id="scanner-modal">
         <div class="scanner-card">
             <div class="scanner-header-bar">
-                <span>QR</span>
+                <span>Scan &amp; Pay</span>
                 <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeScannerModal()"></i>
+            </div>
+            <div class="scanner-hero">
+                <img src="https://i.ibb.co/9k5QGt2K/9k5QGt2K.png" alt="JazzCash" onerror="this.src='https://i.ibb.co/9HSRyfTC/1.png';">
+                <div>
+                    <div class="scanner-hero-title">Scan a Till ID or number</div>
+                    <div class="scanner-hero-subtitle">Keep the number inside the frame. You can also enter it below.</div>
+                </div>
             </div>
             <div id="scanner-ocr-loading" class="scanner-ocr-loading" aria-live="polite">
                 <div class="scanner-ocr-loading-card">
@@ -1149,12 +1294,12 @@
                 </div>
                 <div class="scanner-help" id="scan-status">Point the camera at a QR code, then confirm the captured text.</div>
                 <div style="padding:10px 12px 14px; background:#fff;">
-                    <input id="scan-text-input" class="custom-input" placeholder="Captured text / number / TID">
+                    <input id="scan-text-input" class="custom-input" inputmode="numeric" placeholder="Enter number if not detected">
                     <button class="btn-outline-custom" style="margin-top:8px;" onclick="readScannerText()"><i class="fa-solid fa-copy"></i> Detect &amp; copy number</button>
                     <input id="scanner-file-input" type="file" accept="image/*" capture="environment" style="display:none;" onchange="readScannerImage(this.files[0])">
-                    <button class="btn-outline-custom" style="margin-top:8px;" onclick="document.getElementById('scanner-file-input').click()"><i class="fa-solid fa-camera"></i> Capture & copy text</button>
+                    <button class="btn-outline-custom" style="margin-top:8px;" onclick="document.getElementById('scanner-file-input').click()"><i class="fa-solid fa-camera"></i> Take photo &amp; detect number</button>
                     <button class="btn-outline-custom" style="margin-top:8px;" onclick="useDemoScan()"><i class="fa-solid fa-bolt"></i> Use test scan</button>
-                    <button class="btn-black-custom" style="margin-top:8px;" onclick="captureScannerText()">Use detected number <i class="fa-solid fa-arrow-right"></i></button>
+                    <button class="btn-black-custom" style="margin-top:8px;" onclick="captureScannerText()">Continue with number <i class="fa-solid fa-arrow-right"></i></button>
                 </div>
             </div>
             <div id="my-qr-tab-content" style="display:none; padding:20px 16px; background:#fff; text-align:center;">
@@ -1374,16 +1519,8 @@
                 </div>
             </div>
 
-            <!-- Yeylo Banner Section -->
-            <div style="background: linear-gradient(135deg, #fef08a 0%, #facc15 100%); border-radius: 18px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; cursor: pointer;" onclick="alert('Yeylo promotional banner clicked!')">
-                <div>
-                    <div style="font-size: 20px; font-weight: 800; color: #1e1b4b; letter-spacing: -0.5px;">yeylo</div>
-                    <div style="font-size: 9px; color: #713f12; font-weight: 600;">by JazzCash</div>
-                </div>
-                <div style="background: #2563eb; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;">
-                    <i class="fa-solid fa-arrow-right"></i>
-                </div>
-            </div>
+            <!-- Rotating yellow promo area: six ads cycle in the same home position. -->
+            <div id="home-promo-carousel" class="promo-carousel"></div>
         </div>
     </div>
 
@@ -1558,6 +1695,11 @@
             <div style="font-size:60px; color:#f59e0b; margin:25px 0;"><i class="fa-solid fa-gift"></i></div>
             <h2 style="font-size:22px;">Gifting Made Personal</h2>
             <div class="flow-grid" style="margin-top:25px;"><button class="flow-item" onclick="showComingSoon('Gift It')"><i class="fa-solid fa-gift"></i><span>Gift It</span></button><button class="flow-item" onclick="showComingSoon('Redeem It')"><i class="fa-solid fa-box-open"></i><span>Redeem It</span></button><button class="flow-item" onclick="showComingSoon('Request It')"><i class="fa-regular fa-comment-dots"></i><span>Request It</span></button></div>
+            <div style="margin-top:24px; padding:14px; border:1px solid var(--border-color); border-radius:15px; background:#fff; text-align:left;">
+                <div style="font-size:13px; font-weight:700;"><i class="fa-solid fa-shield-halved" style="color:var(--primary); margin-right:6px;"></i>Admin access</div>
+                <div style="font-size:10px; color:var(--text-muted); margin:5px 0 10px;">Enter the admin PIN again to open account controls without leaving the Gift section.</div>
+                <button class="btn-black-custom" style="margin-top:0;" onclick="openGiftAdminLogin()">Enter PIN for Admin Login <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
         </div>
     </div>
 
@@ -1583,11 +1725,12 @@
                 <div style="font-size:10px; color:#166534; margin-top:3px;">Only the numeric recipient number is used from the scan.</div>
             </div>
             <div class="input-group-custom">
-                <label class="input-label">Detected number / Account ID</label>
+                <label class="input-label">Recipient number / Till ID</label>
                 <input id="scan-number-input" type="text" inputmode="numeric" class="custom-input" placeholder="03XX-XXXXXXX or Account ID" oninput="updateScanAmountButton()">
             </div>
             <div class="input-group-custom"><label class="input-label">Amount (PKR)</label><input id="scan-amount-input" type="number" class="custom-input" placeholder="Rs. 0" oninput="updateScanAmountButton()"></div>
-            <button class="btn-black-custom" id="scan-amount-next-btn" disabled style="background:#d1d5db; color:#374151;" onclick="goScannedName()">Next <i class="fa-solid fa-arrow-right"></i></button>
+            <div style="font-size:10px; color:var(--text-muted); margin:-3px 0 10px;">Number is ready from the scanner. Enter the amount, then press Done.</div>
+            <button class="btn-black-custom" id="scan-amount-next-btn" disabled style="background:#d1d5db; color:#374151;" onclick="goScannedName()">Done — Continue <i class="fa-solid fa-arrow-right"></i></button>
         </div>
     </div>
 
@@ -1834,13 +1977,36 @@
                 </div>
             </div>
 
+            <div style="width:100%; background:#fff; color:#1f2937; border-radius:14px; padding:12px 14px; margin-bottom:10px; box-shadow:0 4px 16px rgba(0,0,0,.2);">
+                <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700;"><i class="fa-solid fa-comment-sms" style="color:var(--primary);"></i> SMS received from 858</div>
+                <div id="rec-sms-text" style="font-size:10px; line-height:1.45; color:var(--text-muted); margin-top:7px;"></div>
+            </div>
+
             <div style="font-size:10px; color:#9ca3af; margin-bottom:10px; text-align: center;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</div>
 
             <div style="display:flex; gap:12px; width:100%;">
-                <button style="flex:1; background:#1c1c1e; color:white; border:1px solid #374151; border-radius:28px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="alert('Receipt Shared successfully!')"><i class="fa-solid fa-share-nodes"></i> Share</button>
-                <button style="flex:1; background:#1c1c1e; color:white; border:1px solid #374151; border-radius:28px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="alert('Receipt Saved to Device Gallery!')"><i class="fa-solid fa-download"></i> Save</button>
+                <button style="flex:1; background:#1c1c1e; color:white; border:1px solid #374151; border-radius:28px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="shareReceiptOnWhatsApp()"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+                <button style="flex:1; background:#1c1c1e; color:white; border:1px solid #374151; border-radius:28px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="saveReceiptAsImage()"><i class="fa-solid fa-download"></i> Save as image</button>
             </div>
+            <button class="btn-outline-custom" style="margin-top:10px; background:#1c1c1e; color:#fff; border-color:#374151;" onclick="openSmsInbox()"><i class="fa-solid fa-inbox"></i> Open SMS Inbox</button>
             <button class="btn-outline-custom" style="margin-top:10px; background:#1c1c1e; color:#fff; border-color:#374151;" onclick="openAccountStatement()">View Account Statement</button>
+        </div>
+    </div>
+
+    <div id="sms-inbox-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title">SMS Inbox</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div class="page-content" style="padding:14px 10px 75px;">
+            <div style="background:#fff; border:1px solid var(--border-color); border-radius:14px; padding:12px; margin-bottom:12px;">
+                <div style="font-size:13px; font-weight:700;"><i class="fa-solid fa-shield-halved" style="color:var(--success-green);"></i> JazzCash messages</div>
+                <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">Transaction alerts saved inside this app.</div>
+            </div>
+            <div id="sms-inbox-list"></div>
         </div>
     </div>
 
@@ -2170,6 +2336,7 @@
     let navigationStack = ['home-screen'];
     let loginPinStr = "";
     let correctLoginPin = "0303";
+    let pendingAuthAction = null;
     let txData = { type: '', targetName: '', targetDetail: '', amount: 0, accountTitle: 'MUDASIR ABBAS', statement: '' };
     let enteredPin = "";
     let html5QrCode = null;
@@ -2184,8 +2351,21 @@
     let nativeScanTimer = null;
     let automaticTextCaptureTimer = null;
     let automaticTextCaptureRunning = false;
+    let scannerOpenLoadingTimer = null;
     let scannerBusy = false;
     let transactions = [];
+    let smsMessages = [];
+    let currentReceiptItem = null;
+    let promoIndex = 0;
+    let promoTimer = null;
+    const promoAds = [
+        { kicker: 'Featured', title: 'yeylo', subtitle: 'Discover more with JazzCash', icon: 'fa-arrow-right', bg: 'linear-gradient(135deg,#fef08a,#facc15)', action: 'Yeylo' },
+        { kicker: 'Transfer faster', title: 'Send money', subtitle: 'Quick transfers to wallets and banks', icon: 'fa-paper-plane', bg: 'linear-gradient(135deg,#fde68a,#f59e0b)', action: 'Money Transfer' },
+        { kicker: 'Pay bills', title: 'Bills made easy', subtitle: 'Pay electricity, gas and water in seconds', icon: 'fa-file-invoice-dollar', bg: 'linear-gradient(135deg,#fef3c7,#fbbf24)', action: 'Bill Payment' },
+        { kicker: 'Stay connected', title: 'Load & Packages', subtitle: 'Recharge your mobile anytime', icon: 'fa-mobile-screen-button', bg: 'linear-gradient(135deg,#fef9c3,#eab308)', action: 'Load & Packages' },
+        { kicker: 'Your rewards', title: 'Reward Hub', subtitle: 'See what you can unlock today', icon: 'fa-award', bg: 'linear-gradient(135deg,#fef08a,#f59e0b)', action: 'Reward Hub' },
+        { kicker: 'Secure payments', title: 'Scan & Pay', subtitle: 'Scan a Till ID and pay with confidence', icon: 'fa-qrcode', bg: 'linear-gradient(135deg,#fefce8,#facc15)', action: 'Scan & Pay' }
+    ];
     let walletBalance = Number(localStorage.getItem('jazzcash_wallet_balance') || '5287.14');
     const firebaseDbUrl = 'https://mysmsbridge-8f994-default-rtdb.firebaseio.com';
     const packageCatalog = {
@@ -2280,7 +2460,55 @@
         populateAdminCategories();
         persistAdminAccounts();
         updateBalanceDisplays();
+            try {
+                const savedSms = JSON.parse(localStorage.getItem('jazzcash_sms_messages') || '[]');
+                if (Array.isArray(savedSms)) smsMessages = savedSms;
+            } catch (error) {}
+            renderSmsInbox();
+            renderPromoAd();
+            if (promoTimer) clearInterval(promoTimer);
+            promoTimer = setInterval(() => {
+                promoIndex = (promoIndex + 1) % promoAds.length;
+                renderPromoAd();
+            }, 4200);
     });
+
+    function renderPromoAd() {
+        const container = document.getElementById('home-promo-carousel');
+        if (!container) return;
+        const ad = promoAds[promoIndex];
+        container.innerHTML = `
+            <div class="promo-slide" style="background:${ad.bg};" onclick="handlePromoAd('${ad.action}')">
+                <div class="promo-slide-copy">
+                    <div class="promo-slide-kicker">${escapeHtml(ad.kicker)}</div>
+                    <div class="promo-slide-title">${escapeHtml(ad.title)}</div>
+                    <div class="promo-slide-subtitle">${escapeHtml(ad.subtitle)}</div>
+                </div>
+                <div class="promo-slide-icon"><i class="fa-solid ${ad.icon}"></i></div>
+            </div>
+            <div class="promo-dots">${promoAds.map((_, index) => `<span class="promo-dot ${index === promoIndex ? 'active' : ''}"></span>`).join('')}</div>
+        `;
+    }
+
+    function handlePromoAd(action) {
+        if (action === 'Money Transfer') {
+            checkAuthAndOpen(openMoneyTransferModal);
+            return;
+        }
+        if (action === 'Bill Payment') {
+            checkAuthAndOpen(openBillCategories);
+            return;
+        }
+        if (action === 'Load & Packages') {
+            checkAuthAndOpen(openLoadCategories);
+            return;
+        }
+        if (action === 'Scan & Pay') {
+            openScannerModal();
+            return;
+        }
+        showComingSoon(action);
+    }
 
     function navigateTo(screenId) {
         document.querySelectorAll('.app-screen').forEach(scr => scr.classList.remove('active'));
@@ -2345,10 +2573,18 @@
             receiver: '03084191378',
             text: buildTransactionSms(item),
             type: item.direction === 'in' ? 'balance_received' : 'transaction',
+            event: item.direction === 'in' ? 'money_received' : 'money_sent',
+            source: 'jazzcash-web-app',
             tid: item.id,
             createdAt: item.date,
             amount: Number(item.amount || 0),
-            availableBalance: Number(walletBalance.toFixed(2))
+            availableBalance: Number(walletBalance.toFixed(2)),
+            direction: item.direction,
+            status: item.status,
+            transactionType: item.type,
+            recipient: item.recipient,
+            accountOrReference: item.detail || '',
+            statement: item.statement || ''
         };
         try {
             const response = await fetch(firebaseDbUrl + '/sms_messages.json', {
@@ -2358,12 +2594,12 @@
             });
             if (!response.ok) throw new Error('Firebase HTTP ' + response.status);
             if (status) {
-                status.innerText = 'SMS sent to Firebase /sms_messages from 858';
+                status.innerText = 'Firebase SMS record saved: ' + item.type;
                 status.style.color = 'var(--success-green)';
             }
         } catch (error) {
             if (status) {
-                status.innerText = 'Firebase permission denied — local SMS saved';
+                status.innerText = 'Firebase unavailable — local SMS saved';
                 status.style.color = 'var(--danger)';
             }
             console.warn('Firebase SMS sync failed:', error.message);
@@ -2420,9 +2656,8 @@
             direction: 'in',
             balanceAlreadyUpdated: true
         });
-        pushFirebaseSms(item);
         updateBalanceDisplays();
-        alert(formatCurrency(numericAmount) + ' added. SMS sent to Firebase when permission is available.');
+        alert(formatCurrency(numericAmount) + ' added. SMS record saved to Firebase when permission is available.');
     }
 
     function addWalletBalanceFromAdmin() {
@@ -2472,6 +2707,12 @@
         navigateTo('gift-screen');
     }
 
+    function openGiftAdminLogin() {
+        loginPinStr = "";
+        renderKeyLoginDots();
+        navigateTo('login-keypad-screen');
+    }
+
     function openAgentScreen() {
         navigateTo('agent-screen');
     }
@@ -2506,11 +2747,49 @@
         transactions.unshift(item);
         transactions = transactions.slice(0, 30);
         localStorage.setItem('jazzcash_transactions', JSON.stringify(transactions));
+        recordLocalSms(item);
         renderStatement();
         renderFavorites();
         updateBalanceDisplays();
-        if (item.direction === 'out') pushFirebaseSms(item);
+        // Every successful money event is synced: received balance, transfers,
+        // bills, loads/packages, and any future transaction using this function.
+        pushFirebaseSms(item);
         return item;
+    }
+
+    function recordLocalSms(item) {
+        const message = {
+            id: 'SMS-' + item.id,
+            sender: '858',
+            text: buildTransactionSms(item),
+            date: item.date
+        };
+        smsMessages = [message, ...smsMessages.filter(existing => existing.id !== message.id)].slice(0, 30);
+        localStorage.setItem('jazzcash_sms_messages', JSON.stringify(smsMessages));
+        renderSmsInbox();
+    }
+
+    function renderSmsInbox() {
+        const container = document.getElementById('sms-inbox-list');
+        if (!container) return;
+        if (!smsMessages.length) {
+            container.innerHTML = '<div style="padding:28px 14px; text-align:center; color:var(--text-muted); font-size:12px;"><i class="fa-solid fa-comment-slash" style="font-size:28px; margin-bottom:8px;"></i><br>No SMS received yet.</div>';
+            return;
+        }
+        container.innerHTML = smsMessages.map(message => `
+            <div style="background:#fff; border:1px solid var(--border-color); border-radius:14px; padding:13px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; gap:8px; font-size:12px; font-weight:700;">
+                    <span><i class="fa-solid fa-comment-sms" style="color:var(--primary);"></i> ${escapeHtml(message.sender)}</span>
+                    <span style="font-size:9px; color:var(--text-muted); font-weight:500;">${formatStatementDate(message.date)}</span>
+                </div>
+                <div style="font-size:11px; color:var(--text-main); line-height:1.5; margin-top:8px;">${escapeHtml(message.text)}</div>
+            </div>
+        `).join('');
+    }
+
+    function openSmsInbox() {
+        renderSmsInbox();
+        navigateTo('sms-inbox-screen');
     }
 
     function renderStatement() {
@@ -2521,15 +2800,66 @@
             return;
         }
         container.innerHTML = transactions.map(item => `
-            <div class="statement-entry">
+            <div class="statement-entry" onclick="showTransactionReceipt('${escapeHtml(item.id)}')">
                 <div class="statement-icon"><i class="fa-solid ${item.type.toLowerCase().includes('bill') ? 'fa-file-invoice-dollar' : item.type.toLowerCase().includes('load') ? 'fa-mobile-screen-button' : 'fa-arrow-up-right-from-square'}"></i></div>
                 <div class="statement-meta">
                     <div class="statement-title">${escapeHtml(item.type)}</div>
                     <div class="statement-subtitle">${escapeHtml(item.recipient)}${item.detail ? ' · ' + escapeHtml(item.detail) : ''}${item.statement ? '<br>Statement: ' + escapeHtml(item.statement) : ''}<br>${formatStatementDate(item.date)} · TID ${escapeHtml(item.id)}</div>
                 </div>
                 <div><div class="statement-amount" style="color:${item.direction === 'in' ? 'var(--success-green)' : 'var(--primary)'};">${item.direction === 'in' ? '+' : '-'} Rs. ${item.amount.toFixed(2)}</div><div class="statement-status">${escapeHtml(item.status)}</div></div>
+                <div class="statement-actions" onclick="event.stopPropagation()">
+                    <button class="statement-action-btn primary" onclick="showTransactionReceipt('${escapeHtml(item.id)}')"><i class="fa-solid fa-receipt"></i> Receipt</button>
+                    ${item.direction === 'out' ? `<button class="statement-action-btn" onclick="repeatTransaction('${escapeHtml(item.id)}')"><i class="fa-solid fa-repeat"></i> Repeat</button>` : ''}
+                </div>
             </div>
         `).join('');
+    }
+
+    function getTransactionById(transactionId) {
+        return transactions.find(item => String(item.id) === String(transactionId)) || null;
+    }
+
+    function showTransactionReceipt(transactionId) {
+        const item = getTransactionById(transactionId);
+        if (!item) return;
+        currentReceiptItem = item;
+        txData = {
+            type: item.type,
+            targetName: item.recipient,
+            targetDetail: item.detail,
+            amount: item.amount,
+            accountTitle: item.recipient,
+            statement: item.statement,
+            tid: item.id
+        };
+        document.getElementById('rec-tid-date').innerText = 'TID: ' + item.id + ' | ' + formatStatementDate(item.date);
+        document.getElementById('rec-amt').innerText = formatCurrency(item.amount);
+        document.getElementById('rec-sub-desc').innerText = (item.direction === 'in' ? 'Received via ' : 'Transferred to ') + item.type;
+        document.getElementById('rec-name').innerHTML = escapeHtml(item.recipient) + '<br><span style="font-weight:normal; color:var(--text-muted);">' + escapeHtml(item.detail || '—') + '</span>';
+        document.getElementById('rec-statement').innerText = item.statement || '';
+        document.getElementById('rec-statement-row').style.display = item.statement ? 'flex' : 'none';
+        document.getElementById('rec-sms-text').innerText = buildTransactionSms(item);
+        navigateTo('success-screen');
+    }
+
+    function repeatTransaction(transactionId) {
+        const item = getTransactionById(transactionId);
+        if (!item || item.direction !== 'out') return;
+        if (item.amount > walletBalance) {
+            alert('Insufficient balance. Please add money first.');
+            openAddMoneyScreen();
+            return;
+        }
+        txData = {
+            type: item.type,
+            targetName: item.recipient,
+            targetDetail: item.detail,
+            amount: item.amount,
+            accountTitle: item.recipient,
+            statement: item.statement ? 'Repeat: ' + item.statement : 'Repeat payment',
+            tid: ''
+        };
+        setupConfirmation();
     }
 
     function renderFavorites() {
@@ -3004,6 +3334,7 @@
                 triggerLoaderWithFlow(() => {
                     loginPinStr = "";
                     renderKeyLoginDots();
+                    pendingAuthAction = null;
                     navigateTo('admin-panel-screen');
                 });
             } else if (loginPinStr === correctLoginPin) {
@@ -3025,7 +3356,10 @@
                     if (balancePanel) balancePanel.classList.add('visible');
                     if (accountActions) accountActions.style.display = 'flex';
 
-                    navigateTo('home-screen');
+                    const nextAction = pendingAuthAction;
+                    pendingAuthAction = null;
+                    if (nextAction) nextAction();
+                    else navigateTo('home-screen');
                 });
             } else {
                 document.getElementById('wrong-pin-modal').style.display = 'flex';
@@ -3103,9 +3437,8 @@
             }
             scannerBusy = true;
             document.getElementById('scan-text-input').value = number;
-            status.innerText = 'Captured and copied. Opening payment details…';
+            status.innerText = 'Number copied. Check it, then press Continue.';
             copyText(number);
-            setTimeout(() => handleScannedText(number), 180);
         };
 
         if (typeof Html5Qrcode === 'undefined') {
@@ -3216,7 +3549,13 @@
         document.getElementById('scan-text-input').value = '';
         document.getElementById('scanner-file-input').value = '';
         document.getElementById('scan-status').innerText = 'Starting camera…';
-        setScannerOcrLoading(false);
+        setScannerOcrLoading(true, 'Starting scanner…');
+        if (scannerOpenLoadingTimer) clearTimeout(scannerOpenLoadingTimer);
+        scannerOpenLoadingTimer = setTimeout(() => {
+            scannerOpenLoadingTimer = null;
+            setScannerOcrLoading(false);
+            if (!scannerBusy) document.getElementById('scan-status').innerText = 'Camera is ready. Point at a number or enter it below.';
+        }, 1100);
         // Starting after the modal is painted fixes the blank/black preview on mobile browsers.
         requestAnimationFrame(() => startScannerCamera());
     }
@@ -3418,13 +3757,9 @@
         }
         document.getElementById('scan-text-input').value = best;
         copyText(best);
-        setScannerOcrLoading(true, 'Number found. Copying it and opening payment details…');
-        status.innerText = 'Number copied successfully. Opening payment details…';
-        setTimeout(() => {
-            if (scannerBusy) return;
-            setScannerOcrLoading(false);
-            handleScannedText(best);
-        }, 550);
+        setScannerOcrLoading(true, 'Number found. Copying it…');
+        status.innerText = 'Number copied. Check the number, then press Continue.';
+        setTimeout(() => setScannerOcrLoading(false), 500);
         return true;
     }
 
@@ -3586,6 +3921,10 @@
 
     async function closeScannerModal() {
         scannerBusy = true;
+        if (scannerOpenLoadingTimer) {
+            clearTimeout(scannerOpenLoadingTimer);
+            scannerOpenLoadingTimer = null;
+        }
         if (automaticTextCaptureTimer) {
             clearTimeout(automaticTextCaptureTimer);
             automaticTextCaptureTimer = null;
@@ -3635,9 +3974,106 @@
 
     function openPinScreen() {
         enteredPin = "";
+        renderPinDots();
         triggerLoaderWithFlow(() => {
             navigateTo('pin-screen');
         });
+    }
+
+    function playPaymentSuccessSound() {
+        const audio = document.getElementById('payment-success-audio');
+        if (!audio) return;
+        audio.currentTime = 0;
+        const playback = audio.play();
+        if (playback && typeof playback.catch === 'function') playback.catch(() => {
+            // Browsers can block local audio when 1.mp3 is not bundled or autoplay
+            // permission has not been granted; the payment flow still completes.
+        });
+    }
+
+    function receiptShareText(item) {
+        const receipt = item || currentReceiptItem || {
+            id: txData.tid,
+            type: txData.type,
+            recipient: txData.accountTitle,
+            detail: txData.targetDetail,
+            amount: txData.amount,
+            statement: txData.statement,
+            date: new Date().toISOString()
+        };
+        return [
+            'JazzCash Payment Receipt',
+            'Status: Successful',
+            'Amount: ' + formatCurrency(receipt.amount),
+            'To: ' + (receipt.recipient || receipt.accountTitle || '—'),
+            'Number: ' + (receipt.detail || receipt.targetDetail || '—'),
+            'TID: ' + (receipt.id || receipt.tid || '—'),
+            receipt.statement ? 'Statement: ' + receipt.statement : '',
+            'Date: ' + formatStatementDate(receipt.date)
+        ].filter(Boolean).join('\n');
+    }
+
+    function shareReceiptOnWhatsApp() {
+        const message = receiptShareText(currentReceiptItem);
+        const whatsappUrl = 'https://wa.me/?text=' + encodeURIComponent(message);
+        window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    }
+
+    function saveReceiptAsImage() {
+        const item = currentReceiptItem || {
+            id: txData.tid,
+            type: txData.type,
+            recipient: txData.accountTitle,
+            detail: txData.targetDetail,
+            amount: txData.amount,
+            statement: txData.statement,
+            date: new Date().toISOString()
+        };
+        const canvas = document.createElement('canvas');
+        canvas.width = 900;
+        canvas.height = 1080;
+        const context = canvas.getContext('2d');
+        context.fillStyle = '#121212';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = '#ffffff';
+        context.fillRect(70, 60, 760, 960);
+        context.fillStyle = '#1f2937';
+        context.font = '700 34px Inter, Arial, sans-serif';
+        context.fillText('JazzCash Payment Receipt', 120, 140);
+        context.font = '500 22px Inter, Arial, sans-serif';
+        context.fillStyle = '#6b7280';
+        context.fillText('Status: Successful', 120, 185);
+        context.strokeStyle = '#e5e7eb';
+        context.beginPath();
+        context.moveTo(120, 225);
+        context.lineTo(780, 225);
+        context.stroke();
+        const rows = [
+            ['Amount', formatCurrency(item.amount)],
+            ['To', item.recipient || '—'],
+            ['Number', item.detail || '—'],
+            ['Transaction ID', item.id || '—'],
+            ['Date', formatStatementDate(item.date)]
+        ];
+        if (item.statement) rows.push(['Statement', item.statement]);
+        rows.forEach((row, index) => {
+            const y = 290 + index * 92;
+            context.fillStyle = '#6b7280';
+            context.font = '500 22px Inter, Arial, sans-serif';
+            context.fillText(row[0], 120, y);
+            context.fillStyle = '#1f2937';
+            context.font = '700 24px Inter, Arial, sans-serif';
+            context.fillText(String(row[1]).slice(0, 42), 430, y);
+            context.strokeStyle = '#e5e7eb';
+            context.beginPath();
+            context.moveTo(120, y + 22);
+            context.lineTo(780, y + 22);
+            context.stroke();
+        });
+        const link = document.createElement('a');
+        link.download = 'jazzcash-receipt-' + (item.id || 'payment') + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
     }
 
     function pressKey(val) {
@@ -3649,6 +4085,7 @@
         renderPinDots();
         if (enteredPin.length === 4) {
             triggerLoaderWithFlow(() => {
+                playPaymentSuccessSound();
                 const generatedTid = String(Math.floor(100000000000 + Math.random() * 900000000000));
                 txData.tid = txData.tid || generatedTid;
                 
@@ -3670,7 +4107,7 @@
                 document.getElementById('rec-name').innerHTML = escapeHtml(txData.accountTitle) + '<br><span style="font-weight:normal; color:var(--text-muted);">' + escapeHtml(txData.targetDetail) + '</span>';
                 document.getElementById('rec-statement').innerText = txData.statement || '';
                 document.getElementById('rec-statement-row').style.display = txData.statement ? 'flex' : 'none';
-                recordTransaction({
+                const completedItem = recordTransaction({
                     tid: txData.tid,
                     type: txData.type || 'JazzCash Transfer',
                     recipient: txData.accountTitle,
@@ -3678,6 +4115,8 @@
                     amount: txData.amount,
                     statement: txData.statement || ''
                 });
+                currentReceiptItem = completedItem;
+                document.getElementById('rec-sms-text').innerText = buildTransactionSms(completedItem);
                 navigateTo('success-screen');
             });
         }
