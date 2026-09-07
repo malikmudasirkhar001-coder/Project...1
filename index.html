@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     
     <style>
         :root {
@@ -678,6 +677,67 @@
             from { opacity: .35; transform: translateY(4px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .upgrade-promo-card {
+            position: relative;
+            overflow: hidden;
+            min-height: 104px;
+            margin-bottom: 10px;
+            padding: 15px 16px;
+            border-radius: 18px;
+            color: #fff;
+            background:
+                radial-gradient(circle at 92% 18%, rgba(250,204,21,.95), transparent 34%),
+                linear-gradient(135deg, #111827 0%, #262626 62%, #713f12 100%);
+            box-shadow: 0 4px 14px rgba(0,0,0,.13);
+            cursor: pointer;
+        }
+        .upgrade-promo-card::after {
+            content: "";
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            right: -38px;
+            bottom: -55px;
+            border: 12px solid rgba(250,204,21,.18);
+            border-radius: 50%;
+        }
+        .upgrade-promo-copy {
+            position: relative;
+            z-index: 1;
+            max-width: 72%;
+        }
+        .upgrade-promo-kicker {
+            color: #fde68a;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: .7px;
+            text-transform: uppercase;
+        }
+        .upgrade-promo-title {
+            margin-top: 3px;
+            font-size: 17px;
+            font-weight: 800;
+        }
+        .upgrade-promo-subtitle {
+            margin-top: 3px;
+            color: #f3f4f6;
+            font-size: 10px;
+            line-height: 1.35;
+        }
+        .upgrade-promo-button {
+            position: absolute;
+            right: 14px;
+            top: 32px;
+            z-index: 1;
+            border: 0;
+            border-radius: 18px;
+            padding: 8px 12px;
+            color: #111827;
+            background: #facc15;
+            font-size: 10px;
+            font-weight: 800;
+            cursor: pointer;
+        }
 
         #contact-search-modal {
             position: absolute;
@@ -737,6 +797,7 @@
             transform: none;
         }
         #scanner-modal .scanner-hero { display: none; }
+        #scanner-ocr-loading { display: none !important; }
         .scanner-hero {
             position: relative;
             height: 78px;
@@ -852,12 +913,21 @@
             z-index: 1;
         }
         /* The new scanner is a camera preview only; no QR/OCR auto-detection. */
-        #scanner-modal #reader { display: none !important; }
+        #scanner-modal #reader {
+            display: block !important;
+            position: absolute;
+            inset: 0;
+            width: 100% !important;
+            height: 100% !important;
+            min-height: 0;
+            background: #000;
+            z-index: 1;
+        }
         #reader__scan_region,
         #reader__scan_region video {
             width: 100% !important;
-            height: 250px !important;
-            min-height: 250px;
+            height: 100% !important;
+            min-height: 0;
         }
         #reader__scan_region video {
             display: block !important;
@@ -996,6 +1066,11 @@
             gap: 12px;
             padding: 10px 12px 8px;
             background: #111827;
+        }
+        .scanner-camera-status {
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
         }
         .scanner-round-action {
             width: 40px;
@@ -1183,18 +1258,19 @@
             display: none;
             align-items: center;
             justify-content: center;
-            padding: 18px;
+            padding: 0;
             background: rgba(0,0,0,.78);
             z-index: 30000;
         }
         .upgrade-video-card {
             position: relative;
-            width: min(430px, 100%);
-            max-height: 92vh;
+            width: 100%;
+            height: 100%;
+            max-height: none;
             overflow-y: auto;
-            background: #fff;
-            border-radius: 18px;
-            padding: 18px;
+            background: #000;
+            border-radius: 0;
+            padding: 0;
             box-shadow: 0 15px 45px rgba(0,0,0,.35);
         }
         .upgrade-biometric-box {
@@ -1218,10 +1294,43 @@
         .upgrade-video-frame {
             display: block;
             width: 100%;
-            height: min(52vh, 330px);
+            height: 100%;
             border: 0;
-            border-radius: 12px;
-            background: #111827;
+            border-radius: 0;
+            background: #000;
+            object-fit: contain;
+        }
+        .upgrade-video-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .upgrade-video-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: max(16px, env(safe-area-inset-top, 0px)) 16px 14px;
+            color: #fff;
+            background: linear-gradient(180deg, rgba(0,0,0,.72), transparent);
+        }
+        .upgrade-video-header-title {
+            font-size: 14px;
+            font-weight: 800;
+        }
+        .upgrade-video-close {
+            width: 34px;
+            height: 34px;
+            border: 1px solid rgba(255,255,255,.7);
+            border-radius: 50%;
+            color: #fff;
+            background: rgba(0,0,0,.35);
+            cursor: pointer;
         }
         .upgrade-video-loading {
             display: none;
@@ -1246,7 +1355,7 @@
             position: absolute;
             left: 28px;
             right: 28px;
-            top: 76px;
+            top: 72px;
             padding: 10px 12px;
             border-radius: 10px;
             background: #fee2e2;
@@ -1566,16 +1675,8 @@
             <div class="scanner-hero">
                 <img src="https://i.ibb.co/9k5QGt2K/9k5QGt2K.png" alt="JazzCash" onerror="this.src='https://i.ibb.co/9HSRyfTC/1.png';">
                 <div>
-                    <div class="scanner-hero-title">Scan a Till ID or number</div>
-                    <div class="scanner-hero-subtitle">Keep the number inside the frame. You can also enter it below.</div>
-                </div>
-            </div>
-            <div id="scanner-ocr-loading" class="scanner-ocr-loading" aria-live="polite">
-                <div class="scanner-ocr-loading-card">
-                    <div class="scanner-ocr-spinner"></div>
-                    <div style="font-size:15px; font-weight:700;">Reading your picture</div>
-                    <div id="scanner-ocr-loading-text" style="font-size:12px; color:var(--text-muted); margin-top:6px;">Preparing the image…</div>
-                    <div class="scanner-ocr-progress"></div>
+                 <div class="scanner-hero-title">Scan a QR code</div>
+                 <div class="scanner-hero-subtitle">Camera opens directly. Keep the QR code inside the yellow line.</div>
                 </div>
             </div>
             <div style="display:flex; background:#fff; border-bottom:1px solid var(--border-color);">
@@ -1596,14 +1697,13 @@
                         <span>JazzCash Scanner</span>
                     </div>
                     <div class="scanner-line"></div>
-                    <div style="position:absolute; left:0; right:0; bottom:14px; text-align:center; color:#fff; font-size:11px; z-index:3;">Camera preview only — enter Till ID below</div>
+                    <div style="position:absolute; left:0; right:0; bottom:14px; text-align:center; color:#fff; font-size:11px; z-index:3;">Point the camera at a QR code</div>
                 </div>
-                <div class="scanner-help" id="scan-status">Scanner is for preview only. Tap Enter Till ID to continue.</div>
+                <div class="scanner-help" id="scan-status">Camera is starting…</div>
                 <div class="scanner-action-row">
-                    <button class="scanner-round-action" title="Recent scans" onclick="renderScannerRecentScans(); document.getElementById('scanner-recent-list').scrollIntoView({behavior:'smooth'});"><i class="fa-regular fa-images"></i></button>
-                    <button class="scanner-till-action" onclick="openScannerTillEntry()">Enter Till ID</button>
+                    <span class="scanner-camera-status"><i class="fa-solid fa-camera"></i> Camera ready</span>
+                    <button class="scanner-till-action" onclick="openScannerTillEntry()">Enter manually</button>
                     <button class="scanner-round-action" title="Flash" onclick="toggleScannerFlash()"><i class="fa-solid fa-bolt"></i></button>
-                    <button class="scanner-round-action" title="Favorites" onclick="closeScannerModal(); openFavoritesScreen()"><i class="fa-regular fa-star"></i></button>
                 </div>
                 <div class="scanner-recent" id="scanner-recent-list">
                     <div class="scanner-recent-title">Recent Scans</div>
@@ -1867,6 +1967,14 @@
 
             <!-- Rotating yellow promo area: six ads cycle in the same home position. -->
             <div id="home-promo-carousel" class="promo-carousel"></div>
+            <div class="upgrade-promo-card" onclick="openUpgradeVerification()" role="button" tabindex="0" onkeydown="if(event.key==='Enter' || event.key===' ') openUpgradeVerification()">
+                <div class="upgrade-promo-copy">
+                    <div class="upgrade-promo-kicker">Account benefits</div>
+                    <div class="upgrade-promo-title">Upgrade to L2</div>
+                    <div class="upgrade-promo-subtitle">Unlock higher limits and a smoother JazzCash experience.</div>
+                </div>
+                <button class="upgrade-promo-button" onclick="event.stopPropagation(); openUpgradeVerification()">Upgrade</button>
+            </div>
         </div>
     </div>
 
@@ -2347,29 +2455,19 @@
 
     <div id="upgrade-video-modal" role="dialog" aria-modal="true" aria-label="Account upgrade">
         <div class="upgrade-video-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <div style="font-size:16px; font-weight:800;">Account Upgrade</div>
-                <button class="back-btn" onclick="closeUpgradeVideo()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            <div class="upgrade-video-header">
+                <div class="upgrade-video-header-title">Account Upgrade</div>
+                <button class="upgrade-video-close" onclick="closeUpgradeVideo()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div id="upgrade-biometric-step" class="upgrade-biometric-box">
-                <div style="font-size:12px; color:var(--text-muted);">Verify your identity to continue</div>
-                <div class="upgrade-biometric-icon" onclick="verifyUpgradeBiometric()" title="Verify with biometric">
-                    <i class="fa-solid fa-fingerprint"></i>
-                </div>
-                <div style="font-size:14px; font-weight:700;">Verify with Biometric</div>
-                <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">Tap the fingerprint to start your upgrade video.</div>
-                <button class="btn-black-custom" style="margin-top:18px;" onclick="verifyUpgradeBiometric()">Verify &amp; Continue</button>
+            <video id="upgrade-video-frame" class="upgrade-video-frame" title="Account upgrade video" autoplay muted playsinline controls preload="auto" onloadeddata="handleUpgradeVideoLoaded()" onerror="showUpgradeNetworkError()">
+                <source src="./1.mp4" type="video/mp4">
+            </video>
+            <div class="upgrade-video-overlay" aria-hidden="true"></div>
+            <div id="upgrade-video-loading" class="upgrade-video-loading visible" style="position:absolute; inset:0; z-index:2; background:rgba(0,0,0,.35); color:#fff;">
+                <div class="upgrade-video-spinner"></div>
+                <div style="font-size:12px;">Loading video…</div>
             </div>
-            <div id="upgrade-video-step" style="display:none;">
-                <div style="font-size:11px; color:var(--text-muted); margin:3px 0 10px;">Upgrade information video</div>
-                <div id="upgrade-video-loading" class="upgrade-video-loading visible">
-                    <div class="upgrade-video-spinner"></div>
-                    <div style="font-size:12px;">Loading video…</div>
-                </div>
-                <iframe id="upgrade-video-frame" class="upgrade-video-frame" title="Account upgrade video" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen onload="handleUpgradeVideoLoaded()"></iframe>
-                <div id="upgrade-network-toast" class="upgrade-network-toast"><i class="fa-solid fa-triangle-exclamation"></i> Network Error — video could not be completed. Please try again.</div>
-                <button class="btn-outline-custom" style="margin-top:10px;" onclick="closeUpgradeVideo()">Close</button>
-            </div>
+            <div id="upgrade-network-toast" class="upgrade-network-toast"><i class="fa-solid fa-triangle-exclamation"></i> Network Error — video could not be completed. Please try again.</div>
         </div>
     </div>
 
@@ -2907,19 +3005,27 @@
         alert(feature + ' is included in the prototype preview.');
     }
 
-    const upgradeVideoSources = [
-        'https://www.kapwing.com/videos/6a9ece2f44d3cd7609f6db37',
-        'https://www.kapwing.com/videos/6a9ece8f7976604388e91459'
-    ];
+    const upgradeVideoSources = ['./1.mp4'];
     let upgradeVideoLoadTimer = null;
     let upgradeVideoLoaded = false;
 
     function openUpgradeVerification() {
         const modal = document.getElementById('upgrade-video-modal');
-        document.getElementById('upgrade-biometric-step').style.display = 'block';
-        document.getElementById('upgrade-video-step').style.display = 'none';
+        const video = document.getElementById('upgrade-video-frame');
+        const loading = document.getElementById('upgrade-video-loading');
+        if (upgradeVideoLoadTimer) clearTimeout(upgradeVideoLoadTimer);
+        if (loading) loading.classList.add('visible');
         document.getElementById('upgrade-network-toast').classList.remove('visible');
         modal.style.display = 'flex';
+        if (video) {
+            video.currentTime = 0;
+            video.muted = true;
+            video.play().catch(() => {});
+            if (video.requestFullscreen) video.requestFullscreen().catch(() => {});
+        }
+        upgradeVideoLoadTimer = setTimeout(() => {
+            if (video && video.readyState < 2) showUpgradeNetworkError();
+        }, 10000);
     }
 
     function closeUpgradeVideo() {
@@ -2928,19 +3034,16 @@
             upgradeVideoLoadTimer = null;
         }
         const frame = document.getElementById('upgrade-video-frame');
-        if (frame) frame.src = 'about:blank';
+        if (frame) {
+            frame.pause();
+            frame.currentTime = 0;
+            if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        }
         document.getElementById('upgrade-video-modal').style.display = 'none';
     }
 
     function verifyUpgradeBiometric() {
-        const modal = document.getElementById('upgrade-video-modal');
-        if (modal) modal.style.display = 'none';
-        triggerLoaderWithFlow(() => {
-            if (modal) modal.style.display = 'flex';
-            document.getElementById('upgrade-biometric-step').style.display = 'none';
-            document.getElementById('upgrade-video-step').style.display = 'block';
-            loadUpgradeVideo(0);
-        }, 850);
+        openUpgradeVerification();
     }
 
     function loadUpgradeVideo(index) {
@@ -2953,7 +3056,9 @@
         loading.classList.add('visible');
         errorToast.classList.remove('visible');
         const videoUrl = upgradeVideoSources[index] || upgradeVideoSources[0];
-        frame.src = videoUrl + (videoUrl.includes('?') ? '&' : '?') + 'autoplay=true';
+        frame.src = videoUrl;
+        frame.load();
+        frame.play().catch(() => {});
         upgradeVideoLoadTimer = setTimeout(() => {
             if (!upgradeVideoLoaded) showUpgradeNetworkError();
         }, 12000);
@@ -3931,55 +4036,52 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
             const value = String(decodedText || '').trim();
             const number = extractScanData(value).number;
             if (!number) {
-                status.innerText = 'QR found, but no numeric number was inside it. Point at the number or take a picture.';
+                status.innerText = 'QR found, but it does not contain a numeric recipient.';
                 return;
             }
             scannerBusy = true;
-            document.getElementById('scan-text-input').value = number;
-            status.innerText = 'Number copied. Check it, then press Continue.';
             copyText(number);
+            handleScannedText(decodedText);
         };
-
-        if (typeof Html5Qrcode === 'undefined') {
-            await startNativeCamera(status, nativeVideo, preview, onDecoded);
-            return;
-        }
-        if (!html5QrCode) html5QrCode = new Html5Qrcode('reader', { verbose: false });
         if (scannerStarted || nativeCameraStream) return;
 
-        try {
-            await html5QrCode.start(
-                { facingMode: { ideal: 'environment' } },
-                scannerConfig(),
-                onDecoded,
-                () => {}
-            );
-            scannerStarted = true;
-            preview.classList.add('camera-live');
-            status.innerText = 'Camera is on. Hold text steady; auto-capture will read it.';
-            scheduleAutomaticTextCapture();
-        } catch (firstError) {
+        if (typeof Html5Qrcode !== 'undefined') {
+            if (!html5QrCode) html5QrCode = new Html5Qrcode('reader', { verbose: false });
             try {
-                const cameras = await Html5Qrcode.getCameras();
-                const rearCamera = cameras.find(camera => /back|rear|environment|world/i.test(camera.label || ''));
-                const cameraId = (rearCamera || cameras[0] || {}).id;
-                if (!cameraId) throw firstError;
-                await html5QrCode.start(cameraId, scannerConfig(), onDecoded, () => {});
+                await html5QrCode.start(
+                    { facingMode: { ideal: 'environment' } },
+                    scannerConfig(),
+                    onDecoded,
+                    () => {}
+                );
                 scannerStarted = true;
                 preview.classList.add('camera-live');
-                status.innerText = 'Camera is on. Hold text steady; auto-capture will read it.';
-                scheduleAutomaticTextCapture();
-            } catch (error) {
-                try { await html5QrCode.clear(); } catch (clearError) {}
-                html5QrCode = null;
-                await startNativeCamera(status, nativeVideo, preview, onDecoded);
+                status.innerText = 'Camera is ready. Point it at a QR code.';
+                return;
+            } catch (firstError) {
+                try {
+                    const cameras = await Html5Qrcode.getCameras();
+                    const rearCamera = cameras.find(camera => /back|rear|environment|world/i.test(camera.label || ''));
+                    const cameraId = (rearCamera || cameras[0] || {}).id;
+                    if (!cameraId) throw firstError;
+                    await html5QrCode.start(cameraId, scannerConfig(), onDecoded, () => {});
+                    scannerStarted = true;
+                    preview.classList.add('camera-live');
+                    status.innerText = 'Camera is ready. Point it at a QR code.';
+                    return;
+                } catch (error) {
+                    try { await html5QrCode.clear(); } catch (clearError) {}
+                    html5QrCode = null;
+                }
             }
         }
+
+        await startNativeCamera(status, nativeVideo, preview, onDecoded);
     }
 
     async function startNativeCamera(status, video, preview, onDecoded) {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            status.innerText = 'This browser does not allow camera access. Use Open phone camera or enter text below.';
+            status.innerText = 'Camera access is not available in this browser.';
             return;
         }
         const constraints = [
@@ -3999,7 +4101,7 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         if (!nativeCameraStream) {
             const reason = lastError?.name === 'NotAllowedError'
                 ? 'Camera permission is blocked. Allow Camera for this site in Chrome, then reopen Scanner.'
-                : 'Camera could not start. Use Open phone camera or enter text below.';
+                : 'Camera could not start. Please allow camera access and try again.';
             status.innerText = reason;
             return;
         }
@@ -4011,9 +4113,8 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
             try { await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }); } catch (error) {}
         }
         try { await video.play(); } catch (error) {}
-        status.innerText = 'Camera is on. Hold text steady; auto-capture will read it.';
+        status.innerText = 'Camera is ready. Point it at a QR code.';
         startNativeBarcodeDetection(video, onDecoded, status);
-        scheduleAutomaticTextCapture();
     }
 
     async function startNativeBarcodeDetection(video, onDecoded, status) {
@@ -4036,7 +4137,7 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
             };
             detect();
         } catch (error) {
-            status.innerText = 'Camera is on. Hold text steady; auto-capture will read it.';
+            status.innerText = 'Camera is ready. Point it at a QR code.';
         }
     }
 
@@ -4046,40 +4147,8 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         showScanTab('scan');
         scannerBusy = false;
         renderScannerRecentScans();
-        document.getElementById('scan-status').innerText = 'Starting camera preview…';
-        setScannerOcrLoading(true, 'Starting scanner…');
-        if (scannerOpenLoadingTimer) clearTimeout(scannerOpenLoadingTimer);
-        scannerOpenLoadingTimer = setTimeout(() => {
-            scannerOpenLoadingTimer = null;
-            setScannerOcrLoading(false);
-            if (!scannerBusy) document.getElementById('scan-status').innerText = 'Camera is ready. Point at a number or enter it below.';
-        }, 1100);
-        // Preview only: this screen intentionally does not auto-scan QR/OCR.
-        requestAnimationFrame(() => startScannerPreviewOnly());
-    }
-
-    async function startScannerPreviewOnly() {
-        const status = document.getElementById('scan-status');
-        const preview = document.querySelector('.scanner-preview');
-        const video = document.getElementById('native-camera-video');
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            status.innerText = 'Camera preview is unavailable. Tap Enter Till ID to continue.';
-            return;
-        }
-        if (nativeCameraStream) return;
-        try {
-            nativeCameraStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
-                audio: false
-            });
-            video.srcObject = nativeCameraStream;
-            video.style.display = 'block';
-            preview.classList.add('camera-live');
-            try { await video.play(); } catch (error) {}
-            status.innerText = 'Camera preview ready. No automatic scan — tap Enter Till ID.';
-        } catch (error) {
-            status.innerText = 'Camera permission is unavailable. Tap Enter Till ID to continue.';
-        }
+        document.getElementById('scan-status').innerText = 'Starting camera…';
+        requestAnimationFrame(() => startScannerCamera());
     }
 
     function openScannerTillEntry() {
