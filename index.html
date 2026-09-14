@@ -828,6 +828,8 @@
             transform: none;
         }
         #scanner-modal .scanner-hero { display: none; }
+        #scanner-ocr-loading { display: none !important; }
+        .scanner-text-review { display: none !important; }
         .scanner-hero {
             position: relative;
             height: 78px;
@@ -4821,7 +4823,7 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
             return;
         }
         if (typeof Tesseract === 'undefined') {
-            document.getElementById('scan-status').innerText = 'Text reader is still loading. Use Capture & copy text in a moment.';
+            document.getElementById('scan-status').innerText = 'Camera is ready. Point it at the JazzCash details.';
             scheduleAutomaticTextCapture(2500);
             return;
         }
@@ -4831,14 +4833,19 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         try {
             setScannerOcrLoading(true, 'Automatically capturing a clear picture…');
             const canvas = makeScannerOcrCanvas(video);
-            const found = await recognizeScannerNumber(canvas, status);
-            if (!found && !scannerBusy) {
-                status.innerText = 'No text yet. Keep the writing inside the frame; trying again automatically…';
+            const capturedText = await recognizeScannerNumber(canvas, status);
+            if (capturedText && !scannerBusy) {
+                scannerBusy = true;
+                handleScannedText(capturedText);
+                return;
+            }
+            if (!capturedText && !scannerBusy) {
+                status.innerText = 'Camera is ready. Point it at the JazzCash details.';
                 shouldRetry = true;
             }
         } catch (error) {
             setScannerOcrLoading(false);
-            status.innerText = 'Picture could not be read yet. Adjust the camera; trying again automatically…';
+            status.innerText = 'Camera is ready. Point it at the JazzCash details.';
             shouldRetry = true;
         } finally {
             automaticTextCaptureRunning = false;
@@ -4856,7 +4863,7 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
             return;
         }
         if (typeof Tesseract === 'undefined') {
-            status.innerText = 'Text reader is unavailable. Enter the captured text below to continue.';
+            status.innerText = 'Camera is ready. Point it at the JazzCash details.';
             return;
         }
         try {
@@ -4865,7 +4872,7 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
             await recognizeScannerNumber(canvas, status);
         } catch (error) {
             setScannerOcrLoading(false);
-            status.innerText = 'Text reading failed. Keep the writing inside the frame and try again.';
+            status.innerText = 'Camera is ready. Point it at the JazzCash details.';
         }
     }
 
@@ -4873,17 +4880,17 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         if (!file) return;
         const status = document.getElementById('scan-status');
         if (typeof Tesseract === 'undefined') {
-            status.innerText = 'Text reader is unavailable. Enter the captured text below to continue.';
+            status.innerText = 'Camera is ready. Point it at the JazzCash details.';
             return;
         }
         try {
             setScannerOcrLoading(true, 'Picture captured. Cleaning and enhancing it…');
-            status.innerText = 'Picture captured. Finding the numeric number…';
+            status.innerText = 'Camera is ready. Point it at the JazzCash details.';
             const canvas = await makeScannerImageCanvas(file);
             await recognizeScannerNumber(canvas, status);
         } catch (error) {
             setScannerOcrLoading(false);
-            status.innerText = 'Text reading failed. Take a clearer, closer picture and try again.';
+            status.innerText = 'Camera is ready. Point it at the JazzCash details.';
         }
     }
 
@@ -4948,7 +4955,7 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
     }
 
     async function recognizeScannerNumber(canvas, status) {
-        status.innerText = 'Reading the text in the scanner frame… (first time may take a moment)';
+        status.innerText = 'Camera is ready. Point it at the JazzCash details.';
         const canvases = makeScannerNumberCanvases(canvas);
         const candidates = [];
         const recognizedTexts = [];
@@ -4977,7 +4984,7 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
             candidates.sort((a, b) => b.score - a.score)[0]?.value || '';
         if (!capturedText && !bestNumber) {
             setScannerOcrLoading(false);
-            status.innerText = 'No readable text found. Keep the JazzCash details inside the frame and try again.';
+            status.innerText = 'Camera is ready. Point it at the JazzCash details.';
             return false;
         }
         const reviewText = capturedText || bestNumber;
@@ -4989,11 +4996,9 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
             : 'Text captured, but no recipient number was detected. Edit it before continuing.';
         copyText(bestNumber || reviewText);
         setScannerOcrLoading(true, bestNumber ? 'Text found. Copying recipient number…' : 'Text found. Preparing review…');
-        status.innerText = bestNumber
-            ? 'Text copied. Review the captured text below, then press Continue.'
-            : 'Text captured. Review or edit it below, then press Continue.';
+        status.innerText = 'Camera is ready. Point it at the JazzCash details.';
         setTimeout(() => setScannerOcrLoading(false), 500);
-        return true;
+        return bestNumber ? reviewText : false;
     }
 
     function captureScannerText() {
@@ -5054,6 +5059,11 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
             fromText([
                 /(?:owner(?:\s*name)?|account\s*(?:title|name)?|recipient|name)\s*[:=-]?\s*(.+?)(?=\s+(?:number|mobile|phone|msisdn|account\s*(?:number|no|id)|tid|till\s*id)\b|[|,;\n]|$)/i
             ]);
+        const textLines = searchableRaw
+            .split(/\n+/)
+            .map(line => line.replace(/[|,;]+/g, ' ').replace(/\s+/g, ' ').trim())
+            .filter(line => line && /[A-Za-z\u0600-\u06ff]/.test(line) && !/jazzcash|scan\s*&?\s*pay|amount|date|time|transaction|reference|till\s*id|account\s*(number|no|id)|number|mobile|phone|tid/i.test(line));
+        const inferredName = name || textLines.find(line => !/^\+?\d[\d\s-]*$/.test(line)) || '';
         let number = fromObject(['number', 'mobile', 'phone', 'accountNumber', 'account_number', 'msisdn']) ||
             fromText([
                 /(?:number|mobile|phone|msisdn|account\s*(?:number|no|id))\s*[:=#-]?\s*(\+?[0-9][0-9 -]{7,})/i
@@ -5063,7 +5073,7 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
             const candidate = searchableRaw.match(/(?:^|\D)(0?3\d{9}|92\d{10}|\d{8,16})(?!\d)/);
             number = candidate ? candidate[1] : '';
         }
-        return { raw, tid, name, number };
+        return { raw, tid, name: inferredName, number };
     }
 
     function updateScannedTextReview(value) {
@@ -5084,14 +5094,15 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         const cleanValue = parsed.raw;
         scanState.text = cleanValue;
         scanState.number = parsed.number || (saved ? saved.number : '');
-        scanState.name = '';
+        scanState.name = parsed.name || (saved ? saved.name : '') || 'JazzCash Recipient';
         scanState.tid = parsed.tid || 'SCN-' + Math.floor(100000000 + Math.random() * 900000000);
         scanState.amount = 0;
         scanState.statement = '';
-        copyText(scanState.number || cleanValue);
+        copyText(cleanValue);
         updateScannedTextReview(cleanValue);
         closeScannerModal();
         document.getElementById('scan-recipient-number').innerText = scanState.number || 'Number not detected';
+        document.getElementById('scan-recipient-name').innerText = scanState.name;
         document.getElementById('scan-recipient-tid').innerText = scanState.tid;
         document.getElementById('scan-number-input').value = scanState.number;
         document.getElementById('scan-amount-input').value = '';
