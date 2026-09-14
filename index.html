@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" type="text/javascript"></script>
     
     <style>
         :root {
@@ -497,11 +498,11 @@
 
         .bottom-nav {
             position: absolute;
-            /* Keep the bottom navigation clear of Chrome's lower browser controls. */
-            bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+            /* Keep the bar at the bottom of the phone shell, including safe-area space. */
+            bottom: env(safe-area-inset-bottom, 0px);
             left: 0;
             width: 100%;
-            height: 60px;
+            height: 64px;
             background-color: white;
             border-top: 1px solid var(--border-color);
             display: flex;
@@ -509,9 +510,37 @@
             align-items: center;
             z-index: 5000;
             pointer-events: auto;
+            overflow: visible;
+            transition: height .2s ease, opacity .2s ease, background-color .2s ease;
         }
-        /* The main Scan navigation is a Home-screen affordance only. */
         #main-bottom-nav.is-hidden { display: none; }
+        /* Keep only the essential navigation visible, in a smaller form, on inner screens. */
+        #main-bottom-nav.is-compact {
+            height: 42px;
+            background: rgba(255,255,255,.96);
+        }
+        #main-bottom-nav.is-compact .nav-link {
+            font-size: 0;
+            gap: 0;
+        }
+        #main-bottom-nav.is-compact .nav-link i {
+            font-size: 14px;
+        }
+        #main-bottom-nav.is-compact .nav-link.nav-optional {
+            display: none;
+        }
+        #main-bottom-nav.is-compact .nav-scan-link {
+            transform: none;
+        }
+        #main-bottom-nav.is-compact .nav-scan-icon {
+            width: 34px;
+            height: 34px;
+            border-width: 2px;
+            box-shadow: 0 3px 9px rgba(31, 18, 20, .28), 0 0 0 2px #fff;
+        }
+        #main-bottom-nav.is-compact .nav-scan-icon i {
+            font-size: 15px;
+        }
         .nav-link {
             display: flex; flex-direction: column; align-items: center; background: none;
             border: none; cursor: pointer; color: #111827; font-size: 10px; font-weight: 500; gap: 2px;
@@ -520,23 +549,25 @@
         .nav-link i { font-size: 16px; color: #111827; }
         .nav-scan-link {
             position: relative;
-            margin-top: -16px;
+            margin-top: 0;
+            transform: none;
             font-weight: 700;
+            z-index: 2;
         }
         .nav-scan-icon {
-            width: 48px;
-            height: 48px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #111827;
-            color: #fff;
-            border: 5px solid #fff;
-            box-shadow: 0 4px 12px rgba(17,24,39,.28);
+            background: linear-gradient(145deg, #5a0d12 0%, #2b1518 52%, #151a20 100%);
+            color: var(--yellow-accent);
+            border: 4px solid var(--yellow-accent);
+            box-shadow: 0 5px 14px rgba(31, 18, 20, .35), 0 0 0 3px #fff;
             margin-bottom: 2px;
         }
-        .nav-scan-icon i { color: #fff !important; font-size: 20px; }
+        .nav-scan-icon i { color: var(--yellow-accent) !important; font-size: 24px; }
 
         #money-transfer-overlay-modal {
             position: absolute;
@@ -797,7 +828,6 @@
             transform: none;
         }
         #scanner-modal .scanner-hero { display: none; }
-        #scanner-ocr-loading { display: none !important; }
         .scanner-hero {
             position: relative;
             height: 78px;
@@ -1041,7 +1071,8 @@
             position: absolute;
             left: 25px;
             right: 25px;
-            top: 50%;
+            /* The lowest point stays about 3 cm above the preview bottom. */
+            top: calc(100% - 3cm - 48px);
             height: 3px;
             background: #facc15;
             box-shadow: 0 0 12px #facc15;
@@ -1049,8 +1080,8 @@
             z-index: 2;
         }
         @keyframes scanLine {
-            0%, 100% { transform: translateY(-72px); opacity: .65; }
-            50% { transform: translateY(72px); opacity: 1; }
+            0%, 100% { transform: translateY(0); opacity: .65; }
+            50% { transform: translateY(48px); opacity: 1; }
         }
         .scanner-help {
             padding: 10px 12px;
@@ -1093,6 +1124,71 @@
             font-weight: 700;
             cursor: pointer;
         }
+        .scanner-text-review {
+            padding: 10px 12px;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .scanner-text-review-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+        .scanner-text-review textarea {
+            width: 100%;
+            min-height: 54px;
+            max-height: 92px;
+            resize: vertical;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px 9px;
+            font: inherit;
+            font-size: 11px;
+            color: var(--text-main);
+            background: #f9fafb;
+        }
+        .scanner-text-review textarea:focus {
+            outline: none;
+            border-color: var(--yellow-accent);
+        }
+        .scanner-text-review-actions {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 7px;
+        }
+        .scanner-text-review-actions button,
+        .scanner-text-review-actions label {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            padding: 7px 6px;
+            background: #fff;
+            color: var(--text-main);
+            font-size: 10px;
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+        }
+        .scanner-text-review-actions button.primary {
+            background: #111827;
+            border-color: #111827;
+            color: #fff;
+        }
+        .scanner-text-review-actions input {
+            display: none;
+        }
+        .scanner-text-review-status {
+            min-height: 14px;
+            margin-top: 5px;
+            color: var(--text-muted);
+            font-size: 10px;
+        }
         .scanner-recent {
             flex: 1;
             min-height: 80px;
@@ -1120,13 +1216,14 @@
             left: 0;
             right: 0;
             bottom: 0;
-            height: 62px;
+            height: calc(62px + env(safe-area-inset-bottom, 0px));
             display: flex;
             justify-content: space-around;
             align-items: center;
             background: #fff;
             border-top: 1px solid var(--border-color);
             z-index: 5;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
         .scanner-bottom-nav button {
             border: 0;
@@ -1139,13 +1236,49 @@
             align-items: center;
             gap: 3px;
         }
+        .scanner-bottom-nav button span {
+            display: block;
+            position: relative;
+            top: 0;
+            color: #111827;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1.1;
+            white-space: nowrap;
+        }
         .scanner-bottom-nav i { font-size: 16px; }
         .scanner-bottom-nav .scanner-nav-active {
-            background: #111827;
-            color: #fff;
-            border-radius: 9px;
-            padding: 6px 10px;
+            background: transparent;
+            color: #111827;
+            border-radius: 0;
+            padding: 0;
         }
+        .scanner-bottom-nav .scanner-nav-active i {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #5a0d12 0%, #2b1518 52%, #151a20 100%);
+            color: var(--yellow-accent);
+            border: 3px solid var(--yellow-accent);
+            box-shadow: 0 4px 10px rgba(31, 18, 20, .3), 0 0 0 2px #fff;
+            font-size: 18px;
+        }
+        .gift-admin-secret {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 42%;
+            border: 0;
+            background: transparent;
+            opacity: 0;
+            cursor: default;
+            z-index: 1;
+        }
+        #gift-screen .flow-grid { position: relative; z-index: 2; }
         .success-receipt-card {
             position: relative;
             width: 100%;
@@ -1191,17 +1324,18 @@
             min-height: calc(100vh - 62px);
             height: auto !important;
             overflow-y: visible;
-            padding: 0 16px 18px !important;
+            padding: 18px 16px 18px !important;
             background: #121212 !important;
             justify-content: flex-start;
         }
         #success-screen .success-check {
             flex: 0 0 auto;
             width: 52px !important;
-            height: 28px !important;
-            margin: 0 auto 9px !important;
+            height: 52px !important;
+            margin: 0 auto 18px !important;
             border-radius: 50% !important;
-            font-size: 16px !important;
+            font-size: 22px !important;
+            box-shadow: 0 0 0 7px rgba(250,204,21,.13), 0 0 22px rgba(250,204,21,.42);
         }
         #success-screen .success-receipt-card,
         #success-screen .success-action-row,
@@ -1213,9 +1347,9 @@
         }
         #success-screen .success-receipt-card {
             flex: 0 0 auto;
-            padding: 20px 24px !important;
+            padding: 24px 24px 20px !important;
             margin-bottom: 10px !important;
-            min-height: clamp(560px, calc(100vh - 205px), 680px);
+            min-height: clamp(460px, calc(100vh - 280px), 530px);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -1224,10 +1358,12 @@
             margin-bottom: 0 !important;
         }
         #success-screen .success-receipt-card > h2 {
-            margin-top: 8px !important;
+            margin-top: 14px !important;
+            text-align: center;
         }
         #success-screen .success-receipt-card > h2 + div {
             margin-bottom: 0 !important;
+            text-align: center;
         }
         #success-screen .success-receipt-card > .receipt-row {
             padding-top: 15px;
@@ -1387,6 +1523,7 @@
         }
         .statement-entry {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             gap: 10px;
             padding: 13px 14px;
@@ -1416,6 +1553,57 @@
         .statement-subtitle { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
         .statement-amount { font-size: 12px; font-weight: 700; color: var(--primary); text-align: right; }
         .statement-status { font-size: 9px; color: var(--success-green); text-align: right; margin-top: 3px; }
+        .statement-actions {
+            flex: 0 0 100%;
+            display: flex;
+            gap: 8px;
+            margin-left: 44px;
+            margin-top: 2px;
+        }
+        .statement-action-btn {
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 6px 12px;
+            color: #111827;
+            background: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .statement-action-btn.primary {
+            border-color: #111827;
+            color: #fff;
+            background: #111827;
+        }
+        .more-service-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            min-height: 68px;
+            margin-bottom: 9px;
+            padding: 12px 13px;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            background: #fff;
+            color: var(--text-main);
+            text-align: left;
+            cursor: pointer;
+            box-shadow: 0 2px 7px rgba(17,24,39,.04);
+        }
+        .more-service-card:active { transform: scale(.99); }
+        .more-service-icon {
+            width: 40px;
+            height: 40px;
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 17px;
+        }
         .limit-card {
             background: #fff;
             border: 1px solid var(--border-color);
@@ -1672,6 +1860,13 @@
                 <span class="scanner-header-title">QR</span>
                 <i class="fa-solid fa-xmark scanner-close" onclick="closeScannerModal()"></i>
             </div>
+            <div id="scanner-ocr-loading" class="scanner-ocr-loading">
+                <div class="scanner-ocr-loading-card">
+                    <div class="scanner-ocr-spinner"></div>
+                    <div id="scanner-ocr-loading-text" style="font-size:12px; font-weight:700;">Reading camera text…</div>
+                    <div class="scanner-ocr-progress"></div>
+                </div>
+            </div>
             <div class="scanner-hero">
                 <img src="https://i.ibb.co/9k5QGt2K/9k5QGt2K.png" alt="JazzCash" onerror="this.src='https://i.ibb.co/9HSRyfTC/1.png';">
                 <div>
@@ -1704,6 +1899,20 @@
                     <span class="scanner-camera-status"><i class="fa-solid fa-camera"></i> Camera ready</span>
                     <button class="scanner-till-action" onclick="openScannerTillEntry()">Enter manually</button>
                     <button class="scanner-round-action" title="Flash" onclick="toggleScannerFlash()"><i class="fa-solid fa-bolt"></i></button>
+                </div>
+                <div class="scanner-text-review">
+                    <div class="scanner-text-review-title">
+                        <span><i class="fa-solid fa-wand-magic-sparkles"></i> Captured text review</span>
+                        <span style="font-size:9px; color:var(--text-muted); font-weight:600;">OCR auto-read</span>
+                    </div>
+                    <textarea id="scan-text-input" placeholder="Camera text will appear here…"></textarea>
+                    <div id="scan-ocr-copy-status" class="scanner-text-review-status">Point the camera at JazzCash text or a QR code.</div>
+                    <div class="scanner-text-review-actions">
+                        <button type="button" onclick="readScannerText()"><i class="fa-solid fa-camera"></i> Read again</button>
+                        <label for="scan-image-input"><i class="fa-regular fa-image"></i> Upload photo</label>
+                        <input id="scan-image-input" type="file" accept="image/*" onchange="readScannerImage(this.files[0])">
+                        <button type="button" class="primary" onclick="captureScannerText()">Continue</button>
+                    </div>
                 </div>
                 <div class="scanner-recent" id="scanner-recent-list">
                     <div class="scanner-recent-title">Recent Scans</div>
@@ -1803,7 +2012,7 @@
                 <button class="login-key-btn" onclick="pressKeypadLogin('7')">7</button>
                 <button class="login-key-btn" onclick="pressKeypadLogin('8')">8</button>
                 <button class="login-key-btn" onclick="pressKeypadLogin('9')">9</button>
-                <button class="login-key-btn" onclick="navigateTo('login-biometric-screen')" style="font-size: 20px;" title="Fingerprint"><i class="fa-solid fa-fingerprint"></i></button>
+                <div class="login-key-btn" aria-hidden="true"></div>
                 <button class="login-key-btn" onclick="pressKeypadLogin('0')">0</button>
                 <button class="login-key-btn" onclick="pressKeypadLogin('del')"><i class="fa-solid fa-delete-left"></i></button>
             </div>
@@ -1813,45 +2022,6 @@
             </div>
         </div>
     </div>
-
-    <div id="login-biometric-screen" class="app-screen">
-        <div class="full-login-screen">
-            <div>
-                <div class="login-dark-topbar">
-                    <button class="back-btn" style="background:#333; color:#fff;" onclick="navigateTo('login-keypad-screen')"><i class="fa-solid fa-arrow-left"></i></button>
-                    <i class="fa-solid fa-house" style="cursor: pointer; color: white;" onclick="navigateTo('home-screen')"></i>
-                </div>
-                <div style="padding: 24px 20px 0 20px;">
-                    <h2 style="font-size: 22px; font-weight: 700; color: #111827;">Complete Sign-in</h2>
-                    <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Enter your 4 digit MPIN</p>
-                    
-                    <div class="login-pin-dots-row">
-                        <div class="login-dot-item" id="bio-dot-0"></div>
-                        <div class="login-dot-item" id="bio-dot-1"></div>
-                        <div class="login-dot-item" id="bio-dot-2"></div>
-                        <div class="login-dot-item" id="bio-dot-3"></div>
-                    </div>
-                    <div style="text-align: right;">
-                        <a href="#" style="font-size: 12px; color: #111827; text-decoration: none; font-weight: 600;" onclick="alert('Forgot MPIN flow')">Forgot MPIN?</a>
-                    </div>
-                    <p style="font-size: 11px; color: var(--danger); margin-top: 25px;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</p>
-                </div>
-            </div>
-
-            <div style="text-align: center; padding: 0 20px;">
-                <div style="font-size: 13px; font-weight: 700; color: #111827; margin-bottom: 12px;">JazzCash</div>
-                <div style="font-size: 16px; font-weight: 600; color: #111827; margin-bottom: 6px;">Biometric login for JazzCash</div>
-                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Touch in-display fingerprint sensor</div>
-                <i class="fa-solid fa-fingerprint" style="font-size: 60px; color: #111827; margin-bottom: 25px; cursor: pointer;" onclick="triggerLoaderWithFlow(() => navigateTo('home-screen'))"></i>
-            </div>
-
-            <div style="padding: 15px 20px 25px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color);">
-                <span style="font-size: 13px; color: #111827; font-weight: 600; cursor: pointer;" onclick="navigateTo('login-keypad-screen')">Use MPIN</span>
-                    <span style="font-size: 12px; color: var(--text-muted); cursor: pointer;" onclick="showComingSoon('Help')">Need Help?</span>
-            </div>
-        </div>
-    </div>
-
 
     <div id="home-screen" class="app-screen">
         <div class="dark-header">
@@ -1894,7 +2064,7 @@
                 <div class="home-balance-label">Available balance</div>
                 <div class="home-balance-value" id="home-balance-value">Rs. 5,287.14</div>
                 <div class="home-balance-tools">
-                    <button class="home-balance-tool" onclick="alert('Balance refreshed')"><i class="fa-solid fa-rotate"></i> Refresh balance</button>
+                    <button class="home-balance-tool" onclick="updateBalanceDisplays(); renderStatement();"><i class="fa-solid fa-rotate"></i> Refresh balance</button>
                     <button class="home-balance-tool" onclick="openAccountStatement()"><i class="fa-solid fa-file-lines"></i> Statement</button>
                 </div>
             </div>
@@ -1921,14 +2091,14 @@
                     </div>
                     <div class="icon-label">Load & Packages</div>
                 </div>
-                <div class="icon-item" onclick="checkAuthAndOpen(() => alert('Market T-Bills'))">
+                <div class="icon-item" onclick="checkAuthAndOpen(() => openMoreServices('Market T-Bills'))">
                     <span class="badge-new">New</span>
                     <div class="icon-box">
                         <img src="https://i.ibb.co/jPR4XgLh/jPR4XgLh.png" style="width:52px; height:52px; object-fit:contain;" alt="Market T-Bills" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-chart-line\'></i>';">
                     </div>
                     <div class="icon-label">Market T-Bills</div>
                 </div>
-                <div class="icon-item" onclick="checkAuthAndOpen(() => alert('Yeylo portal'))">
+                <div class="icon-item" onclick="checkAuthAndOpen(() => openMoreServices('Yeylo'))">
                     <span class="badge-new">New</span>
                     <div class="icon-box" style="background:#fef08a; border-radius:12px; width:52px; height:52px; margin:auto;">
                         <img src="https://i.ibb.co/NdyCmqdj/NdyCmqdj.png" style="width:40px; height:40px; object-fit:contain;" alt="Yeylo" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-y\'></i>';">
@@ -1942,7 +2112,7 @@
                     </div>
                     <div class="icon-label">Government Payments</div>
                 </div>
-                <div class="icon-item" onclick="checkAuthAndOpen(() => alert('Sehat +'))">
+                <div class="icon-item" onclick="checkAuthAndOpen(() => openMoreServices('Sehat +'))">
                     <span class="badge-new">New</span>
                     <div class="icon-box">
                         <img src="https://i.ibb.co/fdp4Fk5S/fdp4Fk5S.png" style="width:52px; height:52px; object-fit:contain;" alt="Sehat +" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-heart-pulse\'></i>';">
@@ -1957,7 +2127,7 @@
                     <div class="icon-label">Corporate Payments</div>
                 </div>
                 <!-- More Services linked to more-services.html -->
-                <div class="icon-item" onclick="checkAuthAndOpen(() => showComingSoon('More Services'))">
+                <div class="icon-item" onclick="checkAuthAndOpen(() => openMoreServices('More Services'))">
                     <div class="icon-box">
                         <img src="https://i.ibb.co/Y4kRLr2J/Y4kRLr2J.png" style="width:52px; height:52px; object-fit:contain;" alt="More" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-ellipsis\'></i>';">
                     </div>
@@ -1967,13 +2137,34 @@
 
             <!-- Rotating yellow promo area: six ads cycle in the same home position. -->
             <div id="home-promo-carousel" class="promo-carousel"></div>
-            <div class="upgrade-promo-card" onclick="openUpgradeVerification()" role="button" tabindex="0" onkeydown="if(event.key==='Enter' || event.key===' ') openUpgradeVerification()">
+            <div class="upgrade-promo-card" onclick="checkAuthAndOpen(openUpgradeVerification)" role="button" tabindex="0" onkeydown="if(event.key==='Enter' || event.key===' ') checkAuthAndOpen(openUpgradeVerification)">
                 <div class="upgrade-promo-copy">
                     <div class="upgrade-promo-kicker">Account benefits</div>
                     <div class="upgrade-promo-title">Upgrade to L2</div>
                     <div class="upgrade-promo-subtitle">Unlock higher limits and a smoother JazzCash experience.</div>
                 </div>
-                <button class="upgrade-promo-button" onclick="event.stopPropagation(); openUpgradeVerification()">Upgrade</button>
+                <button class="upgrade-promo-button" onclick="event.stopPropagation(); checkAuthAndOpen(openUpgradeVerification)">Upgrade</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="more-services-screen" class="app-screen">
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="back-btn" onclick="navigateTo('home-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="screen-title" id="more-services-title">More Services</span>
+            </div>
+            <i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i>
+        </div>
+        <div id="more-services-scroll" class="page-content" style="padding:14px 10px 100px;">
+            <div style="background:#121212; color:#fff; border-radius:16px; padding:18px 16px; margin-bottom:12px;">
+                <div id="more-services-kicker" style="font-size:11px; color:#facc15; font-weight:700;">JazzCash Official</div>
+                <div id="more-services-heading" style="font-size:18px; font-weight:700; margin-top:4px;">Explore services</div>
+                <div id="more-services-subtitle" style="font-size:11px; color:#d1d5db; margin-top:5px;">Scroll down continuously to discover more options.</div>
+            </div>
+            <div id="more-services-list"></div>
+            <div id="more-services-loading" style="padding:18px; text-align:center; color:var(--text-muted); font-size:11px;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Loading more services...
             </div>
         </div>
     </div>
@@ -2145,7 +2336,8 @@
 
     <div id="gift-screen" class="app-screen">
         <div class="top-bar"><span class="screen-title">Gift</span><i class="fa-solid fa-house" style="cursor:pointer;" onclick="navigateTo('home-screen')"></i></div>
-        <div class="page-content" style="padding:30px 16px 75px; text-align:center;">
+        <div class="page-content" style="position:relative; padding:30px 16px 75px; text-align:center;">
+            <button class="gift-admin-secret" aria-label="Gift options" onclick="handleGiftAdminTap()"></button>
             <div style="font-size:60px; color:#f59e0b; margin:25px 0;"><i class="fa-solid fa-gift"></i></div>
             <h2 style="font-size:22px;">Gifting Made Personal</h2>
             <div class="flow-grid" style="margin-top:25px;"><button class="flow-item" onclick="showComingSoon('Gift It')"><i class="fa-solid fa-gift"></i><span>Gift It</span></button><button class="flow-item" onclick="showComingSoon('Redeem It')"><i class="fa-solid fa-box-open"></i><span>Redeem It</span></button><button class="flow-item" onclick="showComingSoon('Request It')"><i class="fa-regular fa-comment-dots"></i><span>Request It</span></button></div>
@@ -2173,6 +2365,10 @@
                 <div style="font-size:12px; color:#166534; margin-top:4px;">Account holder: <strong id="scan-recipient-name">—</strong></div>
                 <div style="font-size:11px; color:#166534; margin-top:3px;">TID: <span id="scan-recipient-tid">—</span></div>
                 <div style="font-size:10px; color:#166534; margin-top:3px;">Saved and verified in Admin Panel for this payment.</div>
+            </div>
+            <div id="scan-captured-text-row" style="display:none; margin-bottom:15px; padding:10px 12px; border-radius:10px; background:#f9fafb; border:1px solid var(--border-color);">
+                <div style="font-size:10px; color:var(--text-muted); font-weight:700;">Captured text from scanner</div>
+                <div id="scan-captured-text" style="font-size:11px; color:var(--text-main); white-space:pre-wrap; word-break:break-word; max-height:90px; overflow:auto; margin-top:5px;"></div>
             </div>
             <div class="input-group-custom">
                 <label class="input-label">Recipient number / Till ID</label>
@@ -2287,6 +2483,10 @@
                 </div>
                 <div id="conf-statement-row" style="display:none; margin:0 0 14px; padding:10px 12px; border-radius:10px; background:#f9fafb; font-size:11px; color:var(--text-main);">
                     <span style="color:var(--text-muted);">Statement:</span> <span id="conf-statement"></span>
+                </div>
+                <div id="conf-scan-text-row" style="display:none; margin:0 0 14px; padding:10px 12px; border-radius:10px; background:#f9fafb; font-size:11px; color:var(--text-main);">
+                    <div style="color:var(--text-muted); font-size:10px; font-weight:700; margin-bottom:4px;">Scanner text review</div>
+                    <div id="conf-scan-text" style="white-space:pre-wrap; word-break:break-word; max-height:90px; overflow:auto;"></div>
                 </div>
 
                 <div style="border-bottom: 1px dashed var(--border-color); margin-bottom: 14px;"></div>
@@ -2409,18 +2609,18 @@
             <div class="success-receipt-card" style="background:white; border-radius:14px; padding:20px; text-align:left; color:#1f2937; margin-bottom:10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
                 <div style="text-align: center; margin-bottom: 12px;">
                     <div style="font-size: 16px; font-weight: 700; color: var(--text-main);">Transaction Successful</div>
-                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;" id="rec-tid-date">TID: 467754865409 | 01 Sep 2026 at 10:52 AM</div>
+                    <div style="font-size: 10px; color: var(--text-muted); line-height:1.55; margin-top: 4px;" id="rec-tid-date">TID: 467754865409<br><span>On 01 Sep 2026 at 10:52</span></div>
                 </div>
 
                 <div style="border-bottom: 1px solid var(--border-color); margin-bottom: 14px;"></div>
 
                 <h2 style="color:var(--text-main); font-size:22px; font-weight:700; margin-bottom:2px;" id="rec-amt">Rs. 100.00</h2>
-                <div style="font-size:12px; color:var(--text-muted); margin-bottom:18px;" id="rec-sub-desc">Transferred to JazzCash Transfer</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:18px; text-align:center;" id="rec-sub-desc">Transferred to JazzCash</div>
 
                 <div class="receipt-row"><span class="receipt-label">Fee</span><span class="receipt-value">Rs. 0.00</span></div>
                 <div class="receipt-row"><span class="receipt-label">To</span><span class="receipt-value" id="rec-name" style="text-align:right;">Recipient<br><span style="font-weight:normal; color:var(--text-muted);" id="rec-num">—</span></span></div>
-                <div class="receipt-row" id="rec-statement-row" style="display:none;"><span class="receipt-label">Statement</span><span class="receipt-value" id="rec-statement" style="text-align:right;"></span></div>
-                <div class="receipt-row"><span class="receipt-label">From</span><span class="receipt-value" style="text-align:right;"><span id="rec-from-name">ANUM SABIR</span><br><span style="font-weight:normal; color:var(--text-muted);">03084191378</span></span></div>
+                <div class="receipt-row" id="rec-statement-row" style="display:none;"><span class="receipt-label" style="font-weight:700;">JazzCash Official</span><span class="receipt-value" id="rec-statement" style="text-align:right;"></span></div>
+                <div class="receipt-row"><span class="receipt-label">From</span><span class="receipt-value" style="text-align:right;"><span id="rec-from-name">ANUM SABIR</span><br><span id="rec-from-number" style="font-weight:normal; color:var(--text-muted);">03084191378</span></span></div>
 
                 <div style="text-align:center; margin-top:20px; font-size:11px; color:var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 12px; display: flex; align-items: center; justify-content: center; gap: 6px;">
                     Securely paid via <img src="https://i.ibb.co/9HSRyfTC/1.png" style="width:30px; height:18px; object-fit:contain; vertical-align:middle;" alt="JazzCash logo" onerror="this.src='https://i.ibb.co/9k5QGt2K/9k5QGt2K.png';"> JazzCash
@@ -2781,11 +2981,11 @@
             <span class="nav-scan-icon"><i class="fa-solid fa-qrcode"></i></span>
             <span>Scan</span>
         </button>
-        <button class="nav-link" onclick="openFavoritesScreen()">
+        <button class="nav-link nav-optional" onclick="openFavoritesScreen()">
             <i class="fa-solid fa-clock-rotate-left" style="color: #111827;"></i>
             <span>Favorites</span>
         </button>
-        <button class="nav-link" onclick="openGiftScreen()">
+        <button class="nav-link nav-optional" onclick="openGiftScreen()">
             <i class="fa-solid fa-gift" style="color: #111827;"></i>
             <span>Gift</span>
         </button>
@@ -2826,6 +3026,115 @@
     let promoIndex = 0;
     let promoTimer = null;
     let paymentSoundArmed = false;
+    let moreServicesOffset = 0;
+    let moreServicesScrollBound = false;
+    let moreServicesIsInfinite = false;
+    let giftAdminTapCount = 0;
+    let giftAdminTapTimer = null;
+    let profileLoadingTimer = null;
+    let loaderTapCount = 0;
+    let loaderTapResetTimer = null;
+    let loaderStopTimer = null;
+    const adminAccountStorageKeys = [
+        'jazzcash_admin_accounts',
+        'jazzcash_admin_accounts_backup',
+        'jazzcash_admin_accounts_v2'
+    ];
+    const moreServiceCatalog = [
+        ['Money Transfer', 'Send money to JazzCash, banks, wallets and CNICs.', 'fa-paper-plane', 'openMoneyTransferModal'],
+        ['Bill Payment', 'Pay electricity, gas, water and internet bills.', 'fa-file-invoice-dollar', 'openBillCategories'],
+        ['Load & Packages', 'Recharge mobile numbers and browse packages.', 'fa-mobile-screen-button', 'openLoadCategories'],
+        ['Market T-Bills', 'Explore savings and investment options.', 'fa-chart-line', 'openMoreServices'],
+        ['Yeylo', 'Discover offers and everyday shopping services.', 'fa-bag-shopping', 'openMoreServices'],
+        ['Government Payments', 'Access government payment services.', 'fa-landmark', 'openMoreServices'],
+        ['Sehat +', 'Explore health and wellness services.', 'fa-heart-pulse', 'openMoreServices'],
+        ['Corporate Payments', 'Manage business and corporate payments.', 'fa-building-columns', 'openMoreServices'],
+        ['Reward Hub', 'View rewards and available benefits.', 'fa-award', 'openMoreServices'],
+        ['Help & Support', 'Find answers and get help with JazzCash.', 'fa-headset', 'openMoreServices']
+    ];
+    const namedServicePages = {
+        'Market T-Bills': {
+            kicker: 'Invest with JazzCash',
+            subtitle: 'Review savings and investment options in this section.',
+            cards: [
+                ['Government T-Bills', 'Explore government treasury bill options.', 'fa-building-columns'],
+                ['Investment Overview', 'View available terms, rates and maturity details.', 'fa-chart-line'],
+                ['My Investments', 'Track your saved investment activity.', 'fa-wallet']
+            ]
+        },
+        'Yeylo': {
+            kicker: 'Yeylo by JazzCash',
+            subtitle: 'Discover shopping, offers and everyday digital services.',
+            cards: [
+                ['Featured Offers', 'Browse the latest partner offers.', 'fa-tags'],
+                ['Shopping & Lifestyle', 'Explore shopping and lifestyle services.', 'fa-bag-shopping'],
+                ['My Yeylo Activity', 'View your Yeylo activity and saved offers.', 'fa-clock-rotate-left']
+            ]
+        },
+        'Government Payments': {
+            kicker: 'Government Services',
+            subtitle: 'Choose the government payment service you need.',
+            layout: 'grid',
+            cards: [
+                ['Government Fees', 'Pay eligible government fees securely.', 'fa-landmark'],
+                ['Token Tax', 'Manage your vehicle token tax payment.', 'fa-car'],
+                ['Challan Payments', 'Pay available challans from one place.', 'fa-file-invoice']
+            ]
+        },
+        'Sehat +': {
+            kicker: 'Sehat +',
+            subtitle: 'Find health and wellness services inside JazzCash.',
+            cards: [
+                ['Health Offers', 'Browse available health partner offers.', 'fa-heart-pulse'],
+                ['Insurance', 'Explore protection and insurance options.', 'fa-shield-heart'],
+                ['Wellness Services', 'Discover useful wellness services.', 'fa-spa']
+            ]
+        },
+        'Corporate Payments': {
+            kicker: 'Corporate Payments',
+            subtitle: 'Manage business collections and corporate payments.',
+            cards: [
+                ['Business Payments', 'Send and receive business payments.', 'fa-building'],
+                ['Corporate Collections', 'Review collection tools for your business.', 'fa-layer-group'],
+                ['Business Support', 'Find support for corporate account services.', 'fa-headset']
+            ]
+        },
+        'Loan': {
+            kicker: 'JazzCash Loans',
+            subtitle: 'Review available loan and ReadyCash services.',
+            cards: [
+                ['ReadyCash', 'Explore ReadyCash eligibility and options.', 'fa-coins'],
+                ['Loan Details', 'Review repayment and account information.', 'fa-file-invoice-dollar'],
+                ['Loan Support', 'Get help with loan-related questions.', 'fa-headset']
+            ]
+        },
+        'Reward Hub': {
+            kicker: 'JazzCash Rewards',
+            subtitle: 'See your rewards, benefits and available offers.',
+            cards: [
+                ['My Rewards', 'View rewards available to your account.', 'fa-gift'],
+                ['Reward Offers', 'Explore current reward offers.', 'fa-star'],
+                ['Reward History', 'Review your reward activity.', 'fa-clock-rotate-left']
+            ]
+        },
+        'Help': {
+            kicker: 'JazzCash Help',
+            subtitle: 'Find support topics and helpful account information.',
+            cards: [
+                ['Payments Help', 'Get help with transfers, bills and loads.', 'fa-circle-question'],
+                ['Account Help', 'Find help for login, MPIN and profile settings.', 'fa-user-shield'],
+                ['Contact Support', 'Open support information for your account.', 'fa-headset']
+            ]
+        },
+        'Share Receipt': {
+            kicker: 'Receipt Sharing',
+            subtitle: 'Your receipt is ready to share from the device share menu.',
+            cards: [
+                ['Receipt Ready', 'Use your device share menu to send this receipt.', 'fa-share-nodes'],
+                ['Save Receipt', 'Save a copy of the receipt to your device.', 'fa-download']
+            ]
+        }
+    };
     const promoAds = [
         { kicker: 'Featured', title: 'yeylo', subtitle: 'Discover more with JazzCash', icon: 'fa-arrow-right', bg: 'linear-gradient(135deg,#fef08a,#facc15)', action: 'Yeylo' },
         { kicker: 'Transfer faster', title: 'Send money', subtitle: 'Quick transfers to wallets and banks', icon: 'fa-paper-plane', bg: 'linear-gradient(135deg,#fde68a,#f59e0b)', action: 'Money Transfer' },
@@ -2891,11 +3200,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         try {
-            const savedAccounts = JSON.parse(
-                localStorage.getItem('jazzcash_admin_accounts') ||
-                localStorage.getItem('jazzcash_admin_accounts_backup') ||
-                '{}'
-            );
+            const savedAccounts = readPersistedAdminAccounts();
             Object.keys(savedAccounts).forEach(cat => {
                 if (savedAccounts[cat] && typeof savedAccounts[cat] === 'object') {
                     const category = {
@@ -2928,6 +3233,9 @@
         renderFavorites();
         populateAdminCategories();
         persistAdminAccounts();
+        requestPersistentStorage();
+        bindProfileLoading();
+        bindProtectedLoaderTapStop();
         updateBalanceDisplays();
             try {
                 const savedSms = JSON.parse(localStorage.getItem('jazzcash_sms_messages') || '[]');
@@ -2982,7 +3290,9 @@
     function updateBottomNavVisibility(screenId) {
         const bottomNav = document.getElementById('main-bottom-nav');
         if (!bottomNav) return;
-        bottomNav.classList.toggle('is-hidden', screenId !== 'home-screen');
+        const isHome = screenId === 'home-screen';
+        bottomNav.classList.toggle('is-hidden', !isHome);
+        bottomNav.classList.remove('is-compact');
     }
 
     function navigateTo(screenId) {
@@ -2998,11 +3308,128 @@
     function openLoginFlow() {
         loginPinStr = "";
         renderKeyLoginDots();
-        navigateTo('login-biometric-screen');
+        navigateTo('login-keypad-screen');
+    }
+
+    function openMoreServices(feature = 'More Services') {
+        const screen = document.getElementById('more-services-screen');
+        const scroll = document.getElementById('more-services-scroll');
+        const list = document.getElementById('more-services-list');
+        const title = document.getElementById('more-services-title');
+        const kicker = document.getElementById('more-services-kicker');
+        const heading = document.getElementById('more-services-heading');
+        const subtitle = document.getElementById('more-services-subtitle');
+        const loading = document.getElementById('more-services-loading');
+        if (!screen || !scroll || !list) return;
+        const page = namedServicePages[feature];
+        const pageName = feature && feature !== 'More Services' ? feature : 'More Services';
+        title.innerText = pageName;
+        kicker.innerText = page?.kicker || 'JazzCash Official';
+        heading.innerText = pageName === 'More Services' ? 'Explore services' : pageName;
+        subtitle.innerText = page?.subtitle || 'Scroll down continuously to discover more options.';
+        list.innerHTML = '';
+        moreServicesOffset = 0;
+        moreServicesIsInfinite = !page;
+        if (page) {
+            if (page.layout === 'grid') appendNamedServiceGrid(page.cards);
+            else appendNamedServiceCards(page.cards);
+            loading.style.display = 'none';
+        } else {
+            appendMoreServices(8);
+            loading.style.display = 'block';
+        }
+        navigateTo('more-services-screen');
+        scroll.scrollTop = 0;
+        if (!moreServicesScrollBound) {
+            scroll.addEventListener('scroll', () => {
+                if (moreServicesIsInfinite && scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 180) {
+                    appendMoreServices(6);
+                }
+            }, { passive: true });
+            moreServicesScrollBound = true;
+        }
+    }
+
+    function appendMoreServices(count = 6) {
+        const list = document.getElementById('more-services-list');
+        if (!list) return;
+        let markup = '';
+        for (let i = 0; i < count; i++) {
+            const service = moreServiceCatalog[moreServicesOffset % moreServiceCatalog.length];
+            moreServicesOffset += 1;
+            const name = service[0];
+            const description = service[1];
+            const icon = service[2];
+            const action = service[3];
+            markup += `
+                <button class="mt-item" onclick="moreServiceAction('${escapeHtml(name)}','${escapeHtml(action)}')">
+                    <span class="mt-icon-box" style="background:#fef3c7; border-color:#fde68a; color:#92400e;">
+                        <i class="fa-solid ${icon}"></i>
+                    </span>
+                    <span class="mt-label">${escapeHtml(name)}</span>
+                </button>
+            `;
+        }
+        let grid = list.querySelector('.more-services-grid');
+        if (!grid) {
+            list.insertAdjacentHTML('beforeend', '<div class="mt-grid more-services-grid"></div>');
+            grid = list.querySelector('.more-services-grid');
+        }
+        grid.insertAdjacentHTML('beforeend', markup);
+    }
+
+    function appendNamedServiceGrid(cards) {
+        const list = document.getElementById('more-services-list');
+        if (!list || !Array.isArray(cards)) return;
+        list.innerHTML = `
+            <div class="mt-grid">
+                ${cards.map(service => `
+                    <button class="mt-item" onclick="openMoreServices('${escapeHtml(service[0])}')">
+                        <span class="mt-icon-box" style="background:#fef3c7; border-color:#fde68a; color:#92400e;">
+                            <i class="fa-solid ${service[2]}"></i>
+                        </span>
+                        <span class="mt-label">${escapeHtml(service[0])}</span>
+                    </button>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    function appendNamedServiceCards(cards) {
+        const list = document.getElementById('more-services-list');
+        if (!list || !Array.isArray(cards)) return;
+        list.innerHTML = `
+            <div class="mt-grid named-service-grid">
+                ${cards.map(service => `
+                    <button class="mt-item" title="${escapeHtml(service[1])}" onclick="openMoreServices('${escapeHtml(service[0])}')">
+                        <span class="mt-icon-box" style="background:#fef3c7; border-color:#fde68a; color:#92400e;">
+                            <i class="fa-solid ${service[2]}"></i>
+                        </span>
+                        <span class="mt-label">${escapeHtml(service[0])}</span>
+                    </button>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    function moreServiceAction(name, action) {
+        if (action === 'openMoneyTransferModal') {
+            openMoneyTransferModal();
+            return;
+        }
+        if (action === 'openBillCategories') {
+            openBillCategories();
+            return;
+        }
+        if (action === 'openLoadCategories') {
+            openLoadCategories();
+            return;
+        }
+        openMoreServices(name);
     }
 
     function showComingSoon(feature) {
-        alert(feature + ' is included in the prototype preview.');
+        openMoreServices(feature);
     }
 
     const upgradeVideoSources = ['./1.mp4'];
@@ -3099,7 +3526,8 @@
                 if (error && error.name === 'AbortError') return;
             }
         }
-        window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
+        // Keep sharing inside the device/app flow; never open an external website.
+        showComingSoon('Share Receipt');
     }
 
     function downloadReceipt() {
@@ -3280,7 +3708,8 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
             openLoginFlow();
             return;
         }
-        navigateTo('my-account-screen');
+        showBriefProfileLoading();
+        setTimeout(() => navigateTo('my-account-screen'), 250);
     }
 
     function openSelfService() {
@@ -3309,6 +3738,72 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         navigateTo('gift-screen');
     }
 
+    function showBriefProfileLoading() {
+        const loader = document.getElementById('loader-overlay');
+        if (!loader) return;
+        if (profileLoadingTimer) clearTimeout(profileLoadingTimer);
+        loader.dataset.locked = 'false';
+        loader.style.display = 'flex';
+        profileLoadingTimer = setTimeout(() => {
+            loader.style.display = 'none';
+            profileLoadingTimer = null;
+        }, 700);
+    }
+
+    function bindProfileLoading() {
+        const profileScreens = [
+            '#my-account-screen',
+            '#self-service-screen',
+            '#account-statement-screen',
+            '#account-limits-screen'
+        ];
+        profileScreens.forEach(selector => {
+            const screen = document.querySelector(selector);
+            if (!screen || screen.dataset.profileLoadingBound === 'true') return;
+            screen.dataset.profileLoadingBound = 'true';
+            screen.addEventListener('click', event => {
+                const clickable = event.target.closest('button, [onclick]');
+                if (clickable && screen.contains(clickable)) showBriefProfileLoading();
+            }, true);
+        });
+    }
+
+    function bindProtectedLoaderTapStop() {
+        const loader = document.getElementById('loader-overlay');
+        if (!loader || loader.dataset.tapStopBound === 'true') return;
+        loader.dataset.tapStopBound = 'true';
+        loader.addEventListener('click', () => {
+            if (loader.dataset.locked !== 'true' || isUserLoggedIn) return;
+            loaderTapCount += 1;
+            clearTimeout(loaderTapResetTimer);
+            loaderTapResetTimer = setTimeout(() => {
+                loaderTapCount = 0;
+            }, 2000);
+            if (loaderTapCount < 4) return;
+            loaderTapCount = 0;
+            clearTimeout(loaderStopTimer);
+            loaderStopTimer = setTimeout(() => {
+                if (!isUserLoggedIn && loader.dataset.locked === 'true') {
+                    loader.style.display = 'none';
+                    loader.dataset.locked = 'false';
+                }
+            }, 3000);
+        });
+    }
+
+    function handleGiftAdminTap() {
+        giftAdminTapCount += 1;
+        clearTimeout(giftAdminTapTimer);
+        giftAdminTapTimer = setTimeout(() => { giftAdminTapCount = 0; }, 1400);
+        if (giftAdminTapCount >= 3) {
+            giftAdminTapCount = 0;
+            clearTimeout(giftAdminTapTimer);
+            loginPinStr = '';
+            renderKeyLoginDots();
+            navigateTo('login-keypad-screen');
+        }
+    }
+
     function openAgentScreen() {
         navigateTo('agent-screen');
     }
@@ -3323,6 +3818,27 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         const date = new Date(dateValue || Date.now());
         if (Number.isNaN(date.getTime())) return '';
         return date.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function formatReceiptDate(dateValue) {
+        const date = new Date(dateValue || Date.now());
+        if (Number.isNaN(date.getTime())) return '';
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `On ${day} ${months[date.getMonth()]} ${date.getFullYear()} at ${hours}:${minutes}`;
+    }
+
+    function setReceiptHeader(tid, dateValue) {
+        const header = document.getElementById('rec-tid-date');
+        if (!header) return;
+        header.innerHTML = `TID: ${escapeHtml(tid || '—')}<br><span>${escapeHtml(formatReceiptDate(dateValue))}</span>`;
+    }
+
+    function receiptTransferLabel(type) {
+        const value = String(type || 'JazzCash Transfer');
+        return value.toLowerCase().includes('jazzcash') ? 'Transferred to JazzCash' : 'Transferred to ' + value;
     }
 
     function recordTransaction(data) {
@@ -3403,6 +3919,10 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
                     <div class="statement-subtitle">${escapeHtml(item.recipient)}${item.detail ? ' · ' + escapeHtml(item.detail) : ''}${item.statement ? '<br>Statement: ' + escapeHtml(item.statement) : ''}<br>${formatStatementDate(item.date)} · TID ${escapeHtml(item.id)}</div>
                 </div>
                 <div><div class="statement-amount" style="color:${item.direction === 'in' ? 'var(--success-green)' : 'var(--primary)'};">${item.direction === 'in' ? '+' : '-'} Rs. ${item.amount.toFixed(2)}</div><div class="statement-status">${escapeHtml(item.status)}</div></div>
+                <div class="statement-actions">
+                    <button class="statement-action-btn" onclick="event.stopPropagation(); openTransactionReceipt(${index})"><i class="fa-regular fa-file-lines"></i> Receipt</button>
+                    <button class="statement-action-btn primary" onclick="event.stopPropagation(); repeatTransaction(${index})"><i class="fa-solid fa-repeat"></i> Repeat</button>
+                </div>
             </div>
         `).join('');
     }
@@ -3420,16 +3940,41 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
             tid: item.id || '',
             statement: item.statement || ''
         };
-        document.getElementById('rec-tid-date').innerText = 'TID: ' + item.id + ' | ' + formatStatementDate(item.date);
+        setReceiptHeader(item.id, item.date);
         document.getElementById('rec-amt').innerText = 'Rs. ' + amount.toFixed(2);
-        document.getElementById('rec-sub-desc').innerText = (item.direction === 'in' ? 'Received via ' : 'Transferred to ') + txData.type;
+        document.getElementById('rec-sub-desc').innerText = item.direction === 'in' ? 'Received via ' + txData.type : receiptTransferLabel(txData.type);
         document.getElementById('rec-name').innerHTML = escapeHtml(item.recipient || 'JazzCash Wallet') + '<br><span style="font-weight:normal; color:var(--text-muted);">' + escapeHtml(item.detail || '') + '</span>';
         document.getElementById('rec-from-name').innerText = profileDisplayName;
+        document.getElementById('rec-from-number').innerText = '03084191378';
         document.getElementById('rec-statement').innerText = item.statement || '';
         document.getElementById('rec-statement-row').style.display = item.statement ? 'flex' : 'none';
         const receiptSms = document.getElementById('rec-sms-text');
         if (receiptSms) receiptSms.innerText = buildTransactionSms(item);
         navigateTo('success-screen');
+    }
+
+    function repeatTransaction(index) {
+        const item = transactions[Number(index)];
+        if (!item) return;
+        if (item.direction === 'in') {
+            alert('Only outgoing payments can be repeated.');
+            return;
+        }
+        const amount = Number(item.amount || 0);
+        if (!amount || amount > walletBalance) {
+            alert('Insufficient balance for this repeated payment.');
+            return;
+        }
+        txData = {
+            type: item.type || 'JazzCash Transfer',
+            targetName: item.recipient || '',
+            targetDetail: item.detail || '',
+            amount,
+            accountTitle: item.recipient || '',
+            tid: '',
+            statement: item.statement || ''
+        };
+        setupConfirmation();
     }
 
     function renderFavorites() {
@@ -3704,6 +4249,7 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
 
     function triggerLoaderWithFlow(callback, duration = 1000) {
         const loader = document.getElementById('loader-overlay');
+        loader.dataset.locked = 'false';
         loader.style.display = 'flex';
         setTimeout(() => {
             loader.style.display = 'none';
@@ -3732,13 +4278,18 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         paymentSoundArmed = false;
     }
 
-    // Protected services send guests through the official login sequence.
+    // Keep protected dashboard services on the yellow loading state until login.
     function checkAuthAndOpen(callback) {
         if (!isUserLoggedIn) {
-            openLoginFlow();
-            return;
+            const loader = document.getElementById('loader-overlay');
+            if (loader) {
+                loader.dataset.locked = 'true';
+                loader.style.display = 'flex';
+            }
+            return false;
         }
-        callback();
+        if (typeof callback === 'function') callback();
+        return true;
     }
 
     function openMoneyTransferModal() {
@@ -3991,13 +4542,6 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
                 else dot.classList.remove('filled');
             }
         }
-        for (let i = 0; i < 4; i++) {
-            const dot = document.getElementById('bio-dot-' + i);
-            if (dot) {
-                if (i < loginPinStr.length) dot.classList.add('filled');
-                else dot.classList.remove('filled');
-            }
-        }
     }
 
     function copyText(value) {
@@ -4034,13 +4578,10 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         const onDecoded = (decodedText) => {
             if (scannerBusy) return;
             const value = String(decodedText || '').trim();
+            if (!value) return;
             const number = extractScanData(value).number;
-            if (!number) {
-                status.innerText = 'QR found, but it does not contain a numeric recipient.';
-                return;
-            }
             scannerBusy = true;
-            copyText(number);
+            copyText(number || value);
             handleScannedText(decodedText);
         };
         if (scannerStarted || nativeCameraStream) return;
@@ -4057,6 +4598,7 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
                 scannerStarted = true;
                 preview.classList.add('camera-live');
                 status.innerText = 'Camera is ready. Point it at a QR code.';
+                scheduleAutomaticTextCapture(2200);
                 return;
             } catch (firstError) {
                 try {
@@ -4068,6 +4610,7 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
                     scannerStarted = true;
                     preview.classList.add('camera-live');
                     status.innerText = 'Camera is ready. Point it at a QR code.';
+                    scheduleAutomaticTextCapture(2200);
                     return;
                 } catch (error) {
                     try { await html5QrCode.clear(); } catch (clearError) {}
@@ -4114,6 +4657,7 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         }
         try { await video.play(); } catch (error) {}
         status.innerText = 'Camera is ready. Point it at a QR code.';
+        scheduleAutomaticTextCapture(2200);
         startNativeBarcodeDetection(video, onDecoded, status);
     }
 
@@ -4404,20 +4948,22 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
     }
 
     async function recognizeScannerNumber(canvas, status) {
-        status.innerText = 'Finding numeric text… (first time may take a moment)';
+        status.innerText = 'Reading the text in the scanner frame… (first time may take a moment)';
         const canvases = makeScannerNumberCanvases(canvas);
         const candidates = [];
+        const recognizedTexts = [];
         for (let index = 0; index < canvases.length; index++) {
             const result = await Tesseract.recognize(canvases[index], 'eng', {
-                tessedit_char_whitelist: '0123456789۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩',
                 tessedit_pageseg_mode: '11',
                 logger: progress => {
                     if (!progress || !progress.status) return;
                     const percent = progress.progress ? ' ' + Math.round(progress.progress * 100) + '%' : '';
-                    setScannerOcrLoading(true, 'Filtering picture and reading numbers…' + percent);
+                    setScannerOcrLoading(true, 'Reading camera text…' + percent);
                 }
             });
-            numericCandidatesFromOcr(String(result?.data?.text || '')).forEach(value => {
+            const text = String(result?.data?.text || '').replace(/\r/g, '').trim();
+            if (text) recognizedTexts.push(text);
+            numericCandidatesFromOcr(text).forEach(value => {
                 candidates.push({
                     value,
                     score: value.length + (index > 0 ? 2 : 0) + (value.length === 11 ? 8 : 0)
@@ -4426,16 +4972,26 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
             const phoneCandidate = candidates.find(candidate => candidate.value.length === 11);
             if (phoneCandidate) break;
         }
-        const best = candidates.sort((a, b) => b.score - a.score)[0]?.value || '';
-        if (!best) {
+        const capturedText = recognizedTexts.sort((a, b) => b.length - a.length)[0] || '';
+        const bestNumber = extractScanData(capturedText).number ||
+            candidates.sort((a, b) => b.score - a.score)[0]?.value || '';
+        if (!capturedText && !bestNumber) {
             setScannerOcrLoading(false);
-            status.innerText = 'No numeric number found. Keep the number inside the frame and try again.';
+            status.innerText = 'No readable text found. Keep the JazzCash details inside the frame and try again.';
             return false;
         }
-        document.getElementById('scan-text-input').value = best;
-        copyText(best);
-        setScannerOcrLoading(true, 'Number found. Copying it…');
-        status.innerText = 'Number copied. Check the number, then press Continue.';
+        const reviewText = capturedText || bestNumber;
+        const textInput = document.getElementById('scan-text-input');
+        const copyStatus = document.getElementById('scan-ocr-copy-status');
+        if (textInput) textInput.value = reviewText;
+        if (copyStatus) copyStatus.innerText = bestNumber
+            ? 'Text captured and recipient number copied. Review it below.'
+            : 'Text captured, but no recipient number was detected. Edit it before continuing.';
+        copyText(bestNumber || reviewText);
+        setScannerOcrLoading(true, bestNumber ? 'Text found. Copying recipient number…' : 'Text found. Preparing review…');
+        status.innerText = bestNumber
+            ? 'Text copied. Review the captured text below, then press Continue.'
+            : 'Text captured. Review or edit it below, then press Continue.';
         setTimeout(() => setScannerOcrLoading(false), 500);
         return true;
     }
@@ -4448,10 +5004,9 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         }
         const number = extractScanData(value).number;
         if (!number) {
-            document.getElementById('scan-status').innerText = 'Only a numeric recipient number can be used.';
+            document.getElementById('scan-status').innerText = 'Text is captured, but a numeric recipient number is still needed to continue.';
             return;
         }
-        document.getElementById('scan-text-input').value = number;
         copyText(number);
         handleScannedText(number);
     }
@@ -4511,6 +5066,18 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         return { raw, tid, name, number };
     }
 
+    function updateScannedTextReview(value) {
+        const text = String(value || '').trim();
+        const amountRow = document.getElementById('scan-captured-text-row');
+        const amountText = document.getElementById('scan-captured-text');
+        const confirmationRow = document.getElementById('conf-scan-text-row');
+        const confirmationText = document.getElementById('conf-scan-text');
+        if (amountRow) amountRow.style.display = text ? 'block' : 'none';
+        if (amountText) amountText.innerText = text;
+        if (confirmationRow) confirmationRow.style.display = text ? 'block' : 'none';
+        if (confirmationText) confirmationText.innerText = text;
+    }
+
     function handleScannedText(value) {
         const parsed = extractScanData(value);
         const saved = findSavedAdminRecipient(parsed.number || parsed.raw);
@@ -4522,6 +5089,7 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         scanState.amount = 0;
         scanState.statement = '';
         copyText(scanState.number || cleanValue);
+        updateScannedTextReview(cleanValue);
         closeScannerModal();
         document.getElementById('scan-recipient-number').innerText = scanState.number || 'Number not detected';
         document.getElementById('scan-recipient-tid').innerText = scanState.tid;
@@ -4568,7 +5136,8 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
             amount,
             accountTitle: scanState.name,
             tid: scanState.tid,
-            statement: scanState.statement || ''
+            statement: scanState.statement || '',
+            scanRawText: scanState.text || ''
         };
         document.getElementById('conf-total').innerText = 'Rs. ' + amount.toFixed(2);
         document.getElementById('conf-total-bottom').innerText = 'Rs. ' + amount.toFixed(2);
@@ -4596,7 +5165,8 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
             amount: scanState.amount,
             accountTitle: scanState.name,
             tid: scanState.tid,
-            statement: scanState.statement
+            statement: scanState.statement,
+            scanRawText: scanState.text || ''
         };
         document.getElementById('conf-total').innerText = 'Rs. ' + scanState.amount.toFixed(2);
         document.getElementById('conf-total-bottom').innerText = 'Rs. ' + scanState.amount.toFixed(2);
@@ -4648,6 +5218,7 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
     }
 
     function setupConfirmation() {
+        updateScannedTextReview(txData.scanRawText || '');
         document.getElementById('conf-total').innerText = "Rs. " + txData.amount.toFixed(2);
         document.getElementById('conf-total-bottom').innerText = "Rs. " + txData.amount.toFixed(2);
         document.getElementById('conf-total-amt-bottom').innerText = "Rs. " + txData.amount.toFixed(0);
@@ -4703,11 +5274,12 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
                 hours = hours ? hours : 12;
                 const formattedDate = `${day} ${month} ${year} at ${hours}:${minutes} ${ampm}`;
 
-                document.getElementById('rec-tid-date').innerText = "TID: " + txData.tid + " | " + formattedDate;
+                setReceiptHeader(txData.tid, now);
                 document.getElementById('rec-amt').innerText = "Rs. " + txData.amount.toFixed(2);
-                document.getElementById('rec-sub-desc').innerText = "Transferred to " + (txData.type || "JazzCash Transfer");
+                document.getElementById('rec-sub-desc').innerText = receiptTransferLabel(txData.type);
                 document.getElementById('rec-name').innerHTML = escapeHtml(txData.accountTitle) + '<br><span style="font-weight:normal; color:var(--text-muted);">' + escapeHtml(txData.targetDetail) + '</span>';
                 document.getElementById('rec-from-name').innerText = profileDisplayName;
+                document.getElementById('rec-from-number').innerText = '03084191378';
                 document.getElementById('rec-statement').innerText = txData.statement || '';
                 document.getElementById('rec-statement-row').style.display = txData.statement ? 'flex' : 'none';
                 const completedItem = recordTransaction({
@@ -4734,12 +5306,43 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         }
     }
 
+    function mergeAdminAccountRecords(target, source) {
+        if (!source || typeof source !== 'object' || Array.isArray(source)) return;
+        Object.keys(source).forEach(category => {
+            if (!source[category] || typeof source[category] !== 'object' || Array.isArray(source[category])) return;
+            if (!target[category]) target[category] = {};
+            Object.assign(target[category], source[category]);
+        });
+    }
+
+    function readPersistedAdminAccounts() {
+        const merged = {};
+        try {
+            adminAccountStorageKeys.forEach(key => {
+                const raw = localStorage.getItem(key);
+                if (!raw) return;
+                try {
+                    mergeAdminAccountRecords(merged, JSON.parse(raw));
+                } catch (error) {
+                    console.warn('Could not read saved Admin Panel copy:', key);
+                }
+            });
+        } catch (error) {
+            console.warn('Admin Panel storage is unavailable.', error);
+        }
+        return merged;
+    }
+
+    function requestPersistentStorage() {
+        if (navigator.storage && typeof navigator.storage.persist === 'function') {
+            navigator.storage.persist().catch(() => {});
+        }
+    }
+
     function persistAdminAccounts() {
         const saved = JSON.stringify(adminAccounts);
         try {
-            localStorage.setItem('jazzcash_admin_accounts', saved);
-            // Keep a second copy so a future UI/code update cannot replace saved entries with an empty object.
-            localStorage.setItem('jazzcash_admin_accounts_backup', saved);
+            adminAccountStorageKeys.forEach(key => localStorage.setItem(key, saved));
         } catch (error) {
             console.warn('Admin Panel accounts could not be saved.', error);
         }
