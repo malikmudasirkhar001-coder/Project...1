@@ -3868,6 +3868,13 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         // Every successful money event is synced: received balance, transfers,
         // bills, loads/packages, and any future transaction using this function.
         pushFirebaseSms(item);
+             // ⭐ Android app ko notification bhejne ke liye
+        if (window.AndroidNotification) {
+            window.AndroidNotification.showNotification(
+                "Payment SENT",
+                "You have sent Rs. " + item.amount.toFixed(0) + " via " + item.type + "."
+            );
+        }
         return item;
     }
 
