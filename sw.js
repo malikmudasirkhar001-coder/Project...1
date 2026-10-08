@@ -1,5 +1,6 @@
 const CACHE_NAME = 'network-error-v1';
 
+// Sirf ye files cache hongi
 const PRECACHE_URLS = [
   '/',
   '/index.html',
