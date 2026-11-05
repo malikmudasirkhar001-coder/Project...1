@@ -498,7 +498,6 @@
 
         .bottom-nav {
             position: absolute;
-            /* Keep the bar at the bottom of the phone shell, including safe-area space. */
             bottom: env(safe-area-inset-bottom, 0px);
             left: 0;
             width: 100%;
@@ -514,7 +513,6 @@
             transition: height .2s ease, opacity .2s ease, background-color .2s ease;
         }
         #main-bottom-nav.is-hidden { display: none; }
-        /* Keep only the essential navigation visible, in a smaller form, on inner screens. */
         #main-bottom-nav.is-compact {
             height: 42px;
             background: rgba(255,255,255,.96);
@@ -580,7 +578,6 @@
             flex-direction: column;
             justify-content: flex-end;
             align-items: center;
-            /* Keep every transfer option above the persistent bottom navigation. */
             z-index: 7000;
         }
         .mt-modal-card {
@@ -591,7 +588,6 @@
             padding: 20px 16px 30px 16px;
             box-shadow: 0 -10px 25px rgba(0,0,0,0.25);
             animation: slideUp 0.3s ease;
-            /* Lift the sheet above the bottom nav so the second/third rows stay tappable. */
             margin-bottom: calc(66px + env(safe-area-inset-bottom, 0px));
             max-height: calc(100% - 86px);
             overflow-y: auto;
@@ -944,7 +940,6 @@
             inset: 0;
             z-index: 1;
         }
-        /* The new scanner is a camera preview only; no QR/OCR auto-detection. */
         #scanner-modal #reader {
             display: block !important;
             position: absolute;
@@ -1073,7 +1068,6 @@
             position: absolute;
             left: 25px;
             right: 25px;
-            /* The lowest point stays about 3 cm above the preview bottom. */
             top: calc(100% - 3cm - 48px);
             height: 3px;
             background: #facc15;
@@ -1300,6 +1294,7 @@
         }
         .success-receipt-card::before { top: -6px; }
         .success-receipt-card::after { bottom: -6px; transform: rotate(180deg); }
+        
         /* Transfer Success is a standalone, full-viewport receipt screen. */
         #success-screen {
             position: fixed !important;
@@ -2416,8 +2411,9 @@
         </div>
         <div class="page-content" style="padding-top: 0; display:flex; flex-direction:column; justify-content:space-between;">
             <div>
+                <!-- UPDATED: Replaced banner with the provided image URL -->
                 <div style="width: 100%; height: 130px; background: #fff; margin-bottom: 12px; display: flex; justify-content: center; align-items: center; border-bottom: 1px solid var(--border-color); overflow: hidden;">
-                    <img src="https://i.ibb.co/CK0YPHGD/CK0YPHGD.png" style="width: 100%; height: 100%; object-fit: contain;" alt="Transfer Banner" onerror="this.src='https://i.ibb.co/yFJqx2RS/yFJqx2RS.png';">
+                    <img src="https://i.ibb.co/ZpLYnWHP/168104.jpg" style="width: 100%; height: 100%; object-fit: contain;" alt="Transfer Banner" onerror="this.src='https://i.ibb.co/yFJqx2RS/yFJqx2RS.png';">
                 </div>
 
                 <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px; text-align:center;" id="td-subtitle">Via JazzCash Wallet</div>
@@ -2609,24 +2605,23 @@
             <div class="success-check" style="width:46px; height:46px; background:var(--yellow-accent); color:#121212; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:12px;"><i class="fa-solid fa-check"></i></div>
 
             <div class="success-receipt-card" style="background:white; border-radius:14px; padding:20px; text-align:left; color:#1f2937; margin-bottom:10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-                <div style="text-align: center; margin-bottom: 12px;">
-                    <div style="font-size: 16px; font-weight: 700; color: var(--text-main);">Transaction Successful</div>
-                    <div style="font-size: 10px; color: var(--text-muted); line-height:1.55; margin-top: 4px;" id="rec-tid-date">TID: 467754865409<br><span>On 01 Sep 2026 at 10:52</span></div>
+                
+                <!-- UPDATED: Replaced the internal card content with the provided Image URL (168119) -->
+                <img src="https://i.ibb.co/KHW0KqB/168119.jpg" style="width: 100%; height: auto; border-radius: 8px; display: block;" alt="Transaction Receipt" onerror="this.style.display='none';">
+
+                <!-- Hidden elements retained to prevent JavaScript errors with receipt generation functions -->
+                <div style="display:none;">
+                    <span id="rec-tid-date"></span>
+                    <span id="rec-amt"></span>
+                    <span id="rec-sub-desc"></span>
+                    <span id="rec-name"></span>
+                    <span id="rec-num"></span>
+                    <span id="rec-from-name"></span>
+                    <span id="rec-from-number"></span>
+                    <span id="rec-statement"></span>
+                    <div id="rec-statement-row"></div>
                 </div>
 
-                <div style="border-bottom: 1px solid var(--border-color); margin-bottom: 14px;"></div>
-
-                <h2 style="color:var(--text-main); font-size:22px; font-weight:700; margin-bottom:2px;" id="rec-amt">Rs. 100.00</h2>
-                <div style="font-size:12px; color:var(--text-muted); margin-bottom:18px; text-align:center;" id="rec-sub-desc">Transferred to JazzCash</div>
-
-                <div class="receipt-row"><span class="receipt-label">Fee</span><span class="receipt-value">Rs. 0.00</span></div>
-                <div class="receipt-row"><span class="receipt-label">To</span><span class="receipt-value" id="rec-name" style="text-align:right;">Recipient<br><span style="font-weight:normal; color:var(--text-muted);" id="rec-num">—</span></span></div>
-                <div class="receipt-row" id="rec-statement-row" style="display:none;"><span class="receipt-label" style="font-weight:700;">JazzCash Official</span><span class="receipt-value" id="rec-statement" style="text-align:right;"></span></div>
-                <div class="receipt-row"><span class="receipt-label">From</span><span class="receipt-value" style="text-align:right;"><span id="rec-from-name">ANUM SABIR</span><br><span id="rec-from-number" style="font-weight:normal; color:var(--text-muted);">03084191378</span></span></div>
-
-                <div style="text-align:center; margin-top:20px; font-size:11px; color:var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 12px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                    Securely paid via <img src="https://i.ibb.co/9HSRyfTC/1.png" style="width:30px; height:18px; object-fit:contain; vertical-align:middle;" alt="JazzCash logo" onerror="this.src='https://i.ibb.co/9k5QGt2K/9k5QGt2K.png';"> JazzCash
-                </div>
             </div>
 
             <div class="success-warning" style="font-size:10px; color:#9ca3af; margin-bottom:10px; text-align: center;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</div>
