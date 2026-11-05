@@ -256,94 +256,89 @@
             cursor: pointer;
         }
 
-        .full-login-screen {
-            background-color: #ffffff;
+        /* Custom PIN Screen Styles to match the new code exactly */
+        .custom-pin-container {
+            background-color: #fff;
             height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            color: #111;
         }
-        .login-dark-topbar {
-            background-color: #1a1a1a;
-            color: white;
-            padding: 16px 20px;
+        .custom-pin-header {
+            padding: 42px 28px;
+            border-bottom: 1px solid #ddd;
+        }
+        .custom-pin-header h1 {
+            font-size: 30px;
+            margin: 0 0 13px;
+            font-weight: normal;
+        }
+        .custom-pin-header p {
+            font-size: 21px;
+            margin: 0;
+        }
+        .custom-pin-area {
+            padding: 42px 28px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .login-pin-dots-row {
+        .custom-dots {
             display: flex;
-            gap: 25px;
-            margin: 20px 0;
+            gap: 17px;
         }
-        .login-dot-item {
-            width: 18px;
-            height: 18px;
+        .custom-dot {
+            width: 21px;
+            height: 21px;
+            background: #d0d0d5;
             border-radius: 50%;
-            background-color: #d1d5db;
+            transition: 0.2s;
         }
-        .login-dot-item.filled {
-            background-color: var(--yellow-accent);
+        .custom-dot.active {
+            background: #FFD700;
         }
-        
-        .login-keypad-grid {
+        .custom-forgot {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .custom-spacer {
+            flex: 1;
+            min-height: 140px;
+        }
+        .custom-warning {
+            padding: 24px;
+            color: #d22;
+            font-size: 17px;
+            border-bottom: 1px solid #ddd;
+        }
+        .custom-keypad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 16px 30px;
-            max-width: 280px;
-            margin: 10px auto 25px auto;
-            justify-items: center;
-            align-items: center;
         }
-        .login-key-btn {
-            background: transparent;
+        .custom-key {
+            height: 105px;
             border: none;
-            color: #1f2937;
-            font-size: 24px;
-            font-weight: 600;
-            width: 54px;
-            height: 54px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: white;
+            font-size: 34px;
             cursor: pointer;
-            border-radius: 50%;
-        }
-        .login-key-btn:active {
-            background-color: #f3f4f6;
-        }
-
-        /* Shared transaction PIN keypad: keep the 1-2-3 / 4-5-6 / 7-8-9 / 0 layout */
-        .keypad-grid {
-            width: min(100%, 300px);
-            display: grid;
-            grid-template-columns: repeat(3, 72px);
-            grid-auto-rows: 58px;
-            justify-content: center;
-            align-items: center;
-            gap: 10px 18px;
-            margin: 0 auto;
-        }
-        .keypad-key {
-            width: 58px;
-            height: 58px;
-            margin: 0 auto;
-            border-radius: 50%;
-            border: 1px solid #e5e7eb;
-            background: #ffffff;
-            color: #111827;
             display: flex;
-            align-items: center;
             justify-content: center;
-            font-size: 22px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,.06);
-            user-select: none;
+            align-items: center;
+            color: #111;
         }
-        .keypad-key:active {
-            transform: scale(.95);
-            background: #fef08a;
+        .custom-key:active {
+            background: #eee;
+        }
+        .custom-image-key img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            background: transparent;
+        }
+        .custom-help {
+            padding: 24px;
+            font-weight: bold;
+            font-size: 20px;
         }
 
         #home-screen {
@@ -1973,50 +1968,48 @@
         </div>
     </div>
 
-    <!-- Login Keypad Screen (Linked to login-mpin.html file path logic) -->
+    <!-- Login Keypad Screen (Updated with Custom Code Style) -->
     <div id="login-keypad-screen" class="app-screen">
-        <div class="full-login-screen">
-            <div>
-                <div class="login-dark-topbar">
-                    <button class="back-btn" style="background:#333; color:#fff;" onclick="navigateTo('home-screen')"><i class="fa-solid fa-arrow-left"></i></button>
-                    <i class="fa-solid fa-house" style="cursor: pointer; color: white;" onclick="navigateTo('home-screen')"></i>
-                </div>
-                <div style="padding: 24px 20px 0 20px;">
-                    <h2 style="font-size: 22px; font-weight: 700; color: #111827;">Complete Sign-in</h2>
-                    <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Enter your 4 digit MPIN (Path: login-mpin.html)</p>
-                    
-                    <div class="login-pin-dots-row">
-                        <div class="login-dot-item" id="key-dot-0"></div>
-                        <div class="login-dot-item" id="key-dot-1"></div>
-                        <div class="login-dot-item" id="key-dot-2"></div>
-                        <div class="login-dot-item" id="key-dot-3"></div>
-                    </div>
-                    <div style="text-align: right;">
-                        <a href="#" style="font-size: 12px; color: #111827; text-decoration: none; font-weight: 600;">Forgot MPIN?</a>
-                    </div>
-                    <p style="font-size: 11px; color: var(--danger); margin-top: 20px;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</p>
-                </div>
+        <div class="custom-pin-container">
+            <div class="custom-pin-header">
+                <h1>Complete Sign-in</h1>
+                <p>Enter your 4 digit MPIN</p>
             </div>
 
-            <!-- Balanced 3-Column Keypad Layout -->
-            <div class="login-keypad-grid">
-                <button class="login-key-btn" onclick="pressKeypadLogin('1')">1</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('2')">2</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('3')">3</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('4')">4</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('5')">5</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('6')">6</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('7')">7</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('8')">8</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('9')">9</button>
-                <div class="login-key-btn" aria-hidden="true"></div>
-                <button class="login-key-btn" onclick="pressKeypadLogin('0')">0</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('del')"><i class="fa-solid fa-delete-left"></i></button>
+            <div class="custom-pin-area">
+                <div class="custom-dots">
+                    <span class="custom-dot" id="key-dot-0"></span>
+                    <span class="custom-dot" id="key-dot-1"></span>
+                    <span class="custom-dot" id="key-dot-2"></span>
+                    <span class="custom-dot" id="key-dot-3"></span>
+                </div>
+                <span class="custom-forgot">Forgot MPIN?</span>
             </div>
 
-            <div style="padding: 15px 20px 20px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color);">
-                    <span style="font-size: 12px; color: var(--text-muted); cursor: pointer;" onclick="showComingSoon('Help')">Need Help?</span>
+            <div class="custom-spacer"></div>
+
+            <div class="custom-warning">
+                ⓘ Never share your MPIN with anyone
             </div>
+
+            <div class="custom-keypad">
+                <button class="custom-key" onclick="pressKeypadLogin('1')">1</button>
+                <button class="custom-key" onclick="pressKeypadLogin('2')">2</button>
+                <button class="custom-key" onclick="pressKeypadLogin('3')">3</button>
+                <button class="custom-key" onclick="pressKeypadLogin('4')">4</button>
+                <button class="custom-key" onclick="pressKeypadLogin('5')">5</button>
+                <button class="custom-key" onclick="pressKeypadLogin('6')">6</button>
+                <button class="custom-key" onclick="pressKeypadLogin('7')">7</button>
+                <button class="custom-key" onclick="pressKeypadLogin('8')">8</button>
+                <button class="custom-key" onclick="pressKeypadLogin('9')">9</button>
+                <button class="custom-key custom-image-key" type="button" onclick="pressKeypadLogin('del')">
+                    <img src="https://i.ibb.co/vxxGbSzH/168135.jpg" alt="Custom icon">
+                </button>
+                <button class="custom-key" onclick="pressKeypadLogin('0')">0</button>
+                <button class="custom-key" onclick="pressKeypadLogin('del')">⌫</button>
+            </div>
+
+            <div class="custom-help">Need Help?</div>
         </div>
     </div>
 
@@ -2025,16 +2018,13 @@
             <div class="header-top">
                 <div class="app-title">JazzCash</div>
                 <div class="header-icons">
-                    <!-- Help linked to help.html -->
                     <i class="fa-solid fa-headset" onclick="showComingSoon('Help')"></i>
-                    <!-- Profile Header button linked to profile.html -->
                     <i class="fa-solid fa-user" onclick="openMyAccount()"></i>
                 </div>
             </div>
 
             <div class="user-row-home">
                 <div class="user-info-box">
-                    <!-- Profile DP image linked to profile.html -->
                     <div class="user-avatar-home" id="home-avatar" onclick="openMyAccount()">
                         <img id="profile-avatar-img" src="https://i.ibb.co/3Y74Vy3y/3Y74Vy3y.png" style="width:100%; height:100%; object-fit:cover; display:block;" alt="Avatar">
                         <span id="home-avatar-text" style="display:none;">MA</span>
@@ -2046,7 +2036,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- + Money and Loan buttons linked to add-money.html and loan.html -->
                 <div id="home-account-actions" style="display: none; gap: 8px;">
                     <button onclick="openAddMoneyScreen()" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 700; cursor: pointer;">+ Money</button>
                     <button onclick="showComingSoon('Loan')" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 700; cursor: pointer;">Loan</button>
@@ -2068,71 +2057,67 @@
         </div>
 
         <div class="app-body">
-            <!-- 3x3 Grid protected by unauthenticated infinite loading if not logged in -->
+            <!-- 3x3 Grid with NEW Images -->
             <div class="icon-grid">
                 <div class="icon-item" onclick="checkAuthAndOpen(openMoneyTransferModal)">
                     <div class="icon-box">
-                        <img src="https://i.ibb.co/yFJqx2RS/yFJqx2RS.png" style="width:52px; height:52px; object-fit:contain;" alt="Money Transfer" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-paper-plane\'></i>';">
+                        <img src="https://i.ibb.co/67RgC3wn/105418.jpg" style="width:52px; height:52px; object-fit:contain;" alt="Money Transfer">
                     </div>
                     <div class="icon-label">Money Transfer</div>
                 </div>
                 <div class="icon-item" onclick="checkAuthAndOpen(openBillCategories)">
                     <div class="icon-box">
-                        <img src="https://i.ibb.co/7tdSVfL2/7tdSVfL2.png" style="width:52px; height:52px; object-fit:contain;" alt="Bill Payment" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-file-invoice-dollar\'></i>';">
+                        <img src="https://i.ibb.co/0yNF72zR/105419.jpg" style="width:52px; height:52px; object-fit:contain;" alt="Bill Payment">
                     </div>
                     <div class="icon-label">Bill Payment</div>
                 </div>
                 <div class="icon-item" onclick="checkAuthAndOpen(openLoadCategories)">
                     <div class="icon-box">
-                        <img src="https://i.ibb.co/LzCwJcKj/LzCwJcKj.png" style="width:52px; height:52px; object-fit:contain;" alt="Load & Packages" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-mobile-screen-button\'></i>';">
+                        <img src="https://i.ibb.co/5NXPTYN/105420.jpg" style="width:52px; height:52px; object-fit:contain;" alt="Load & Packages">
                     </div>
                     <div class="icon-label">Load & Packages</div>
                 </div>
                 <div class="icon-item" onclick="checkAuthAndOpen(() => openMoreServices('Market T-Bills'))">
                     <span class="badge-new">New</span>
                     <div class="icon-box">
-                        <img src="https://i.ibb.co/jPR4XgLh/jPR4XgLh.png" style="width:52px; height:52px; object-fit:contain;" alt="Market T-Bills" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-chart-line\'></i>';">
+                        <img src="https://i.ibb.co/MDSDYPgR/105421.jpg" style="width:52px; height:52px; object-fit:contain;" alt="Market T-Bills">
                     </div>
                     <div class="icon-label">Market T-Bills</div>
                 </div>
                 <div class="icon-item" onclick="checkAuthAndOpen(() => openMoreServices('Yeylo'))">
                     <span class="badge-new">New</span>
                     <div class="icon-box" style="background:#fef08a; border-radius:12px; width:52px; height:52px; margin:auto;">
-                        <img src="https://i.ibb.co/NdyCmqdj/NdyCmqdj.png" style="width:40px; height:40px; object-fit:contain;" alt="Yeylo" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-y\'></i>';">
+                        <img src="https://i.ibb.co/4nsmFxKh/105422.jpg" style="width:40px; height:40px; object-fit:contain;" alt="Yellow">
                     </div>
-                    <div class="icon-label" style="margin-top:4px;">Yeylo</div>
+                    <div class="icon-label" style="margin-top:4px;">Yellow</div>
                 </div>
-                <!-- Government Payments linked to gov-payments.html -->
                 <div class="icon-item" onclick="checkAuthAndOpen(() => showComingSoon('Government Payments'))">
                     <div class="icon-box">
-                        <img src="https://i.ibb.co/Kp4B8wHG/Kp4B8wHG.png" style="width:52px; height:52px; object-fit:contain;" alt="Government Payments" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-landmark\'></i>';">
+                        <img src="https://i.ibb.co/QjK55BSs/105423.jpg" style="width:52px; height:52px; object-fit:contain;" alt="Government Payments">
                     </div>
                     <div class="icon-label">Government Payments</div>
                 </div>
                 <div class="icon-item" onclick="checkAuthAndOpen(() => openMoreServices('Sehat +'))">
                     <span class="badge-new">New</span>
                     <div class="icon-box">
-                        <img src="https://i.ibb.co/fdp4Fk5S/fdp4Fk5S.png" style="width:52px; height:52px; object-fit:contain;" alt="Sehat +" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-heart-pulse\'></i>';">
+                        <img src="https://i.ibb.co/VcWmbPxD/105424.jpg" style="width:52px; height:52px; object-fit:contain;" alt="Sehat +">
                     </div>
                     <div class="icon-label">Sehat +</div>
                 </div>
-                <!-- Corporate Payments linked to corporate-payments.html -->
                 <div class="icon-item" onclick="checkAuthAndOpen(() => showComingSoon('Corporate Payments'))">
                     <div class="icon-box">
-                        <img src="https://i.ibb.co/8LGg9rRT/8LGg9rRT.png" style="width:52px; height:52px; object-fit:contain;" alt="Corporate Payments" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-building-columns\'></i>';">
+                        <img src="https://i.ibb.co/v4w8j59w/105425.jpg" style="width:52px; height:52px; object-fit:contain;" alt="Corporate Payments">
                     </div>
                     <div class="icon-label">Corporate Payments</div>
                 </div>
-                <!-- More Services linked to more-services.html -->
                 <div class="icon-item" onclick="checkAuthAndOpen(() => openMoreServices('More Services'))">
                     <div class="icon-box">
-                        <img src="https://i.ibb.co/Y4kRLr2J/Y4kRLr2J.png" style="width:52px; height:52px; object-fit:contain;" alt="More" onerror="this.parentNode.innerHTML='<i class=\'fa-solid fa-ellipsis\'></i>';">
+                        <img src="https://i.ibb.co/1YFPbBqL/105426.jpg" style="width:52px; height:52px; object-fit:contain;" alt="More">
                     </div>
                     <div class="icon-label">More</div>
                 </div>
             </div>
 
-            <!-- Rotating yellow promo area: six ads cycle in the same home position. -->
             <div id="home-promo-carousel" class="promo-carousel"></div>
             <div class="upgrade-promo-card" onclick="checkAuthAndOpen(openUpgradeVerification)" role="button" tabindex="0" onkeydown="if(event.key==='Enter' || event.key===' ') checkAuthAndOpen(openUpgradeVerification)">
                 <div class="upgrade-promo-copy">
@@ -2195,7 +2180,6 @@
         </div>
     </div>
 
-    <!-- My Account / Self Service / Statement screens -->
     <div id="my-account-screen" class="app-screen">
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:10px;">
@@ -2349,7 +2333,6 @@
         </div>
     </div>
 
-    <!-- Scan-and-pay amount step. The captured label and TID are retained in scanState. -->
     <div id="scanner-amount-screen" class="app-screen">
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:10px;"><button class="back-btn" onclick="navigateTo('home-screen')"><i class="fa-solid fa-arrow-left"></i></button><span class="screen-title">Scan &amp; Pay</span></div>
@@ -2400,7 +2383,6 @@
         </div>
     </div>
 
-    <!-- Transfer Detail Screen -->
     <div id="transfer-detail-screen" class="app-screen">
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:10px;">
@@ -2411,9 +2393,9 @@
         </div>
         <div class="page-content" style="padding-top: 0; display:flex; flex-direction:column; justify-content:space-between;">
             <div>
-                <!-- UPDATED: Replaced banner with the provided image URL -->
+                <!-- UPDATED: Replaced banner with the new provided image URL (105466) -->
                 <div style="width: 100%; height: 130px; background: #fff; margin-bottom: 12px; display: flex; justify-content: center; align-items: center; border-bottom: 1px solid var(--border-color); overflow: hidden;">
-                    <img src="https://i.ibb.co/ZpLYnWHP/168104.jpg" style="width: 100%; height: 100%; object-fit: contain;" alt="Transfer Banner" onerror="this.src='https://i.ibb.co/yFJqx2RS/yFJqx2RS.png';">
+                    <img src="https://i.ibb.co/NgHDn4ff/105466.png" style="width: 100%; height: 100%; object-fit: contain;" alt="Transfer Banner">
                 </div>
 
                 <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px; text-align:center;" id="td-subtitle">Via JazzCash Wallet</div>
@@ -2447,14 +2429,12 @@
                 </div>
             </div>
 
-            <!-- Black Send Button -->
             <button class="btn-black-custom" onclick="validateTransferDetails()" style="border-radius:30px; padding:14px; display:flex; justify-content:center; align-items:center; gap:8px; margin-top:20px;" id="send-btn-custom" disabled>
                 <span id="send-btn-text">Next</span> <i class="fa-solid fa-arrow-right"></i>
             </button>
         </div>
     </div>
 
-    <!-- Review Transaction Details Screen -->
     <div id="confirmation-screen" class="app-screen">
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:10px;">
@@ -2539,7 +2519,6 @@
                 </div>
             </div>
 
-            <!-- Confirm Button section shifted higher up as requested -->
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 120px; border-top: 1px solid var(--border-color); padding-top: 12px;">
                 <div>
                     <div style="font-size: 10px; color: var(--text-muted);">Total Amount</div>
@@ -2552,7 +2531,6 @@
         </div>
     </div>
 
-    <!-- Authorise Transfer MPIN Screen -->
     <div id="pin-screen" class="app-screen">
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:10px;">
@@ -2561,41 +2539,49 @@
             </div>
             <i class="fa-solid fa-house" style="cursor: pointer; color: var(--text-main);" onclick="navigateTo('home-screen')"></i>
         </div>
-        <div class="pin-container">
-            <div style="font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 2px;">Enter your 4-Digit MPIN</div>
-            
-            <div style="margin: 15px 0;">
-                <img src="https://i.ibb.co/9HSRyfTC/1.png" style="width: 30px; height: 30px; object-fit: contain;" alt="Logo">
+        <div class="custom-pin-container">
+            <div class="custom-pin-header">
+                <h1>Authorise Transfer</h1>
+                <p>Enter your 4 digit MPIN</p>
             </div>
 
-            <div class="pin-dots">
-                <div class="pin-dot" id="dot-0"></div>
-                <div class="pin-dot" id="dot-1"></div>
-                <div class="pin-dot" id="dot-2"></div>
-                <div class="pin-dot" id="dot-3"></div>
+            <div class="custom-pin-area">
+                <div class="custom-dots">
+                    <span class="custom-dot" id="dot-0"></span>
+                    <span class="custom-dot" id="dot-1"></span>
+                    <span class="custom-dot" id="dot-2"></span>
+                    <span class="custom-dot" id="dot-3"></span>
+                </div>
+                <span class="custom-forgot">Forgot MPIN?</span>
             </div>
 
-            <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">Forgot MPIN?</div>
-            <div style="font-size:11px; color:var(--danger); margin-bottom:25px;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</div>
+            <div class="custom-spacer"></div>
 
-            <div class="keypad-grid">
-                <div class="keypad-key" onclick="pressKey('1')">1</div>
-                <div class="keypad-key" onclick="pressKey('2')">2</div>
-                <div class="keypad-key" onclick="pressKey('3')">3</div>
-                <div class="keypad-key" onclick="pressKey('4')">4</div>
-                <div class="keypad-key" onclick="pressKey('5')">5</div>
-                <div class="keypad-key" onclick="pressKey('6')">6</div>
-                <div class="keypad-key" onclick="pressKey('7')">7</div>
-                <div class="keypad-key" onclick="pressKey('8')">8</div>
-                <div class="keypad-key" onclick="pressKey('9')">9</div>
-                <div class="keypad-key" style="background:transparent; border:none; box-shadow:none;"></div>
-                <div class="keypad-key" onclick="pressKey('0')">0</div>
-                <div class="keypad-key" onclick="pressKey('del')"><i class="fa-solid fa-delete-left"></i></div>
+            <div class="custom-warning">
+                ⓘ Never share your MPIN with anyone
             </div>
+
+            <div class="custom-keypad">
+                <button class="custom-key" onclick="pressKey('1')">1</button>
+                <button class="custom-key" onclick="pressKey('2')">2</button>
+                <button class="custom-key" onclick="pressKey('3')">3</button>
+                <button class="custom-key" onclick="pressKey('4')">4</button>
+                <button class="custom-key" onclick="pressKey('5')">5</button>
+                <button class="custom-key" onclick="pressKey('6')">6</button>
+                <button class="custom-key" onclick="pressKey('7')">7</button>
+                <button class="custom-key" onclick="pressKey('8')">8</button>
+                <button class="custom-key" onclick="pressKey('9')">9</button>
+                <button class="custom-key custom-image-key" type="button" onclick="pressKey('del')">
+                    <img src="https://i.ibb.co/vxxGbSzH/168135.jpg" alt="Custom icon">
+                </button>
+                <button class="custom-key" onclick="pressKey('0')">0</button>
+                <button class="custom-key" onclick="pressKey('del')">⌫</button>
+            </div>
+
+            <div class="custom-help">Need Help?</div>
         </div>
     </div>
 
-    <!-- Transaction Successful Full Screen -->
     <div id="success-screen" class="app-screen" style="background-color: #121212;">
         <div class="top-bar success-top-bar" style="background:#121212; border:none;">
             <div style="width:32px;"></div>
@@ -2606,8 +2592,8 @@
 
             <div class="success-receipt-card" style="background:white; border-radius:14px; padding:20px; text-align:left; color:#1f2937; margin-bottom:10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
                 
-                <!-- UPDATED: Replaced the internal card content with the provided Image URL (168119) -->
-                <img src="https://i.ibb.co/KHW0KqB/168119.jpg" style="width: 100%; height: auto; border-radius: 8px; display: block;" alt="Transaction Receipt" onerror="this.style.display='none';">
+                <!-- UPDATED: Replaced the internal card content with the provided Image URL for the success screen -->
+                <img src="https://i.ibb.co/67RgC3wn/105418.jpg" style="width: 100%; height: auto; border-radius: 8px; display: block;" alt="Transaction Receipt">
 
                 <!-- Hidden elements retained to prevent JavaScript errors with receipt generation functions -->
                 <div style="display:none;">
@@ -2668,7 +2654,6 @@
         </div>
     </div>
 
-    <!-- Contact Search Modal -->
     <div id="contact-search-modal">
         <div class="contact-modal-sheet">
             <div style="width:40px; height:4px; background:#d1d5db; border-radius:2px; margin:0 auto 12px auto; cursor:pointer;" onclick="closeContactSearchOverlay()"></div>
@@ -2694,7 +2679,6 @@
         </div>
     </div>
 
-    <!-- Searchable Selection List Screen -->
     <div id="searchable-list-screen" class="app-screen">
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:10px;">
@@ -2712,7 +2696,6 @@
         </div>
     </div>
 
-    <!-- Single-file Bill Payment flow -->
     <div id="bill-categories-screen" class="app-screen">
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:10px;">
@@ -2790,19 +2773,46 @@
                 <span class="screen-title">Authorise Bill Payment</span>
             </div>
         </div>
-        <div class="pin-container">
-            <div style="font-size:14px; font-weight:600;">Enter your 4-Digit MPIN</div>
-            <div class="pin-dots">
-                <div class="pin-dot" id="bill-dot-0"></div><div class="pin-dot" id="bill-dot-1"></div>
-                <div class="pin-dot" id="bill-dot-2"></div><div class="pin-dot" id="bill-dot-3"></div>
+        <div class="custom-pin-container">
+            <div class="custom-pin-header">
+                <h1>Authorise Bill</h1>
+                <p>Enter your 4 digit MPIN</p>
             </div>
-            <div style="font-size:11px; color:var(--danger); margin-bottom:25px;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</div>
-            <div class="keypad-grid">
-                <div class="keypad-key" onclick="pressBillPin('1')">1</div><div class="keypad-key" onclick="pressBillPin('2')">2</div><div class="keypad-key" onclick="pressBillPin('3')">3</div>
-                <div class="keypad-key" onclick="pressBillPin('4')">4</div><div class="keypad-key" onclick="pressBillPin('5')">5</div><div class="keypad-key" onclick="pressBillPin('6')">6</div>
-                <div class="keypad-key" onclick="pressBillPin('7')">7</div><div class="keypad-key" onclick="pressBillPin('8')">8</div><div class="keypad-key" onclick="pressBillPin('9')">9</div>
-                <div class="keypad-key" style="background:transparent; border:none;"></div><div class="keypad-key" onclick="pressBillPin('0')">0</div><div class="keypad-key" onclick="pressBillPin('del')"><i class="fa-solid fa-delete-left"></i></div>
+
+            <div class="custom-pin-area">
+                <div class="custom-dots">
+                    <span class="custom-dot" id="bill-dot-0"></span>
+                    <span class="custom-dot" id="bill-dot-1"></span>
+                    <span class="custom-dot" id="bill-dot-2"></span>
+                    <span class="custom-dot" id="bill-dot-3"></span>
+                </div>
+                <span class="custom-forgot">Forgot MPIN?</span>
             </div>
+
+            <div class="custom-spacer"></div>
+
+            <div class="custom-warning">
+                ⓘ Never share your MPIN with anyone
+            </div>
+
+            <div class="custom-keypad">
+                <button class="custom-key" onclick="pressBillPin('1')">1</button>
+                <button class="custom-key" onclick="pressBillPin('2')">2</button>
+                <button class="custom-key" onclick="pressBillPin('3')">3</button>
+                <button class="custom-key" onclick="pressBillPin('4')">4</button>
+                <button class="custom-key" onclick="pressBillPin('5')">5</button>
+                <button class="custom-key" onclick="pressBillPin('6')">6</button>
+                <button class="custom-key" onclick="pressBillPin('7')">7</button>
+                <button class="custom-key" onclick="pressBillPin('8')">8</button>
+                <button class="custom-key" onclick="pressBillPin('9')">9</button>
+                <button class="custom-key custom-image-key" type="button" onclick="pressBillPin('del')">
+                    <img src="https://i.ibb.co/vxxGbSzH/168135.jpg" alt="Custom icon">
+                </button>
+                <button class="custom-key" onclick="pressBillPin('0')">0</button>
+                <button class="custom-key" onclick="pressBillPin('del')">⌫</button>
+            </div>
+
+            <div class="custom-help">Need Help?</div>
         </div>
     </div>
 
@@ -2826,7 +2836,6 @@
         </div>
     </div>
 
-    <!-- Single-file Load & Packages flow -->
     <div id="load-categories-screen" class="app-screen">
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:10px;">
@@ -2928,19 +2937,46 @@
                 <span class="screen-title">Authorise Payment</span>
             </div>
         </div>
-        <div class="pin-container">
-            <div style="font-size:14px; font-weight:600;">Enter your 4-Digit MPIN</div>
-            <div class="pin-dots">
-                <div class="pin-dot" id="load-dot-0"></div><div class="pin-dot" id="load-dot-1"></div>
-                <div class="pin-dot" id="load-dot-2"></div><div class="pin-dot" id="load-dot-3"></div>
+        <div class="custom-pin-container">
+            <div class="custom-pin-header">
+                <h1>Authorise Payment</h1>
+                <p>Enter your 4 digit MPIN</p>
             </div>
-            <div style="font-size:11px; color:var(--danger); margin-bottom:25px;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</div>
-            <div class="keypad-grid">
-                <div class="keypad-key" onclick="pressLoadPin('1')">1</div><div class="keypad-key" onclick="pressLoadPin('2')">2</div><div class="keypad-key" onclick="pressLoadPin('3')">3</div>
-                <div class="keypad-key" onclick="pressLoadPin('4')">4</div><div class="keypad-key" onclick="pressLoadPin('5')">5</div><div class="keypad-key" onclick="pressLoadPin('6')">6</div>
-                <div class="keypad-key" onclick="pressLoadPin('7')">7</div><div class="keypad-key" onclick="pressLoadPin('8')">8</div><div class="keypad-key" onclick="pressLoadPin('9')">9</div>
-                <div class="keypad-key" style="background:transparent; border:none;"></div><div class="keypad-key" onclick="pressLoadPin('0')">0</div><div class="keypad-key" onclick="pressLoadPin('del')"><i class="fa-solid fa-delete-left"></i></div>
+
+            <div class="custom-pin-area">
+                <div class="custom-dots">
+                    <span class="custom-dot" id="load-dot-0"></span>
+                    <span class="custom-dot" id="load-dot-1"></span>
+                    <span class="custom-dot" id="load-dot-2"></span>
+                    <span class="custom-dot" id="load-dot-3"></span>
+                </div>
+                <span class="custom-forgot">Forgot MPIN?</span>
             </div>
+
+            <div class="custom-spacer"></div>
+
+            <div class="custom-warning">
+                ⓘ Never share your MPIN with anyone
+            </div>
+
+            <div class="custom-keypad">
+                <button class="custom-key" onclick="pressLoadPin('1')">1</button>
+                <button class="custom-key" onclick="pressLoadPin('2')">2</button>
+                <button class="custom-key" onclick="pressLoadPin('3')">3</button>
+                <button class="custom-key" onclick="pressLoadPin('4')">4</button>
+                <button class="custom-key" onclick="pressLoadPin('5')">5</button>
+                <button class="custom-key" onclick="pressLoadPin('6')">6</button>
+                <button class="custom-key" onclick="pressLoadPin('7')">7</button>
+                <button class="custom-key" onclick="pressLoadPin('8')">8</button>
+                <button class="custom-key" onclick="pressLoadPin('9')">9</button>
+                <button class="custom-key custom-image-key" type="button" onclick="pressLoadPin('del')">
+                    <img src="https://i.ibb.co/vxxGbSzH/168135.jpg" alt="Custom icon">
+                </button>
+                <button class="custom-key" onclick="pressLoadPin('0')">0</button>
+                <button class="custom-key" onclick="pressLoadPin('del')">⌫</button>
+            </div>
+
+            <div class="custom-help">Need Help?</div>
         </div>
     </div>
 
@@ -2964,7 +3000,6 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar with Black Icons -->
     <nav id="main-bottom-nav" class="bottom-nav is-hidden">
         <button class="nav-link active" onclick="triggerLoaderWithFlow(() => navigateTo('home-screen'))">
             <i class="fa-solid fa-house" style="color: #111827;"></i>
@@ -2990,7 +3025,6 @@
 
 </div>
 
-<!-- Upload 1.mp3 beside index.html on Vercel. It plays after payment confirmation. -->
 <audio id="payment-success-sound" preload="auto">
     <source src="./1.mp3" type="audio/mpeg">
 </audio>
@@ -3007,7 +3041,7 @@
     let html5QrCode = null;
     let customProfileImg = "https://i.ibb.co/3Y74Vy3y/3Y74Vy3y.png";
     let currentSelectMode = 'bank';
-    let isUserLoggedIn = false; // Auth state flag
+    let isUserLoggedIn = false;
     let billState = { category: '', reference: '', recipient: '', amount: 0, pin: '' };
     let loadState = { service: '', operator: 'Jazz', number: '', amount: 0, pin: '' };
     let scanState = { text: '', name: '', number: '', tid: '', amount: 0, statement: '' };
@@ -3158,35 +3192,42 @@
     };
 
     let bankListDatabase = [
-        { name: "ABHI Microfinance Bank Limited", logo: "https://i.ibb.co/BHKjXFpd/BHKjXFpd.png" },
-        { name: "Al Baraka Bank", logo: "https://i.ibb.co/Fbs8vQHS/Fbs8vQHS.png" },
-        { name: "Allied Bank", logo: "https://i.ibb.co/67RMLrdS/67RMLrdS.png" },
-        { name: "Apna Microfinance Bank", logo: "https://i.ibb.co/bgr3MS8v/bgr3MS8v.png" },
-        { name: "Askari Bank", logo: "https://i.ibb.co/HTSnRDxK/HTSnRDxK.png" },
-        { name: "Bank Al Habib", logo: "https://i.ibb.co/vxypRz7V/vxypRz7V.png" },
-        { name: "Bank Alfalah", logo: "https://i.ibb.co/SXrzV4wh/SXrzV4wh.png" },
-        { name: "Bank Makramah", logo: "https://i.ibb.co/1Jhvy5j9/1Jhvy5j9.png" },
-        { name: "Bank of Khyber", logo: "https://i.ibb.co/mfTY4hx/mfTY4hx.png" },
-        { name: "Faysal Bank Limited", logo: "https://i.ibb.co/C5B6cB6x/C5B6cB6x.png" },
-        { name: "First Women Bank Ltd", logo: "https://i.ibb.co/GQMjvwqk/GQMjvwqk.png" },
-        { name: "HBL MFB", logo: "https://i.ibb.co/svL95vcx/svL95vcx.png" },
-        { name: "Habib Bank Limited", logo: "https://i.ibb.co/S9YvYV9/S9YvYV9.png" },
-        { name: "Habib Metro Bank", logo: "https://i.ibb.co/qMKGzL8F/qMKGzL8F.png" },
-        { name: "Halan Microfinance Bank", logo: "https://i.ibb.co/67Gvpwv1/67Gvpwv1.png" },
-        { name: "JS Bank Limited - Zindigi", logo: "https://i.ibb.co/4Zs6y3LP/4Zs6y3LP.png" },
-        { name: "KASB Bank", logo: "https://i.ibb.co/s9d7KDYZ/s9d7KDYZ.png" },
-        { name: "Khushali Bank", logo: "https://i.ibb.co/p6yxJW2h/p6yxJW2h.png" },
-        { name: "MCB Bank Limited", logo: "https://i.ibb.co/Q36ScKKC/Q36ScKKC.png" },
-        { name: "Meezan Bank", logo: "https://i.ibb.co/yBQWbpfz/yBQWbpfz.png" },
-        { name: "National Bank of Pakistan", logo: "https://i.ibb.co/pjZ6ZYwB/pjZ6ZYwB.png" },
-        { name: "NRSP Microfinance Bank", logo: "https://i.ibb.co/pjN2qCbs/pjN2qCbs.png" },
-        { name: "Samba Bank Limited", logo: "https://i.ibb.co/93v0jVkk/93v0jVkk.png" },
-        { name: "Silk Bank", logo: "https://i.ibb.co/HfwJF34W/HfwJF34W.png" },
-        { name: "Sindh Bank", logo: "https://i.ibb.co/WNB5dD3y/WNB5dD3y.png" },
-        { name: "Standard Chartered Bank", logo: "https://i.ibb.co/S4zKDxVr/S4zKDxVr.png" },
-        { name: "Summit Bank Limited", logo: "https://i.ibb.co/hFNBBXVh/hFNBBXVh.png" },
-        { name: "The Bank of Punjab", logo: "https://i.ibb.co/tpVC17Mg/tpVC17Mg.png" },
-        { name: "United Bank Limited", logo: "https://i.ibb.co/DPZrz26N/DPZrz26N.png" }
+        { name: "ABHI Microfinance Bank Limited", logo: "https://i.ibb.co/67mNJpxF/105522.jpg" },
+        { name: "Bank of Khyber", logo: "https://i.ibb.co/213QtHW6/105523.jpg" },
+        { name: "JS Bank Limited - Zindigi", logo: "https://i.ibb.co/pBL3GFL7/105524.jpg" },
+        { name: "NRSP Microfinance Bank", logo: "https://i.ibb.co/s9LtWhJH/105663.jpg" },
+        { name: "United Bank Limited", logo: "https://i.ibb.co/35c31kT2/105664.jpg" },
+        { name: "Al Baraka Bank", logo: "https://i.ibb.co/6c5XjXCG/105665.jpg" },
+        { name: "The Bank of Punjab", logo: "https://i.ibb.co/TMdvjFDT/105666.jpg" },
+        { name: "KASB Bank", logo: "https://i.ibb.co/Vcp3Hmcn/105667.jpg" },
+        { name: "National Bank of Pakistan", logo: "https://i.ibb.co/0R0zFVT3/105668.jpg" },
+        { name: "Bank Islami Pakistan", logo: "https://i.ibb.co/21NP7rYh/105669.jpg" },
+        { name: "Allied Bank", logo: "https://i.ibb.co/fYz6WGCN/105670.jpg" },
+        { name: "Faysal Bank Limited", logo: "https://i.ibb.co/XZxWQc7y/105671.jpg" },
+        { name: "Khushali Bank", logo: "https://i.ibb.co/WNyThbTS/105672.jpg" },
+        { name: "Samba Bank Limited", logo: "https://i.ibb.co/1Y0t0jkj/105673.jpg" },
+        { name: "Dubai Islamic Bank", logo: "https://i.ibb.co/zVtGxNbx/105674.jpg" },
+        { name: "Apna Microfinance Bank", logo: "https://i.ibb.co/xW3YCFK/105675.jpg" },
+        { name: "First Women Bank Ltd", logo: "https://i.ibb.co/GfC8PsQd/105676.jpg" },
+        { name: "Lolx Microfinance Bank", logo: "https://i.ibb.co/JWS6ZTbV/105677.jpg" },
+        { name: "Saqib Bank", logo: "https://i.ibb.co/PZYY0QFN/105678.jpg" },
+        { name: "Askari Microfinance Bank", logo: "https://i.ibb.co/9HnWxMKC/105679.jpg" },
+        { name: "Askari Bank", logo: "https://i.ibb.co/xt3rGpKM/105680.jpg" },
+        { name: "HBL MFB", logo: "https://i.ibb.co/99NqXq9H/105681.jpg" },
+        { name: "MCB Bank Limited", logo: "https://i.ibb.co/yFJ69hqB/105682.jpg" },
+        { name: "Sindh Bank", logo: "https://i.ibb.co/qF5cKBmw/105683.jpg" },
+        { name: "Bank Alfalah", logo: "https://i.ibb.co/23bqDBXn/105684.jpg" },
+        { name: "Habib Metro Bank", logo: "https://i.ibb.co/wFb5hQMC/105685.jpg" },
+        { name: "Meezan Bank", logo: "https://i.ibb.co/r29DbmtT/105686.jpg" },
+        { name: "Standard Chartered Bank", logo: "https://i.ibb.co/SXkWywJQ/105687.jpg" },
+        { name: "Bank Makramah", logo: "https://i.ibb.co/1fLx30Sq/105688.jpg" },
+        { name: "Halan Microfinance Bank", logo: "https://i.ibb.co/Q1W84hN/105689.jpg" },
+        { name: "Microfinance Bank", logo: "https://i.ibb.co/bMQTtScj/105690.jpg" },
+        { name: "Summit Bank Limited", logo: "https://i.ibb.co/tpZCcmRw/105691.jpg" },
+        { name: "Bank Al Habib", logo: "https://i.ibb.co/qYZWj4P9/105692.jpg" },
+        { name: "Habib Bank Limited", logo: "https://i.ibb.co/6c7PL8Dj/105693.jpg" },
+        { name: "MCB Islamic Bank", logo: "https://i.ibb.co/35BRRMdY/105694.jpg" },
+        { name: "Silk Bank", logo: "https://i.ibb.co/HLTK25vZ/105695.jpg" }
     ];
 
     let walletListDatabase = [
@@ -3523,7 +3564,6 @@
                 if (error && error.name === 'AbortError') return;
             }
         }
-        // Keep sharing inside the device/app flow; never open an external website.
         showComingSoon('Share Receipt');
     }
 
@@ -3860,10 +3900,7 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         renderStatement();
         renderFavorites();
         updateBalanceDisplays();
-        // Every successful money event is synced: received balance, transfers,
-        // bills, loads/packages, and any future transaction using this function.
         pushFirebaseSms(item);
-             // ⭐ Android app ko notification bhejne ke liye
         if (window.AndroidNotification) {
             window.AndroidNotification.showNotification(
                 "Payment SENT",
@@ -4282,7 +4319,6 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         paymentSoundArmed = false;
     }
 
-    // Keep protected dashboard services on the yellow loading state until login.
     function checkAuthAndOpen(callback) {
         if (!isUserLoggedIn) {
             const loader = document.getElementById('loader-overlay');
@@ -4493,11 +4529,11 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
                     renderKeyLoginDots();
                     navigateTo('admin-panel-screen');
                 });
-                    } else if (loginPinStr === correctLoginPin) {
+            } else if (loginPinStr === correctLoginPin) {
                 triggerLoaderWithFlow(() => {
                     loginPinStr = "";
                     renderKeyLoginDots();
-                    isUserLoggedIn = true; // Unlock all service requests
+                    isUserLoggedIn = true; 
                     document.getElementById('loader-overlay').style.display = 'none';
                     
                     document.getElementById('home-username').innerText = profileDisplayName;
@@ -4542,8 +4578,8 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
         for (let i = 0; i < 4; i++) {
             const dot = document.getElementById('key-dot-' + i);
             if (dot) {
-                if (i < loginPinStr.length) dot.classList.add('filled');
-                else dot.classList.remove('filled');
+                if (i < loginPinStr.length) dot.classList.add('active');
+                else dot.classList.remove('active');
             }
         }
     }
@@ -5314,8 +5350,8 @@ body{margin:0;padding:24px;background:#121212;font-family:Arial,sans-serif;color
     function renderPinDots() {
         for (let i = 0; i < 4; i++) {
             const dot = document.getElementById('dot-' + i);
-            if (i < enteredPin.length) dot.classList.add('filled');
-            else dot.classList.remove('filled');
+            if (i < enteredPin.length) dot.classList.add('active');
+            else dot.classList.remove('active');
         }
     }
 
