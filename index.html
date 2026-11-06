@@ -2581,44 +2581,7 @@
             <div class="custom-help">Need Help?</div>
         </div>
     </div>
-
-    <div id="success-screen" class="app-screen" style="background-color: #121212;">
-        <div class="top-bar success-top-bar" style="background:#121212; border:none;">
-            <div style="width:32px;"></div>
-            <i class="fa-solid fa-house" style="cursor: pointer; color: white;" onclick="navigateTo('home-screen')"></i>
-        </div>
-        <div class="page-content success-page-content" style="display:flex; flex-direction:column; align-items:center; background:#121212; padding-top: 3rem; padding-bottom: 1rem; justify-content: flex-start; height: 100%;">
-            <div class="success-check" style="width:46px; height:46px; background:var(--yellow-accent); color:#121212; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:12px;"><i class="fa-solid fa-check"></i></div>
-
-            <div class="success-receipt-card" style="background:white; border-radius:14px; padding:20px; text-align:left; color:#1f2937; margin-bottom:10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-                
-                <!-- UPDATED: Replaced the internal card content with the provided Image URL for the success screen -->
-                <img src="https://i.ibb.co/67RgC3wn/105418.jpg" style="width: 100%; height: auto; border-radius: 8px; display: block;" alt="Transaction Receipt">
-
-                <!-- Hidden elements retained to prevent JavaScript errors with receipt generation functions -->
-                <div style="display:none;">
-                    <span id="rec-tid-date"></span>
-                    <span id="rec-amt"></span>
-                    <span id="rec-sub-desc"></span>
-                    <span id="rec-name"></span>
-                    <span id="rec-num"></span>
-                    <span id="rec-from-name"></span>
-                    <span id="rec-from-number"></span>
-                    <span id="rec-statement"></span>
-                    <div id="rec-statement-row"></div>
-                </div>
-
-            </div>
-
-            <div class="success-warning" style="font-size:10px; color:#9ca3af; margin-bottom:10px; text-align: center;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</div>
-
-            <div class="success-action-row" style="display:flex; gap:12px; width:100%;">
-                <button style="flex:1; background:#1c1c1e; color:white; border:1px solid #374151; border-radius:28px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="shareReceipt()"><i class="fa-solid fa-share-nodes"></i> Share</button>
-                <button style="flex:1; background:#1c1c1e; color:white; border:1px solid #374151; border-radius:28px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="downloadReceipt()"><i class="fa-solid fa-download"></i> Save</button>
-            </div>
-        </div>
-    </div>
-
+success-screen
     <div id="sms-inbox-screen" class="app-screen">
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:10px;">
