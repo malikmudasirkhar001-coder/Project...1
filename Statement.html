@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Transaction History - JazzCash</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #0f1012;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .custom-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .decimal-sup {
+      font-size: 0.65em;
+      vertical-align: super;
+      margin-left: 1px;
+      font-weight: 600;
+    }
+    
+    /* Loader Overlay */
+    #loader-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .dots-container {
+        display: flex;
+        gap: 10px;
+    }
+    .dot-loader {
+        width: 16px;
+        height: 16px;
+        background-color: #facc15; /* Yellow accent */
+        border-radius: 50%;
+        animation: bounce 1.2s infinite ease-in-out both;
+    }
+    .dot-loader:nth-child(1) { animation-delay: -0.36s; }
+    .dot-loader:nth-child(2) { animation-delay: -0.24s; }
+    .dot-loader:nth-child(3) { animation-delay: -0.12s; }
+    .dot-loader:nth-child(4) { animation-delay: 0s; }
+
+    @keyframes bounce {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1.0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-0 sm:p-4">
+
+  <!-- Mobile Screen Container -->
+  <div class="w-full max-w-[430px] min-h-screen sm:min-h-[880px] bg-white sm:rounded-[36px] shadow-2xl overflow-hidden flex flex-col relative border border-gray-200">
+    
+    <!-- Loader Overlay -->
+    <div id="loader-overlay">
+        <div class="dots-container">
+            <div class="dot-loader"></div>
+            <div class="dot-loader"></div>
+            <div class="dot-loader"></div>
+            <div class="dot-loader"></div>
+        </div>
+    </div>
+
+    <!-- Android / Mobile Status Bar Mockup -->
+    <div class="w-full pt-3 pb-1 px-6 flex justify-between items-center text-xs text-gray-700 select-none bg-white font-medium">
+      <span>7:01</span>
+      <div class="flex items-center space-x-1.5">
+        <svg class="w-3.5 h-3.5 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 3C7.03 3 2.84 5.48.43 9.27L12 23.36l11.57-14.09C21.16 5.48 16.97 3 12 3z"/>
+        </svg>
+        <span class="text-[10px] font-bold">4G</span>
+        <svg class="w-4 h-3 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M2 22h20V2z"/>
+        </svg>
+        <svg class="w-5 h-3 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M17 4h-3V2h-4v2H7v18h10V4z"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Top Navigation Header -->
+    <header class="px-5 py-3 flex items-center justify-between border-b border-gray-100 bg-white">
+      <button class="p-1 -ml-1 text-gray-800 hover:text-black transition-colors focus:outline-none" onclick="window.location.href='index.html'">
+        <svg class="w-6 h-6 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"></path>
+        </svg>
+      </button>
+      <h1 class="text-base font-bold text-gray-800 tracking-tight">Transaction History</h1>
+      <div class="w-6"></div>
+    </header>
+
+    <!-- Tabs Header -->
+    <div class="grid grid-cols-2 bg-gray-50 border-b border-gray-200">
+      <button id="tab-all" class="py-3.5 text-center text-[15px] font-semibold text-gray-900 border-b-2 border-black transition-all" onclick="filterTransactions('all')">
+        All Payments
+      </button>
+      <button id="tab-spending" class="py-3.5 text-center text-[15px] font-medium text-gray-400 hover:text-gray-600 transition-all" onclick="filterTransactions('spending')">
+        Spending
+      </button>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 overflow-y-auto custom-scrollbar px-4 pt-4 pb-8 space-y-4">
+
+      <!-- Summary Received & Sent Cards -->
+      <div class="grid grid-cols-2 gap-3">
+        <!-- Received Card -->
+        <div class="bg-[#f2f7f4] border border-emerald-100 rounded-xl p-3 flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-emerald-600 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 4.5l-15 15m0 0h11.25m-11.25 0V8.25"></path>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <span class="text-xs text-gray-500 font-medium block">Received</span>
+            <div class="text-[15px] font-bold text-gray-900 leading-tight" id="total-received">
+              Rs. 0<span class="decimal-sup">.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sent Card -->
+        <div class="bg-[#fdf2f2] border border-red-100 rounded-xl p-3 flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-red-500 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"></path>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <span class="text-xs text-gray-500 font-medium block">Sent</span>
+            <div class="text-[15px] font-bold text-gray-900 leading-tight" id="total-sent">
+              Rs. 0<span class="decimal-sup">.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Row (Horizontal Scrolling / Wrap) -->
+      <div class="flex items-center space-x-2 overflow-x-auto custom-scrollbar py-1">
+        <!-- Date Filter -->
+        <button class="px-3 py-1.5 rounded-full border border-gray-300 text-xs font-medium text-gray-700 bg-white flex items-center space-x-1 whitespace-nowrap active:bg-gray-100">
+          <span>Date</span>
+          <svg class="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </button>
+
+        <!-- Categories Filter -->
+        <button class="px-3 py-1.5 rounded-full border border-gray-300 text-xs font-medium text-gray-700 bg-white flex items-center space-x-1 whitespace-nowrap active:bg-gray-100">
+          <span>Categories</span>
+          <svg class="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Count & Statement Banner Row -->
+      <div class="flex items-center justify-between pt-1">
+        <div>
+          <div class="text-[13px] font-semibold text-gray-800" id="transaction-count">Last 0 transactions</div>
+          <div class="text-[11px] text-gray-500 flex items-center space-x-1 mt-0.5">
+            <i class="fa-solid fa-rotate-right text-gray-400 text-[10px]"></i>
+            <span>Update in 2 hours</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-100 my-1"></div>
+
+      <!-- TRANSACTIONS LIST -->
+      <div id="transactions-container" class="space-y-4">
+        <!-- Transactions will be injected here -->
+      </div>
+
+    </div>
+
+    <!-- Android Home Indicator / Bottom Bar -->
+    <div class="w-full py-2 flex justify-center items-center bg-white border-t border-gray-100">
+      <div class="w-32 h-1 bg-gray-300 rounded-full"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // Format Currency
+    function formatCurrency(amount) {
+        return Number(amount || 0).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // Format Date for list
+    function formatStatementDate(dateValue) {
+        const date = new Date(dateValue || Date.now());
+        if (Number.isNaN(date.getTime())) return '';
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        let hours = date.getHours();
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        return `${day} ${month}, ${year} | ${hours}:${minutes} ${ampm}`;
+    }
+
+    // Load Data and Render
+    let allTransactions = [];
+    let currentFilter = 'all';
+
+    function loadTransactions() {
+        try {
+            allTransactions = JSON.parse(localStorage.getItem('jazzcash_transactions') || '[]');
+        } catch (error) {
+            allTransactions = [];
+        }
+        renderUI();
+    }
+
+    function renderUI() {
+        let filtered = allTransactions;
+        if (currentFilter === 'spending') {
+            filtered = allTransactions.filter(t => t.direction === 'out');
+        }
+
+        // Calculate Totals
+        let totalIn = 0;
+        let totalOut = 0;
+        allTransactions.forEach(t => {
+            if (t.direction === 'in') totalIn += Number(t.amount);
+            if (t.direction === 'out') totalOut += Number(t.amount);
+        });
+
+        document.getElementById('total-received').innerHTML = `Rs. ${formatCurrency(totalIn).split('.')[0]}<span class="decimal-sup">.${formatCurrency(totalIn).split('.')[1] || '00'}</span>`;
+        document.getElementById('total-sent').innerHTML = `Rs. ${formatCurrency(totalOut).split('.')[0]}<span class="decimal-sup">.${formatCurrency(totalOut).split('.')[1] || '00'}</span>`;
+        
+        document.getElementById('transaction-count').innerText = `Last ${filtered.length} transactions`;
+
+        const container = document.getElementById('transactions-container');
+        container.innerHTML = '';
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="text-center text-gray-500 py-10 text-sm">No transactions found.</div>`;
+            return;
+        }
+
+        let currentDateGroup = '';
+
+        filtered.forEach((item, index) => {
+            const dateGroup = formatStatementDate(item.date).split(' | ')[0];
+            
+            // Date Header
+            if (dateGroup !== currentDateGroup) {
+                currentDateGroup = dateGroup;
+                container.innerHTML += `
+                    <section class="space-y-3 pt-2">
+                        <div class="text-[11px] font-medium text-gray-400 tracking-wide">
+                            ${formatStatementDate(item.date)}
+                        </div>
+                `;
+            }
+
+            const isReceived = item.direction === 'in';
+            const arrowColor = isReceived ? 'text-emerald-600' : 'text-red-500';
+            const arrowPath = isReceived 
+                ? "M19.5 4.5l-15 15m0 0h11.25m-11.25 0V8.25" 
+                : "M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25";
+            
+            const amountPrefix = isReceived ? '+' : '-';
+
+            container.innerHTML += `
+                <div class="flex items-start justify-between py-1 border-b border-gray-100 pb-3">
+                    <div class="flex items-start space-x-3">
+                        <div class="mt-1 ${arrowColor}">
+                            <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="${arrowPath}"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-normal">${item.type}</p>
+                            <p class="text-sm font-bold text-gray-900 leading-tight">${amountPrefix} Rs. ${formatCurrency(item.amount)}</p>
+                            <p class="text-[11px] text-gray-400 mt-0.5">${item.recipient || item.detail}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-end space-y-1.5">
+                        ${!isReceived ? `
+                        <button onclick="repeatTransaction(${index})" class="w-[78px] flex items-center justify-center space-x-1 px-2 py-0.5 rounded-full border border-gray-300 text-[11px] text-gray-700 font-medium active:bg-gray-100">
+                            <i class="fa-solid fa-rotate-right text-gray-500 text-[10px]"></i>
+                            <span>Repeat</span>
+                        </button>` : ''}
+                        <button onclick="openReceipt(${index})" class="w-[78px] flex items-center justify-center space-x-1 px-2 py-0.5 rounded-full border border-gray-300 text-[11px] text-gray-700 font-medium active:bg-gray-100">
+                            <i class="fa-regular fa-file-lines text-gray-500 text-[10px]"></i>
+                            <span>Receipt</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Close section if it's the last item or next item has a different date
+            if (index === filtered.length - 1 || formatStatementDate(filtered[index + 1].date).split(' | ')[0] !== currentDateGroup) {
+                container.innerHTML += `</section>`;
+            }
+        });
+    }
+
+    function filterTransactions(filter) {
+        currentFilter = filter;
+        const tabAll = document.getElementById('tab-all');
+        const tabSpending = document.getElementById('tab-spending');
+        
+        if (filter === 'all') {
+            tabAll.className = "py-3.5 text-center text-[15px] font-semibold text-gray-900 border-b-2 border-black transition-all";
+            tabSpending.className = "py-3.5 text-center text-[15px] font-medium text-gray-400 hover:text-gray-600 transition-all";
+        } else {
+            tabAll.className = "py-3.5 text-center text-[15px] font-medium text-gray-400 hover:text-gray-600 transition-all";
+            tabSpending.className = "py-3.5 text-center text-[15px] font-semibold text-gray-900 border-b-2 border-black transition-all";
+        }
+        
+        showLoader(() => renderUI());
+    }
+
+    function showLoader(callback) {
+        const loader = document.getElementById('loader-overlay');
+        loader.style.display = 'flex';
+        setTimeout(() => {
+            loader.style.display = 'none';
+            if (callback) callback();
+        }, 2000); // 2 Seconds Delay
+    }
+
+    function openReceipt(index) {
+        showLoader(() => {
+            const item = allTransactions[index];
+            // Save the selected transaction to be viewed in index.html
+            localStorage.setItem('jazzcash_view_receipt', JSON.stringify(item));
+            window.location.href = 'index.html?view=receipt';
+        });
+    }
+
+    function repeatTransaction(index) {
+        showLoader(() => {
+            const item = allTransactions[index];
+            // Save the selected transaction to be repeated in index.html
+            localStorage.setItem('jazzcash_repeat_transaction', JSON.stringify(item));
+            window.location.href = 'index.html?repeat=true';
+        });
+    }
+
+    // Initialize
+    window.onload = () => {
+        loadTransactions();
+    };
+  </script>
+</body>
+</html>
