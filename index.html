@@ -246,14 +246,17 @@
         .login-prompt-banner .login-title { font-size: 20px; font-weight: 700; color: var(--yellow-accent); display: flex; align-items: center; gap: 8px; }
         .login-prompt-banner .login-subtitle { font-size: 16px; font-weight: 600; color: white; margin-top: 2px; }
         
-        .home-balance-panel { display: none; margin-top: 16px; padding: 15px 16px; border-radius: 18px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.16); cursor: pointer; }
+        /* NEW BALANCE STYLES (No Box) */
+        .home-balance-panel { display: none; margin-top: 16px; }
         .home-balance-panel.visible { display: block; }
         .home-balance-label { color: #d1d5db; font-size: 11px; margin-bottom: 5px; }
-        .home-balance-value { color: white; font-size: 25px; font-weight: 700; letter-spacing: -0.4px; display: flex; align-items: center; justify-content: space-between; }
-        .home-balance-value i { font-size: 14px; color: var(--yellow-accent); }
+        .home-balance-value { color: #facc15; font-size: 32px; font-weight: 700; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .home-balance-value span { color: #facc15; }
+        .home-balance-value .decimals { font-size: 20px; }
+        .home-balance-value i { font-size: 18px; color: #a16207; }
         
-        .refresh-balance-btn { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #d1d5db; margin-top: 12px; cursor: pointer; }
-        .refresh-balance-btn i { font-size: 12px; }
+        .refresh-balance-btn { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #d1d5db; margin-top: 15px; cursor: pointer; }
+        .refresh-balance-btn i { font-size: 14px; }
 
         .app-body { flex: 1; overflow-y: auto; padding: 12px 10px 65px 10px; }
         .icon-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #ffffff; padding: 14px 10px; border-radius: 22px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
@@ -830,7 +833,7 @@
             <div class="home-balance-panel" id="home-balance-panel" onclick="openAccountStatementWithLoader()">
                 <div class="home-balance-label">Available balance</div>
                 <div class="home-balance-value">
-                    <span id="home-balance-value">Rs. 5,287.14</span>
+                    <span id="home-balance-value">Rs. 302<span class="decimals">.69</span></span>
                     <i class="fa-solid fa-circle-chevron-down"></i>
                 </div>
             </div>
@@ -993,7 +996,6 @@
             <div class="menu-list-card">
                 <button class="menu-list-item" style="width:100%; border:0;" onclick="openSelfService()"><span><i class="fa-regular fa-user" style="width:25px;"></i> Self Service<br><small style="margin-left:29px; color:var(--text-muted);">Change MPIN, Account Statement...</small></span><i class="fa-solid fa-chevron-right"></i></button>
                 <button class="menu-list-item" style="width:100%; border:0;" onclick="openAccountLimits()"><span><i class="fa-solid fa-wallet" style="width:25px;"></i> Account Limits</span><i class="fa-solid fa-chevron-right"></i></button>
-                <button class="menu-list-item" style="width:100%; border:0;" onclick="openAccountStatement()"><span><i class="fa-solid fa-list-check" style="width:25px;"></i> Transaction History</span><i class="fa-solid fa-chevron-right"></i></button>
                 <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('Payment Requests')"><span><i class="fa-regular fa-comment-dots" style="width:25px;"></i> Payment Requests</span><i class="fa-solid fa-chevron-right"></i></button>
                 <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('Create NextGen Account')"><span><i class="fa-solid fa-bolt" style="width:25px;"></i> Create NextGen Account</span><i class="fa-solid fa-chevron-right"></i></button>
                 <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('Subscription Management')"><span><i class="fa-regular fa-file-lines" style="width:25px;"></i> Subscription Management</span><i class="fa-solid fa-chevron-right"></i></button>
@@ -1016,11 +1018,6 @@
                 <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('Change MPIN')"><span><i class="fa-solid fa-key" style="width:25px;"></i> Change MPIN</span><i class="fa-solid fa-chevron-right"></i></button>
                 <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('Manage Devices')"><span><i class="fa-solid fa-mobile-screen" style="width:25px;"></i> Manage Devices</span><i class="fa-solid fa-chevron-right"></i></button>
             </div>
-            <div class="account-section-label">Account Information</div>
-            <div class="menu-list-card">
-                <button class="menu-list-item" style="width:100%; border:0;" onclick="openAccountStatement()"><span><i class="fa-regular fa-file-lines" style="width:25px;"></i> Account Statement</span><i class="fa-solid fa-chevron-right"></i></button>
-                <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('Tax Certificate')"><span><i class="fa-regular fa-file-circle-xmark" style="width:25px;"></i> Tax Certificate</span><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
             <div class="account-section-label">Transfer &amp; Payments</div>
             <div class="menu-list-card">
                 <button class="menu-list-item" style="width:100%; border:0;" onclick="openFavoritesScreen()"><span><i class="fa-regular fa-star" style="width:25px;"></i> Favorites Management</span><i class="fa-solid fa-chevron-right"></i></button>
@@ -1028,24 +1025,6 @@
                 <button class="menu-list-item" style="width:100%; border:0;" onclick="showComingSoon('CNIC Transfer Cancellation')"><span><i class="fa-regular fa-hand" style="width:25px;"></i> CNIC Transfer Cancellation</span><i class="fa-solid fa-chevron-right"></i></button>
                 <button class="menu-list-item" style="width:100%; border:0; color:#ef4444;" onclick="showComingSoon('Close Account')"><span><i class="fa-regular fa-user-xmark" style="width:25px;"></i> Close Account</span><i class="fa-solid fa-chevron-right"></i></button>
             </div>
-        </div>
-    </div>
-
-    <div id="account-statement-screen" class="app-screen">
-        <div class="top-bar">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <button class="back-btn" onclick="navigateTo('home-screen')"><i class="fa-solid fa-arrow-left"></i></button>
-                <span class="screen-title">Account Statement</span>
-            </div>
-            <i class="fa-solid fa-download" style="cursor:pointer;" onclick="showComingSoon('Statement Download')"></i>
-        </div>
-        <div class="page-content" style="padding:12px 10px 75px;">
-            <div style="background:#fff; border:1px solid var(--border-color); border-radius:14px; padding:13px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-                <div><div style="font-size:11px; color:var(--text-muted);">Available balance</div><div style="font-size:20px; font-weight:700;" id="statement-balance-value">Rs. 5,287.14</div></div>
-                <button class="btn-outline-custom" style="width:auto; padding:7px 10px; border-radius:18px;" onclick="renderStatement()">Refresh</button>
-            </div>
-            <div style="font-size:12px; font-weight:700; margin:10px 2px;">Recent activity</div>
-            <div class="menu-list-card" id="statement-list-container"></div>
         </div>
     </div>
 
@@ -2061,7 +2040,7 @@
         { name: "HBL MFB", logo: "https://i.ibb.co/svL95vcx/svL95vcx.png" },
         { name: "Habib Bank Limited", logo: "https://i.ibb.co/S9YvYV9/S9YvYV9.png" },
         { name: "Habib Metro Bank", logo: "https://i.ibb.co/qMKGzL8F/qMKGzL8F.png" },
-        { name: "Halan Microfinance Bank", logo: "https://i.ibb.co/67Gvpwv1/67Gpv1.png" },
+        { name: "Halan Microfinance Bank", logo: "https://i.ibb.co/67Gvpwv1/67Gvpwv1.png" },
         { name: "JS Bank Limited - Zindigi", logo: "https://i.ibb.co/4Zs6y3LP/4Zs6y3LP.png" },
         { name: "KASB Bank", logo: "https://i.ibb.co/s9d7KDYZ/s9d7KDYZ.png" },
         { name: "Khushali Bank", logo: "https://i.ibb.co/p6yxJW2h/p6yxJW2h.png" },
@@ -2138,7 +2117,7 @@
 
     function openAccountStatementWithLoader() {
         triggerLoaderWithFlow(() => {
-            openAccountStatement();
+            window.location.href = 'statement.html';
         }, 1000);
     }
 
@@ -2995,7 +2974,7 @@
                         amount: billState.amount
                     });
                     navigateTo('bill-success-screen');
-                    setTimeout(playPaymentSuccessSound, 4000); // 4 Second Delay
+                    setTimeout(playPaymentSuccessSound, 1000); // 1 Second Delay
                 }, 2000);
             } else {
                 alert('Incorrect MPIN. Please enter 0303.');
@@ -3127,7 +3106,7 @@
                         amount: loadState.amount
                     });
                     navigateTo('load-success-screen');
-                    setTimeout(playPaymentSuccessSound, 4000); // 4 Second Delay
+                    setTimeout(playPaymentSuccessSound, 1000); // 1 Second Delay
                 });
             } else {
                 alert('Incorrect MPIN. Please enter 0303.');
@@ -4200,7 +4179,7 @@
                 });
                 
                 navigateTo('success-screen');
-                setTimeout(playPaymentSuccessSound, 4000); // 4 Second Delay
+                setTimeout(playPaymentSuccessSound, 1000); // 1 Second Delay
             }, 2000);
         }
     }
