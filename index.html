@@ -130,13 +130,6 @@
             width: 160px;
             height: auto;
             object-fit: contain;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
         }
 
         #loader-overlay {
@@ -557,16 +550,19 @@
         .account-hero { background: #fff; padding: 18px 16px 14px; border-bottom: 1px solid var(--border-color); }
         .account-avatar-large { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-color); }
         .account-section-label { font-size: 15px; font-weight: 700; color: var(--text-main); margin: 17px 0 7px; }
-        .statement-entry { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 13px 14px; background: #fff; border-bottom: 1px solid #f0f1f3; }
-        .statement-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #fef3c7; color: #92400e; flex: 0 0 auto; }
+        
+        /* Improved Statement Entries */
+        .statement-entry { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 15px 14px; background: #fff; border-bottom: 1px solid #f0f1f3; }
+        .statement-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #fef3c7; color: #92400e; flex: 0 0 auto; font-size: 16px; }
         .statement-meta { min-width: 0; flex: 1; }
-        .statement-title { font-size: 12px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .statement-subtitle { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
-        .statement-amount { font-size: 12px; font-weight: 700; color: var(--primary); text-align: right; }
-        .statement-status { font-size: 9px; color: var(--success-green); text-align: right; margin-top: 3px; }
-        .statement-actions { flex: 0 0 100%; display: flex; gap: 8px; margin-left: 44px; margin-top: 2px; }
-        .statement-action-btn { border: 1px solid var(--border-color); border-radius: 16px; padding: 6px 12px; color: #111827; background: #fff; font-size: 10px; font-weight: 700; cursor: pointer; }
+        .statement-title { font-size: 13px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .statement-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
+        .statement-amount { font-size: 13px; font-weight: 700; color: var(--primary); text-align: right; }
+        .statement-status { font-size: 10px; color: var(--success-green); text-align: right; margin-top: 4px; }
+        .statement-actions { flex: 0 0 100%; display: flex; gap: 10px; margin-left: 50px; margin-top: 5px; }
+        .statement-action-btn { border: 1px solid var(--border-color); border-radius: 16px; padding: 6px 14px; color: #111827; background: #fff; font-size: 11px; font-weight: 600; cursor: pointer; }
         .statement-action-btn.primary { border-color: #111827; color: #fff; background: #111827; }
+        
         .more-service-card { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 68px; margin-bottom: 9px; padding: 12px 13px; border: 1px solid var(--border-color); border-radius: 14px; background: #fff; color: var(--text-main); text-align: left; cursor: pointer; box-shadow: 0 2px 7px rgba(17,24,39,.04); }
         .more-service-card:active { transform: scale(.99); }
         .more-service-icon { width: 40px; height: 40px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: #fef3c7; color: #92400e; font-size: 17px; }
@@ -851,9 +847,10 @@
         </div>
     </div>
 
+    <!-- Splash Screen with New Logo -->
     <div id="splash-screen" class="app-screen active">
         <div class="splash-logo-container">
-            <img src="https://i.ibb.co/9HSRyfTC/1.png" class="splash-logo-img" alt="JazzCash Logo" onerror="this.src='./images/1.png';">
+            <img src="https://i.ibb.co/kgRq1Zmj/170007.png" class="splash-logo-img" alt="JazzCash Logo">
         </div>
     </div>
 
@@ -867,7 +864,7 @@
                 </div>
                 <div style="padding: 24px 20px 0 20px;">
                     <h2 style="font-size: 22px; font-weight: 700; color: #111827;">Complete Sign-in</h2>
-                    <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Enter your 4 digit MPIN (Path: login-mpin.html)</p>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Enter your 4 digit MPIN</p>
                     
                     <div class="login-pin-dots-row">
                         <div class="login-dot-item" id="key-dot-0"></div>
@@ -2216,7 +2213,7 @@
             if(splash) splash.classList.remove('active');
             if(home) home.classList.add('active');
             updateBottomNavVisibility('home-screen');
-        }, 3000);
+        }, 2500); // 2.5 Seconds Delay
         renderAdminList();
         renderStatement();
         renderFavorites();
@@ -2239,6 +2236,7 @@
             }, 4200);
     });
 
+    // ... (All the rest of the JavaScript functions remain exactly the same as your provided code)
     function renderPromoAd() {
         const container = document.getElementById('home-promo-carousel');
         if (!container) return;
@@ -3078,7 +3076,6 @@
         if (billState.pin.length === 4) {
             if (billState.pin === paymentPin) {
                 armPaymentSuccessSound();
-                playPaymentSuccessSound();
                 triggerLoaderWithFlow(() => {
                     const billTid = String(Math.floor(100000000000 + Math.random() * 900000000000));
                     document.getElementById('bill-success-category').innerText = billState.category;
@@ -3092,7 +3089,7 @@
                         amount: billState.amount
                     });
                     navigateTo('bill-success-screen');
-                    setTimeout(playPaymentSuccessSound, 60);
+                    setTimeout(playPaymentSuccessSound, 1000); // 1 Second Delay
                 }, 2000);
             } else {
                 alert('Incorrect MPIN. Please enter 0303.');
@@ -3211,7 +3208,6 @@
         if (loadState.pin.length === 4) {
             if (loadState.pin === paymentPin) {
                 armPaymentSuccessSound();
-                playPaymentSuccessSound();
                 triggerLoaderWithFlow(() => {
                     const loadTid = String(Math.floor(100000000000 + Math.random() * 900000000000));
                     document.getElementById('load-success-service').innerText = loadState.service;
@@ -3225,7 +3221,7 @@
                         amount: loadState.amount
                     });
                     navigateTo('load-success-screen');
-                    setTimeout(playPaymentSuccessSound, 60);
+                    setTimeout(playPaymentSuccessSound, 1000); // 1 Second Delay
                 });
             } else {
                 alert('Incorrect MPIN. Please enter 0303.');
@@ -4269,7 +4265,6 @@
                 return;
             }
             armPaymentSuccessSound();
-            playPaymentSuccessSound();
             triggerLoaderWithFlow(() => {
                 const generatedTid = String(Math.floor(100000000000 + Math.random() * 900000000000));
                 txData.tid = txData.tid || generatedTid;
@@ -4299,7 +4294,7 @@
                 });
                 
                 navigateTo('success-screen');
-                setTimeout(playPaymentSuccessSound, 60);
+                setTimeout(playPaymentSuccessSound, 1000); // 1 Second Delay
             }, 2000);
         }
     }
