@@ -472,6 +472,15 @@
         .compact-review-card { border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; background: #fff; margin: 12px 0; }
         .flow-success { background: #121212 !important; color: #fff; }
         .flow-success .page-content { background: #121212; }
+        .btn-black-custom { width: 100%; background: #111827; color: #ffffff; border: none; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .btn-outline-custom { width: 100%; background: transparent; color: var(--text-main); border: 1px solid var(--border-color); padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #wrong-pin-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 15000; }
+        .popup-card { background: #fff; border-radius: 18px; padding: 25px 30px; text-align: center; width: 80%; max-width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .popup-icon { font-size: 40px; color: var(--danger); margin-bottom: 12px; }
+        .popup-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+        .popup-buttons-col { display: flex; flex-direction: column; gap: 10px; }
     </style>
 </head>
 <body>
@@ -725,7 +734,7 @@
     <!-- Splash Screen -->
     <div id="splash-screen" class="app-screen active">
         <div class="splash-logo-container">
-            <img src="https://i.ibb.co/kgRq1Zmj/170007.png" class="splash-logo-img" alt="JazzCash Logo" onerror="this.style.display='none'">
+            <img src="https://i.ibb.co/W44tDjLj/170107.png" class="splash-logo-img" alt="JazzCash Logo" onerror="this.style.display='none'">
         </div>
     </div>
 
@@ -1612,20 +1621,20 @@
         </div>
     </div>
 
-    <div id="searchable-list-screen" class="app-screen">
+    <div id="searchable-list-screen-2" class="app-screen" style="display:none;">
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:10px;">
                 <button class="back-btn" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i></button>
-                <span class="screen-title" id="sl-title">Select Bank</span>
+                <span class="screen-title" id="sl-title-2">Select Bank</span>
             </div>
         </div>
         <div class="page-content" style="background:#ffffff; padding: 15px;">
             <div style="position:relative; margin-bottom:15px;">
-                <input type="text" class="custom-input" id="sl-search-input" placeholder="Search Bank" style="padding-right:35px;" oninput="filterSearchableList(this.value)">
+                <input type="text" class="custom-input" id="sl-search-input-2" placeholder="Search Bank" style="padding-right:35px;" oninput="filterSearchableList(this.value)">
                 <i class="fa-solid fa-magnifying-glass" style="position:absolute; right:14px; top:14px; color:var(--text-muted);"></i>
             </div>
-            <div style="font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:10px;" id="sl-subtitle">Select Bank</div>
-            <div class="menu-list-card" id="sl-items-container"></div>
+            <div style="font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:10px;" id="sl-subtitle-2">Select Bank</div>
+            <div class="menu-list-card" id="sl-items-container-2"></div>
         </div>
     </div>
 
@@ -1914,9 +1923,6 @@
         document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
         document.getElementById('success-screen').classList.add('active');
     }
-
-    // ... (All the rest of your massive JavaScript functions for Bill, Load, Scanner, Admin Panel, etc. will go here)
-    // For this complete file, I am including all the original functions you provided.
 
     let navigationStack = ['home-screen'];
     let loginPinStr = "";
@@ -2435,7 +2441,6 @@
         const backBtn = captureArea.querySelector('.success-back-btn');
         const homeIndicator = captureArea.querySelector('.success-home-indicator');
         
-        // Temporarily hide UI elements
         if(buttonContainer) buttonContainer.style.visibility = 'hidden';
         if(backBtn) backBtn.style.visibility = 'hidden';
         if(homeIndicator) homeIndicator.style.visibility = 'hidden';
@@ -2446,7 +2451,6 @@
             backgroundColor: "#f6f6f6"
         });
         
-        // Show UI elements again
         if(buttonContainer) buttonContainer.style.visibility = 'visible';
         if(backBtn) backBtn.style.visibility = 'visible';
         if(homeIndicator) homeIndicator.style.visibility = 'visible';
@@ -2873,7 +2877,6 @@
         };
         setReceiptHeader(item.id, item.date);
         
-        // Updated to new success screen elements
         document.getElementById('rec-amt').innerText = 'Rs. ' + amount.toFixed(2);
         document.getElementById('rec-sub-desc').innerText = item.direction === 'in' ? 'Received via ' + txData.type : 'QR Payment';
         document.getElementById('rec-name').innerText = item.recipient || 'JazzCash Wallet';
@@ -3022,7 +3025,7 @@
                         amount: billState.amount
                     });
                     navigateTo('bill-success-screen');
-                    setTimeout(playPaymentSuccessSound, 1000); // 1 Second Delay
+                    setTimeout(playPaymentSuccessSound, 3000); // 3 Second Delay
                 }, 2000);
             } else {
                 alert('Incorrect MPIN. Please enter 0303.');
@@ -3154,7 +3157,7 @@
                         amount: loadState.amount
                     });
                     navigateTo('load-success-screen');
-                    setTimeout(playPaymentSuccessSound, 1000); // 1 Second Delay
+                    setTimeout(playPaymentSuccessSound, 3000); // 3 Second Delay
                 });
             } else {
                 alert('Incorrect MPIN. Please enter 0303.');
@@ -4204,7 +4207,6 @@
                 
                 const now = new Date();
                 
-                // Update new success screen elements
                 setReceiptHeader(txData.tid, now);
                 document.getElementById('rec-amt').innerText = "Rs. " + txData.amount.toFixed(2);
                 document.getElementById('rec-sub-desc').innerText = "QR Payment"; 
@@ -4227,7 +4229,7 @@
                 });
                 
                 navigateTo('success-screen');
-                setTimeout(playPaymentSuccessSound, 1000); // 1 Second Delay
+                setTimeout(playPaymentSuccessSound, 3000); // 3 Second Delay
             }, 2000);
         }
     }
