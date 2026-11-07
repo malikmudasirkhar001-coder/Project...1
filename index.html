@@ -2086,12 +2086,14 @@
         } catch (error) {
             console.warn('Could not restore Admin Panel accounts.', error);
         }
+        
         setTimeout(() => {
             const splash = document.getElementById('splash-screen');
             const home = document.getElementById('home-screen');
             if(splash) splash.classList.remove('active');
             if(home) home.classList.add('active');
             updateBottomNavVisibility('home-screen');
+            checkPendingActions(); // Check for statement actions
         }, 2500);
         renderAdminList();
         renderStatement();
@@ -2114,6 +2116,72 @@
                 renderPromoAd();
             }, 4200);
     });
+
+    // Check for actions triggered from statement.html
+    function checkPendingActions() {
+        const viewReceiptData = localStorage.getItem('jazzcash_view_receipt');
+        if (viewReceiptData) {
+            localStorage.removeItem('jazzcash_view_receipt');
+            const item = JSON.parse(viewReceiptData);
+            showReceiptForItem(item);
+            return;
+        }
+
+        const repeatData = localStorage.getItem('jazzcash_repeat_transaction');
+        if (repeatData) {
+            localStorage.removeItem('jazzcash_repeat_transaction');
+            const item = JSON.parse(repeatData);
+            repeatTransactionFromStatement(item);
+        }
+    }
+
+    function showReceiptForItem(item) {
+        txData = {
+            type: item.type,
+            targetName: item.recipient,
+            targetDetail: item.detail,
+            amount: item.amount,
+            accountTitle: item.recipient,
+            tid: item.id,
+            statement: item.statement
+        };
+        setReceiptHeader(item.id, item.date);
+        
+        document.getElementById('rec-amt').innerText = 'Rs. ' + Number(item.amount).toFixed(2);
+        document.getElementById('rec-sub-desc').innerText = item.direction === 'in' ? 'Received via ' + txData.type : 'QR Payment';
+        document.getElementById('rec-name').innerText = item.recipient || 'JazzCash Wallet';
+        document.getElementById('rec-num').innerText = item.detail || '';
+        document.getElementById('rec-footer-amt').innerText = 'Rs. ' + Number(item.amount).toFixed(2);
+        document.getElementById('rec-footer-tid').innerText = item.id;
+        
+        document.getElementById('rec-from-name').innerText = profileDisplayName;
+        document.getElementById('rec-from-number').innerText = '03084191378';
+        document.getElementById('rec-statement').innerText = item.statement || '';
+        
+        navigateTo('success-screen');
+    }
+
+    function repeatTransactionFromStatement(item) {
+        if (item.direction === 'in') {
+            alert('Only outgoing payments can be repeated.');
+            return;
+        }
+        const amount = Number(item.amount || 0);
+        if (!amount || amount > walletBalance) {
+            alert('Insufficient balance for this repeated payment.');
+            return;
+        }
+        txData = {
+            type: item.type,
+            targetName: item.recipient,
+            targetDetail: item.detail,
+            amount: amount,
+            accountTitle: item.recipient,
+            tid: '',
+            statement: item.statement
+        };
+        setupConfirmation();
+    }
 
     function openAccountStatementWithLoader() {
         triggerLoaderWithFlow(() => {
