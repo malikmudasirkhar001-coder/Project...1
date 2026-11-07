@@ -115,13 +115,13 @@
             color: var(--text-main);
         }
 
-        /* UPDATED SPLASH SCREEN STYLES */
+        /* SPLASH SCREEN STYLES */
         #splash-screen {
             background-color: #ffffff;
             justify-content: center;
             align-items: center;
             z-index: 100;
-            padding: 0 !important; /* Remove padding */
+            padding: 0 !important;
         }
 
         .splash-logo-container {
@@ -135,10 +135,9 @@
         .splash-logo-img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Force image to cover full screen */
+            object-fit: cover;
             object-position: center;
         }
-        /* END SPLASH SCREEN STYLES */
 
         #loader-overlay {
             position: absolute;
@@ -174,151 +173,7 @@
             40% { transform: scale(1.0); }
         }
 
-        /* Rest of the CSS remains unchanged... */
-        #wrong-pin-modal {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.65);
-            display: none;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-            z-index: 2000;
-        }
-        .popup-card {
-            width: 100%;
-            background: white;
-            border-top-left-radius: 25px;
-            border-top-right-radius: 25px;
-            padding: 24px 20px 32px 20px;
-            text-align: center;
-            box-shadow: 0 -10px 25px rgba(0,0,0,0.2);
-            animation: slideUp 0.3s ease;
-        }
-        @keyframes slideUp {
-            0% { transform: translateY(100%); }
-            100% { transform: translateY(0); }
-        }
-        .popup-icon {
-            width: 50px;
-            height: 50px;
-            background-color: #fee2e2;
-            color: var(--danger);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            margin: 0 auto 12px auto;
-        }
-        .login-failed-icon {
-            background: transparent;
-            color: #6b7280;
-            border: none;
-            border-radius: 0;
-            font-size: 44px;
-        }
-        .popup-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 6px;
-        }
-        .popup-desc {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 20px;
-        }
-        .popup-buttons-col {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .btn-black-custom {
-            width: 100%;
-            background-color: #111827;
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 14px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .btn-outline-custom {
-            width: 100%;
-            background-color: #ffffff;
-            color: #111827;
-            border: 1px solid var(--border-color);
-            padding: 14px;
-            border-radius: 14px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .full-login-screen {
-            background-color: #ffffff;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            overflow: hidden;
-        }
-        .login-dark-topbar {
-            background-color: #1a1a1a;
-            color: white;
-            padding: 16px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .login-pin-dots-row {
-            display: flex;
-            gap: 25px;
-            margin: 20px 0;
-        }
-        .login-dot-item {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background-color: #d1d5db;
-        }
-        .login-dot-item.filled {
-            background-color: var(--yellow-accent);
-        }
-        
-        .login-keypad-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px 30px;
-            max-width: 280px;
-            margin: 10px auto 25px auto;
-            justify-items: center;
-            align-items: center;
-        }
-        .login-key-btn {
-            background: transparent;
-            border: none;
-            color: #1f2937;
-            font-size: 24px;
-            font-weight: 600;
-            width: 54px;
-            height: 54px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border-radius: 50%;
-        }
-        .login-key-btn:active {
-            background-color: #f3f4f6;
-        }
-
-        /* NEW CUSTOM PIN SCREEN */
+        /* NEW CUSTOM PIN SCREEN (Used for Login, Transfer, Bill, Load) */
         .custom-pin-container {
             background-color: #ffffff;
             display: flex;
@@ -378,6 +233,7 @@
         .custom-key.backspace svg { width: 24px; height: 24px; fill: none; stroke: #333; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
         .custom-help-text { text-align: left; font-size: 14px; color: #777; }
 
+        /* HOME SCREEN */
         #home-screen { background-color: var(--light-bg); }
         .dark-header { background: linear-gradient(180deg, #3b0707 0%, #1a1a1a 100%); color: white; padding: 24px 20px 24px 20px; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -389,12 +245,16 @@
         .login-prompt-banner { margin-top: 5px; cursor: pointer; }
         .login-prompt-banner .login-title { font-size: 20px; font-weight: 700; color: var(--yellow-accent); display: flex; align-items: center; gap: 8px; }
         .login-prompt-banner .login-subtitle { font-size: 16px; font-weight: 600; color: white; margin-top: 2px; }
-        .home-balance-panel { display: none; margin-top: 16px; padding: 15px 16px; border-radius: 18px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.16); }
+        
+        .home-balance-panel { display: none; margin-top: 16px; padding: 15px 16px; border-radius: 18px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.16); cursor: pointer; }
         .home-balance-panel.visible { display: block; }
         .home-balance-label { color: #d1d5db; font-size: 11px; margin-bottom: 5px; }
-        .home-balance-value { color: white; font-size: 25px; font-weight: 700; letter-spacing: -0.4px; }
-        .home-balance-tools { display: flex; gap: 8px; margin-top: 12px; }
-        .home-balance-tool { border: 1px solid rgba(255,255,255,0.24); background: rgba(255,255,255,0.1); color: white; border-radius: 18px; padding: 7px 11px; font-size: 10px; cursor: pointer; }
+        .home-balance-value { color: white; font-size: 25px; font-weight: 700; letter-spacing: -0.4px; display: flex; align-items: center; justify-content: space-between; }
+        .home-balance-value i { font-size: 14px; color: var(--yellow-accent); }
+        
+        .refresh-balance-btn { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #d1d5db; margin-top: 12px; cursor: pointer; }
+        .refresh-balance-btn i { font-size: 12px; }
+
         .app-body { flex: 1; overflow-y: auto; padding: 12px 10px 65px 10px; }
         .icon-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #ffffff; padding: 14px 10px; border-radius: 22px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .icon-item { display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; position: relative; padding: 12px 4px; background: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition: all 0.2s ease; }
@@ -402,6 +262,27 @@
         .icon-box { width: 100%; height: 68px; background: transparent; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; color: var(--primary); font-size: 36px; }
         .icon-label { font-size: 11px; color: #374151; line-height: 1.2; font-weight: 600; }
         .badge-new { position: absolute; top: 4px; right: 6px; background: #f59e0b; color: white; font-size: 8px; font-weight: 700; padding: 1px 4px; border-radius: 4px; text-transform: uppercase; }
+        
+        .promo-carousel { position: relative; overflow: hidden; min-height: 92px; border-radius: 18px; margin-bottom: 10px; box-shadow: 0 3px 12px rgba(0,0,0,.08); }
+        .promo-slide { min-height: 92px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; animation: promoFade .35s ease; }
+        .promo-slide-copy { min-width: 0; }
+        .promo-slide-kicker { font-size: 9px; font-weight: 700; color: #713f12; text-transform: uppercase; letter-spacing: .6px; }
+        .promo-slide-title { font-size: 20px; font-weight: 800; color: #1e1b4b; letter-spacing: -.4px; margin-top: 2px; }
+        .promo-slide-subtitle { font-size: 10px; color: #713f12; font-weight: 600; margin-top: 3px; }
+        .promo-slide-icon { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,.72); color: #1e1b4b; display: flex; align-items: center; justify-content: center; font-size: 19px; }
+        .promo-dots { position: absolute; left: 16px; bottom: 8px; display: flex; gap: 4px; }
+        .promo-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(113,63,18,.3); }
+        .promo-dot.active { width: 14px; border-radius: 5px; background: #713f12; }
+        @keyframes promoFade { from { opacity: .35; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .upgrade-promo-card { position: relative; overflow: hidden; min-height: 104px; margin-bottom: 10px; padding: 15px 16px; border-radius: 18px; color: #fff; background: radial-gradient(circle at 92% 18%, rgba(250,204,21,.95), transparent 34%), linear-gradient(135deg, #111827 0%, #262626 62%, #713f12 100%); box-shadow: 0 4px 14px rgba(0,0,0,.13); cursor: pointer; }
+        .upgrade-promo-card::after { content: ""; position: absolute; width: 120px; height: 120px; right: -38px; bottom: -55px; border: 12px solid rgba(250,204,21,.18); border-radius: 50%; }
+        .upgrade-promo-copy { position: relative; z-index: 1; max-width: 72%; }
+        .upgrade-promo-kicker { color: #fde68a; font-size: 9px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; }
+        .upgrade-promo-title { margin-top: 3px; font-size: 17px; font-weight: 800; }
+        .upgrade-promo-subtitle { margin-top: 3px; color: #f3f4f6; font-size: 10px; line-height: 1.35; }
+        .upgrade-promo-button { position: absolute; right: 14px; top: 32px; z-index: 1; border: 0; border-radius: 18px; padding: 8px 12px; color: #111827; background: #facc15; font-size: 10px; font-weight: 800; cursor: pointer; }
+
         .bottom-nav { position: absolute; bottom: env(safe-area-inset-bottom, 0px); left: 0; width: 100%; height: 64px; background-color: white; border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 5000; pointer-events: auto; overflow: visible; transition: height .2s ease, opacity .2s ease, background-color .2s ease; }
         #main-bottom-nav.is-hidden { display: none; }
         .nav-link { display: flex; flex-direction: column; align-items: center; background: none; border: none; cursor: pointer; color: #111827; font-size: 10px; font-weight: 500; gap: 2px; }
@@ -419,25 +300,7 @@
         .mt-item { background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px; padding: 14px 8px; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         .mt-icon-box { width: 52px; height: 52px; background: #ffffff; border: 1px solid #f3f4f6; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 22px; margin-bottom: 8px; }
         .mt-label { font-size: 11px; font-weight: 600; color: #374151; line-height: 1.2; }
-        .promo-carousel { position: relative; overflow: hidden; min-height: 92px; border-radius: 18px; margin-bottom: 10px; box-shadow: 0 3px 12px rgba(0,0,0,.08); }
-        .promo-slide { min-height: 92px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; animation: promoFade .35s ease; }
-        .promo-slide-copy { min-width: 0; }
-        .promo-slide-kicker { font-size: 9px; font-weight: 700; color: #713f12; text-transform: uppercase; letter-spacing: .6px; }
-        .promo-slide-title { font-size: 20px; font-weight: 800; color: #1e1b4b; letter-spacing: -.4px; margin-top: 2px; }
-        .promo-slide-subtitle { font-size: 10px; color: #713f12; font-weight: 600; margin-top: 3px; }
-        .promo-slide-icon { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,.72); color: #1e1b4b; display: flex; align-items: center; justify-content: center; font-size: 19px; }
-        .promo-dots { position: absolute; left: 16px; bottom: 8px; display: flex; gap: 4px; }
-        .promo-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(113,63,18,.3); }
-        .promo-dot.active { width: 14px; border-radius: 5px; background: #713f12; }
-        @keyframes promoFade { from { opacity: .35; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-        .upgrade-promo-card { position: relative; overflow: hidden; min-height: 104px; margin-bottom: 10px; padding: 15px 16px; border-radius: 18px; color: #fff; background: radial-gradient(circle at 92% 18%, rgba(250,204,21,.95), transparent 34%), linear-gradient(135deg, #111827 0%, #262626 62%, #713f12 100%); box-shadow: 0 4px 14px rgba(0,0,0,.13); cursor: pointer; }
-        .upgrade-promo-card::after { content: ""; position: absolute; width: 120px; height: 120px; right: -38px; bottom: -55px; border: 12px solid rgba(250,204,21,.18); border-radius: 50%; }
-        .upgrade-promo-copy { position: relative; z-index: 1; max-width: 72%; }
-        .upgrade-promo-kicker { color: #fde68a; font-size: 9px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; }
-        .upgrade-promo-title { margin-top: 3px; font-size: 17px; font-weight: 800; }
-        .upgrade-promo-subtitle { margin-top: 3px; color: #f3f4f6; font-size: 10px; line-height: 1.35; }
-        .upgrade-promo-button { position: absolute; right: 14px; top: 32px; z-index: 1; border: 0; border-radius: 18px; padding: 8px 12px; color: #111827; background: #facc15; font-size: 10px; font-weight: 800; cursor: pointer; }
-
+        
         #contact-search-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.65); display: none; flex-direction: column; justify-content: flex-end; align-items: center; z-index: 1500; }
         .contact-modal-sheet { width: 100%; height: 94%; background: #ffffff; border-top-left-radius: 25px; border-top-right-radius: 25px; padding: 16px 16px 24px 16px; display: flex; flex-direction: column; animation: slideUp 0.3s ease; box-shadow: 0 -10px 30px rgba(0,0,0,0.3); }
         
@@ -856,59 +719,79 @@
         </div>
     </div>
 
-    <!-- Splash Screen with New Logo (FULL SCREEN) -->
+    <!-- Splash Screen -->
     <div id="splash-screen" class="app-screen active">
         <div class="splash-logo-container">
             <img src="https://i.ibb.co/kgRq1Zmj/170007.png" class="splash-logo-img" alt="JazzCash Logo">
         </div>
     </div>
 
-    <!-- Login Keypad Screen -->
+    <!-- NEW CUSTOM PIN SCREEN (LOGIN) -->
     <div id="login-keypad-screen" class="app-screen">
-        <div class="full-login-screen">
-            <div>
-                <div class="login-dark-topbar">
-                    <button class="back-btn" style="background:#333; color:#fff;" onclick="navigateTo('home-screen')"><i class="fa-solid fa-arrow-left"></i></button>
-                    <i class="fa-solid fa-house" style="cursor: pointer; color: white;" onclick="navigateTo('home-screen')"></i>
-                </div>
-                <div style="padding: 24px 20px 0 20px;">
-                    <h2 style="font-size: 22px; font-weight: 700; color: #111827;">Complete Sign-in</h2>
-                    <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Enter your 4 digit MPIN</p>
-                    
-                    <div class="login-pin-dots-row">
-                        <div class="login-dot-item" id="key-dot-0"></div>
-                        <div class="login-dot-item" id="key-dot-1"></div>
-                        <div class="login-dot-item" id="key-dot-2"></div>
-                        <div class="login-dot-item" id="key-dot-3"></div>
-                    </div>
-                    <div style="text-align: right;">
-                        <a href="#" style="font-size: 12px; color: #111827; text-decoration: none; font-weight: 600;">Forgot MPIN?</a>
-                    </div>
-                    <p style="font-size: 11px; color: var(--danger); margin-top: 20px;"><i class="fa-solid fa-circle-info"></i> Never share your MPIN with anyone</p>
+        <div class="custom-pin-container">
+            <div class="custom-notCH"></div>
+
+            <div class="custom-top-header">
+                <div class="icons-left" onclick="navigateTo('home-screen')">&#8592;</div>
+                <div class="dots">•••</div>
+                <div class="icons-right">
+                    <span>&#9432;</span>
+                    <span onclick="navigateTo('home-screen')">&#8962;</span>
                 </div>
             </div>
 
-            <div class="login-keypad-grid">
-                <button class="login-key-btn" onclick="pressKeypadLogin('1')">1</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('2')">2</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('3')">3</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('4')">4</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('5')">5</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('6')">6</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('7')">7</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('8')">8</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('9')">9</button>
-                <div class="login-key-btn" aria-hidden="true"></div>
-                <button class="login-key-btn" onclick="pressKeypadLogin('0')">0</button>
-                <button class="login-key-btn" onclick="pressKeypadLogin('del')"><i class="fa-solid fa-delete-left"></i></button>
-            </div>
+            <div class="custom-main-content">
+                <div class="custom-title-section">
+                    <h2>Complete Sign-in</h2>
+                    <p>Enter your 4-Digit MPIN</p>
+                </div>
 
-            <div style="padding: 15px 20px 20px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color);">
-                    <span style="font-size: 12px; color: var(--text-muted); cursor: pointer;" onclick="showComingSoon('Help')">Need Help?</span>
+                <div class="custom-pin-section">
+                    <div class="custom-dots-input" id="login-dots-container">
+                        <div class="custom-dot" id="key-dot-0"></div>
+                        <div class="custom-dot" id="key-dot-1"></div>
+                        <div class="custom-dot" id="key-dot-2"></div>
+                        <div class="custom-dot" id="key-dot-3"></div>
+                    </div>
+                    <a href="#" class="custom-forgot-pin">Forgot MPIN?</a>
+                </div>
+
+                <div class="custom-warning-text">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                    </svg>
+                    <span>Never share your MPIN with anyone</span>
+                </div>
+
+                <div class="custom-keypad" id="login-keypad">
+                    <div class="custom-key" onclick="pressKeypadLogin('1')">1</div>
+                    <div class="custom-key" onclick="pressKeypadLogin('2')">2</div>
+                    <div class="custom-key" onclick="pressKeypadLogin('3')">3</div>
+                    <div class="custom-key" onclick="pressKeypadLogin('4')">4</div>
+                    <div class="custom-key" onclick="pressKeypadLogin('5')">5</div>
+                    <div class="custom-key" onclick="pressKeypadLogin('6')">6</div>
+                    <div class="custom-key" onclick="pressKeypadLogin('7')">7</div>
+                    <div class="custom-key" onclick="pressKeypadLogin('8')">8</div>
+                    <div class="custom-key" onclick="pressKeypadLogin('9')">9</div>
+                    <div class="custom-key"></div>
+                    <div class="custom-key" onclick="pressKeypadLogin('0')">0</div>
+                    <div class="custom-key backspace" onclick="pressKeypadLogin('del')">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
+                            <line x1="18" y1="9" x2="12" y2="15"></line>
+                            <line x1="12" y1="9" x2="18" y2="15"></line>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="custom-help-text">
+                    Need Help?
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- HOME SCREEN -->
     <div id="home-screen" class="app-screen">
         <div class="dark-header">
             <div class="header-top">
@@ -942,13 +825,19 @@
                 <div class="login-title" id="banner-main-text">Log in <i class="fa-solid fa-arrow-right" style="font-size:16px;"></i></div>
                 <div class="login-subtitle" id="banner-sub-text">to Make Payments</div>
             </div>
-            <div class="home-balance-panel" id="home-balance-panel">
+            
+            <!-- Clickable Balance Panel -->
+            <div class="home-balance-panel" id="home-balance-panel" onclick="openAccountStatementWithLoader()">
                 <div class="home-balance-label">Available balance</div>
-                <div class="home-balance-value" id="home-balance-value">Rs. 5,287.14</div>
-                <div class="home-balance-tools">
-                    <button class="home-balance-tool" onclick="updateBalanceDisplays(); renderStatement();"><i class="fa-solid fa-rotate"></i> Refresh balance</button>
-                    <button class="home-balance-tool" onclick="openAccountStatement()"><i class="fa-solid fa-file-lines"></i> Statement</button>
+                <div class="home-balance-value">
+                    <span id="home-balance-value">Rs. 5,287.14</span>
+                    <i class="fa-solid fa-circle-chevron-down"></i>
                 </div>
+            </div>
+            
+            <!-- Simple Refresh Button -->
+            <div class="refresh-balance-btn" onclick="updateBalanceDisplays(); renderStatement();">
+                <i class="fa-solid fa-rotate-right"></i> Refresh Balance
             </div>
         </div>
 
@@ -1145,7 +1034,7 @@
     <div id="account-statement-screen" class="app-screen">
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:10px;">
-                <button class="back-btn" onclick="navigateTo('self-service-screen')"><i class="fa-solid fa-arrow-left"></i></button>
+                <button class="back-btn" onclick="navigateTo('home-screen')"><i class="fa-solid fa-arrow-left"></i></button>
                 <span class="screen-title">Account Statement</span>
             </div>
             <i class="fa-solid fa-download" style="cursor:pointer;" onclick="showComingSoon('Statement Download')"></i>
@@ -1425,7 +1314,7 @@
         </div>
     </div>
 
-    <!-- NEW CUSTOM PIN SCREEN (Transfer) -->
+    <!-- NEW CUSTOM PIN SCREEN (TRANSFER) -->
     <div id="pin-screen" class="app-screen">
         <div class="custom-pin-container">
             <div class="custom-notCH"></div>
@@ -1490,7 +1379,7 @@
         </div>
     </div>
 
-    <!-- Bill PIN Screen -->
+    <!-- NEW CUSTOM PIN SCREEN (BILL) -->
     <div id="bill-pin-screen" class="app-screen">
         <div class="custom-pin-container">
             <div class="custom-notCH"></div>
@@ -1555,7 +1444,7 @@
         </div>
     </div>
 
-    <!-- Load PIN Screen -->
+    <!-- NEW CUSTOM PIN SCREEN (LOAD) -->
     <div id="load-pin-screen" class="app-screen">
         <div class="custom-pin-container">
             <div class="custom-notCH"></div>
@@ -2148,7 +2037,9 @@
     };
 
     let adminAccounts = {
-        'JazzCash Transfer': {},
+        'JazzCash Transfer': {
+            '03084191378': 'AZIZ BIBI' // FIXED SAVED ACCOUNT
+        },
         'Easypaisa Wallet': {},
         'Bank Transfer': {},
         'CNIC Transfer': {},
@@ -2170,7 +2061,7 @@
         { name: "HBL MFB", logo: "https://i.ibb.co/svL95vcx/svL95vcx.png" },
         { name: "Habib Bank Limited", logo: "https://i.ibb.co/S9YvYV9/S9YvYV9.png" },
         { name: "Habib Metro Bank", logo: "https://i.ibb.co/qMKGzL8F/qMKGzL8F.png" },
-        { name: "Halan Microfinance Bank", logo: "https://i.ibb.co/67Gvpwv1/67Gvpwv1.png" },
+        { name: "Halan Microfinance Bank", logo: "https://i.ibb.co/67Gvpwv1/67Gpv1.png" },
         { name: "JS Bank Limited - Zindigi", logo: "https://i.ibb.co/4Zs6y3LP/4Zs6y3LP.png" },
         { name: "KASB Bank", logo: "https://i.ibb.co/s9d7KDYZ/s9d7KDYZ.png" },
         { name: "Khushali Bank", logo: "https://i.ibb.co/p6yxJW2h/p6yxJW2h.png" },
@@ -2244,6 +2135,12 @@
                 renderPromoAd();
             }, 4200);
     });
+
+    function openAccountStatementWithLoader() {
+        triggerLoaderWithFlow(() => {
+            openAccountStatement();
+        }, 1000);
+    }
 
     // ... (All the rest of the JavaScript functions remain exactly the same as your provided code)
     function renderPromoAd() {
@@ -3098,7 +2995,7 @@
                         amount: billState.amount
                     });
                     navigateTo('bill-success-screen');
-                    setTimeout(playPaymentSuccessSound, 1000); // 1 Second Delay
+                    setTimeout(playPaymentSuccessSound, 4000); // 4 Second Delay
                 }, 2000);
             } else {
                 alert('Incorrect MPIN. Please enter 0303.');
@@ -3230,7 +3127,7 @@
                         amount: loadState.amount
                     });
                     navigateTo('load-success-screen');
-                    setTimeout(playPaymentSuccessSound, 1000); // 1 Second Delay
+                    setTimeout(playPaymentSuccessSound, 4000); // 4 Second Delay
                 });
             } else {
                 alert('Incorrect MPIN. Please enter 0303.');
@@ -3546,8 +3443,8 @@
         for (let i = 0; i < 4; i++) {
             const dot = document.getElementById('key-dot-' + i);
             if (dot) {
-                if (i < loginPinStr.length) dot.classList.add('filled');
-                else dot.classList.remove('filled');
+                if (i < loginPinStr.length) dot.classList.add('active');
+                else dot.classList.remove('active');
             }
         }
     }
@@ -4303,7 +4200,7 @@
                 });
                 
                 navigateTo('success-screen');
-                setTimeout(playPaymentSuccessSound, 1000); // 1 Second Delay
+                setTimeout(playPaymentSuccessSound, 4000); // 4 Second Delay
             }, 2000);
         }
     }
