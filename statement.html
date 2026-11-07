@@ -356,7 +356,7 @@
             const item = allTransactions[index];
             // Save the selected transaction to be viewed in index.html
             localStorage.setItem('jazzcash_view_receipt', JSON.stringify(item));
-            window.location.href = 'index.html?view=receipt';
+            window.location.href = 'index.html';
         });
     }
 
@@ -365,7 +365,7 @@
             const item = allTransactions[index];
             // Save the selected transaction to be repeated in index.html
             localStorage.setItem('jazzcash_repeat_transaction', JSON.stringify(item));
-            window.location.href = 'index.html?repeat=true';
+            window.location.href = 'index.html';
         });
     }
 
